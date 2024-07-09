@@ -1,0 +1,13 @@
+﻿@inject ISnackbar Snackbar
+
+
+
+@code {
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.Snackbar.Clear();
+        this.Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+        this.Snackbar.Add("Wazzup?", Severity.Normal);
+    }
+}

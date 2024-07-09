@@ -284,6 +284,9 @@ namespace Data.Migrations
                     b.Property<DateTime>("CreateDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<Guid>("IdPost")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<Guid>("IdUser")
                         .HasColumnType("uniqueidentifier");
 
@@ -298,6 +301,8 @@ namespace Data.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("IdPost");
 
                     b.HasIndex("IdUser");
 
@@ -694,11 +699,19 @@ namespace Data.Migrations
 
             modelBuilder.Entity("Data.Database.Table.Response", b =>
                 {
+                    b.HasOne("Data.Database.Table.Post", "Post")
+                        .WithMany()
+                        .HasForeignKey("IdPost")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("BlogWebsite.Data.ApplicationUser", "User")
                         .WithMany("Responses")
                         .HasForeignKey("IdUser")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Post");
 
                     b.Navigation("User");
                 });

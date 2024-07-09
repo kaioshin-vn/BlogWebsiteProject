@@ -15,6 +15,7 @@ namespace Data.Database.Table
         public Guid Id { get; set; }
 
         public Guid IdUser { get; set; }
+        public Guid IdPost { get; set; }
 
         public DateTime CreateDate { get; set; }
 
@@ -26,6 +27,9 @@ namespace Data.Database.Table
 
         [ForeignKey("IdUser")]
         public ApplicationUser? User { get; set; }
+
+        [ForeignKey("IdPost")]
+        public Post? Post { get; set; }
 
     }
 }
