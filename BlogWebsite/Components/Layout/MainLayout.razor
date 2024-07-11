@@ -1,22 +1,27 @@
-﻿
-@inherits LayoutComponentBase
+﻿@inherits LayoutComponentBase
 <MudThemeProvider />
 <MudPopoverProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
+<style>
+    a:hover {
+        color:unset;
+    }
+</style>
 <div class="page">
-    <div class="sidebar" style="height : 100%">
-            <NavMenu />
-    </div>
-
     <main>
         <div class="top-row px-4">
             <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
         </div>
+        <div class="d-flex ">
+            <div class="" style="height : 100% ; position: sticky;top: 56px;">
+                <NavMenu />
+            </div>
 
-        <article class="content px-4">
-            @Body
-        </article>
+            <article class="content px-4">
+                @Body
+            </article>
+        </div>
     </main>
 </div>
 

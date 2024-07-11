@@ -2,14 +2,28 @@
 
 @inject NavigationManager NavigationManager
 
-<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">BlogWebsite</a>
-    </div>
-</div>
-
 <input type="checkbox" title="Navigation menu" class="navbar-toggler" />
 
+<MudNavMenu Color="Color.Success" Style="width:110px;">
+    <MudNavLink Match="NavLinkMatch.Prefix" Href="/Error" Class="rounded-3 overflow-hidden m-3">
+        <MudIcon Icon="@Icons.Material.Filled.AutoStories"></MudIcon>
+        <MudText>Blog</MudText>
+    </MudNavLink>
+
+    <MudNavLink Match="NavLinkMatch.Prefix" Href="/weather" Class="rounded-3 overflow-hidden m-3">
+        <MudIcon Icon="@Icons.Material.Filled.Architecture"></MudIcon>
+        <MudText>Quiz</MudText>
+    </MudNavLink>
+
+    <MudNavLink Match="NavLinkMatch.Prefix" Href="/counter" Class="rounded-3 overflow-hidden m-3">
+        <MudIcon Icon="@Icons.Material.Filled.AutoFixHigh"></MudIcon>
+        <MudText>Dịch vụ</MudText>
+    </MudNavLink>
+
+    
+</MudNavMenu>
+
+@*
 <div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
     <nav class="flex-column">
         <div class="nav-item px-3">
@@ -67,7 +81,7 @@
             </NotAuthorized>
         </AuthorizeView>
     </nav>
-</div>
+</div> *@
 
 @code {
     private string? currentUrl;
@@ -87,6 +101,34 @@
     public void Dispose()
     {
         NavigationManager.LocationChanged -= OnLocationChanged;
+    }
+}
+
+@code {
+    public bool ToolbarCheckBox { get; set; } = false;
+    string _selectedFolder = "Inbox";
+
+    private void ItemUpdated(MudItemDropInfo<DropItem> dropItem)
+    {
+        dropItem.Item.Identifier = dropItem.DropzoneIdentifier;
+
+    }
+
+    private List<DropItem> _items = new()
+    {
+        new DropItem(){ Name = "Your exchange rate and Klarna benefits here", Identifier = "Inbox" },
+        new DropItem(){ Name = "IKEA - Betalningsbekräftelse för din order", Identifier = "Inbox" },
+        new DropItem(){ Name = "Leverans beställd till dig​", Identifier = "Inbox" },
+        new DropItem(){ Name = "You’ve Got Sales! Cotton Bureau On Demand Report for Thursday, February 24, 2022", Identifier = "Inbox" },
+        new DropItem(){ Name = "Answer: Offer to buy mudblazor", Identifier = "Drafts" },
+        new DropItem(){ Name = "Inloggningsvarning för Facebook Messenger for Android", Identifier = "Social" },
+        new DropItem(){ Name = "Nya privata meddelanden på SweClockers", Identifier = "Forums" },
+    };
+
+    public class DropItem
+    {
+        public string Name { get; init; }
+        public string Identifier { get; set; }
     }
 }
 

@@ -34,10 +34,6 @@ namespace BlogWebsite.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Ignore<IdentityUserLogin<Guid>>();
-            modelBuilder.Ignore<IdentityUserClaim<Guid>>();
-            modelBuilder.Ignore<IdentityRoleClaim<Guid>>();
-
             modelBuilder.Entity<PostTag>().HasKey(u => new
             {
                 u.IdTag,
