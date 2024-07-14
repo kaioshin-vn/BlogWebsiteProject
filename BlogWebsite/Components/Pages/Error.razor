@@ -1,8 +1,18 @@
 ﻿@page "/Error"
 @using System.Diagnostics
-
+@inject Blazored.SessionStorage.ISessionStorageService sessionStorage
 <PageTitle>Error</PageTitle>
+<button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
+@code {
+    private int currentCount = 0;
 
+
+    private async Task IncrementCount()
+    {
+        var a = await sessionStorage.GetItemAsync<int>("check");
+        Console.WriteLine(a);
+    }
+}
 <h1 class="text-danger">Error.</h1>
 <h2 class="text-danger">An error occurred while processing your request.</h2>
 
