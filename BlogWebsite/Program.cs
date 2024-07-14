@@ -1,4 +1,5 @@
 ﻿
+using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 using BlogWebsite.Components.Account;
 using BlogWebsite.Data;
 using Client.Components;
@@ -9,9 +10,18 @@ using MudBlazor;
 using MudBlazor.Services;
 using System;
 using System.Text.Json.Serialization;
+using Blazored.SessionStorage;
+
 
 var builder = WebApplication.CreateBuilder(args);
-
+builder.Services.AddBlazoredSessionStorage();
+//builder.Services.AddSession(options =>
+//{
+//    options.IdleTimeout = TimeSpan.FromSeconds(10);  //you can change the session expired time.  
+//    options.Cookie.HttpOnly = true;
+//    options.Cookie.IsEssential = true;
+//});
+builder.Services.AddDistributedMemoryCache();
 
 builder.Services.AddMudServices(config =>
 {
@@ -29,6 +39,7 @@ builder.Services.AddMudServices(config =>
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddHttpClient("MyHttpClient", client =>
 {
     client.BaseAddress = new Uri("https://localhost:7272/"); // Địa chỉ cơ bản của API
@@ -85,7 +96,6 @@ builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSe
 
 
 var app = builder.Build();
-
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -105,7 +115,7 @@ app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseAntiforgery();
-
+app.UseSession();
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
