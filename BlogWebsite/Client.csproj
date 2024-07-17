@@ -8,6 +8,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Components\CSS\**" />
+    <Content Remove="Components\CSS\**" />
+    <EmbeddedResource Remove="Components\CSS\**" />
+    <None Remove="Components\CSS\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Include="wwwroot\ForgotPassword.css" />
   </ItemGroup>
 
@@ -23,10 +30,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Data\Data.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Components\CSS\" />
   </ItemGroup>
 
 </Project>
