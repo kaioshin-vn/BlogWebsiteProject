@@ -10,7 +10,7 @@
 </style>
 <div class="page">
     <main>
-        <div Style="background-color:#fff;z-index:100; position :fixed;border-bottom:grey 0.5px solid;width:100%" class="d-flex justify-content-between align-items-center row">
+        <div style="background-color:#fff;z-index:100; position :fixed;border-bottom:grey 0.5px solid;width:100%" class="d-flex justify-content-between align-items-center row">
             <div class="col-3">
                 <NavLink href="/">
                     <MudImage Src="logo.png" Height="64"></MudImage>
@@ -23,9 +23,17 @@
             <div class="col-3">
                 <AuthorizeView>
                     <Authorized>
-                        <NavLink>
-                            <MudImage Src="icon.png" Alt="Mony the dog" Elevation="25" Class="rounded-circle" />
-                        </NavLink>
+                        <div class="d-flex justify-content-end">
+                            <div class="nav-item ">
+                                <NavLink class="nav-link" href="Account/Logout">
+                                    <MudButton Variant="Variant.Outlined"
+                                               Color="Color.Info"
+                                               Style="text-transform:none">
+                                        Đăng xuất
+                                    </MudButton>
+                                </NavLink>
+                            </div>
+                        </div>
                     </Authorized>
 
                     <NotAuthorized>
