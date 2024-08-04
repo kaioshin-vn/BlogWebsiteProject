@@ -3,10 +3,11 @@
 @using System.Text
 @using System.ComponentModel.DataAnnotations
 @using System.Text.Encodings.Web
+@using Client.Components.Layout
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.AspNetCore.WebUtilities
 @using BlogWebsite.Data
-
+@layout EmptyLayout
 @inject UserManager<ApplicationUser> UserManager
 @inject IUserStore<ApplicationUser> UserStore
 @inject SignInManager<ApplicationUser> SignInManager
@@ -15,43 +16,35 @@
 @inject NavigationManager NavigationManager
 @inject IdentityRedirectManager RedirectManager
 
-<PageTitle>Register</PageTitle>
-
-<h1>Register</h1>
-
+<PageTitle>Đăng kí</PageTitle>
 <div class="row">
-    <div class="col-md-4">
-        <StatusMessage Message="@Message" />
-        <EditForm Model="Input" asp-route-returnUrl="@ReturnUrl" method="post" OnValidSubmit="RegisterUser" FormName="register">
-            <DataAnnotationsValidator />
-            <h2>Create a new account.</h2>
-            <hr />
-            <ValidationSummary class="text-danger" role="alert" />
-            <div class="form-floating mb-3">
-                <InputText @bind-Value="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
-                <label for="email">Email</label>
-                <ValidationMessage For="() => Input.Email" class="text-danger" />
+    <section class="container forms">
+        <div class="form login">
+            <div class="form-content">
+                <header>K A I Z E N</header>
+                <EditForm Model="Input" method="post" OnValidSubmit="RegisterUser" FormName="Register">
+                    <DataAnnotationsValidator />
+                    <MudTextField @bind-Value="Input.Email" Label="Email" Variant="Variant.Outlined" InputType="@InputType.Email" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Person" name="Input.Email" />
+                    <ValidationMessage For="() => Input.Email" class="text-danger" />
+                    <MudTextField @bind-Value="Input.Password" Label="Mật khẩu" Variant="Variant.Outlined" InputType="@PasswordInput" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon" OnAdornmentClick="ShowPassword" AdornmentAriaLabel="Hiện mật khẩu" name="Input.Password" />
+                    <ValidationMessage For="() => Input.Password" class="text-danger" />
+                    <MudTextField @bind-Value="Input.ConfirmPassword" Label="Nhập lại mật khẩu" Variant="Variant.Outlined" InputType="@PasswordInput" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon" OnAdornmentClick="ShowPassword" AdornmentAriaLabel="Hiện mật khẩu" name="Input.ConfirmPassword" />
+                    <ValidationMessage For="() => Input.ConfirmPassword" class="text-danger" />
+                    <div class="field button-field">
+                        <button type="submit">Đăng kí vào Kaizen</button>
+                    </div>
+                </EditForm>
+                <div class="row">
+                    <div class="form-link col-6">
+                        <span>Đã có tài khoản? <a href="Account/Login" class="link signup-link">Đăng nhập</a></span>
+                    </div>
+                    <div class="form-link col-6 d-flex justify-content-end">
+                        <a href="/ForgotPassword" class="forgot-pass">Quên mật khẩu?</a>
+                    </div>
+                </div>
             </div>
-            <div class="form-floating mb-3">
-                <InputText type="password" @bind-Value="Input.Password" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />
-                <label for="password">Password</label>
-                <ValidationMessage For="() => Input.Password" class="text-danger" />
-            </div>
-            <div class="form-floating mb-3">
-                <InputText type="password" @bind-Value="Input.ConfirmPassword" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />
-                <label for="confirm-password">Confirm Password</label>
-                <ValidationMessage For="() => Input.ConfirmPassword" class="text-danger" />
-            </div>
-            <button type="submit" class="w-100 btn btn-lg btn-primary">Register</button>
-        </EditForm>
-    </div>
-    <div class="col-md-6 col-md-offset-2">
-        <section>
-            <h3>Use another service to register.</h3>
-            <hr />
-            <ExternalLoginPicker />
-        </section>
-    </div>
+        </div>
+    </section>
 </div>
 
 @code {
@@ -64,7 +57,24 @@
     private string? ReturnUrl { get; set; }
 
     private string? Message => identityErrors is null ? null : $"Error: {string.Join(", ", identityErrors.Select(error => error.Description))}";
-
+    bool isShow;
+    InputType PasswordInput = InputType.Password;
+    string PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+    void ShowPassword()
+    {
+        @if (isShow)
+        {
+            isShow = false;
+            PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+            PasswordInput = InputType.Password;
+        }
+        else
+        {
+            isShow = true;
+            PasswordInputIcon = Icons.Material.Filled.Visibility;
+            PasswordInput = InputType.Text;
+        }
+    }
     public async Task RegisterUser(EditContext editContext)
     {
         var user = CreateUser();

@@ -1,70 +1,100 @@
 ﻿@page "/Account/Login"
-
-@using BlogWebsite.Components.Account
 @using System.ComponentModel.DataAnnotations
+@using Client.Components.Layout
+@using Microsoft.AspNetCore.Antiforgery
 @using Microsoft.AspNetCore.Authentication
 @using Microsoft.AspNetCore.Identity
 @using BlogWebsite.Data
-
+@layout EmptyLayout
 @inject SignInManager<ApplicationUser> SignInManager
 @inject ILogger<Login> Logger
 @inject NavigationManager NavigationManager
 @inject IdentityRedirectManager RedirectManager
-
-<PageTitle>Log in</PageTitle>
-
-<h1>Log in</h1>
+<PageTitle>Đăng nhập</PageTitle>
 <div class="row">
-    <div class="col-md-4">
-        <section>
-            <StatusMessage Message="@errorMessage" />
-            <EditForm Model="Input" method="post" OnValidSubmit="LoginUser" FormName="login">
-                <DataAnnotationsValidator />
-                <h2>Use a local account to log in.</h2>
-                <hr />
-                <ValidationSummary class="text-danger" role="alert" />
-                <div class="form-floating mb-3">
-                    <InputText @bind-Value="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
-                    <label for="email" class="form-label">Email</label>
+    <section class="container forms">
+        <div class="form login">
+            <div class="form-content">
+                <header>K A I Z E N</header>
+        <label>@errorMessage</label>
+                <EditForm Model="Input" method="post" OnValidSubmit="LoginUser" FormName="login">
+                    <DataAnnotationsValidator />
+                    <MudTextField @bind-Value="Input.Email" Label="Email" Variant="Variant.Outlined" InputType="@InputType.Email" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Person" name="Input.Email" />
                     <ValidationMessage For="() => Input.Email" class="text-danger" />
-                </div>
-                <div class="form-floating mb-3">
-                    <InputText type="password" @bind-Value="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="password" />
-                    <label for="password" class="form-label">Password</label>
+                    <MudTextField @bind-Value="Input.Password" Label="Mật khẩu" Variant="Variant.Outlined" InputType="@PasswordInput" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon" OnAdornmentClick="ShowPassword" AdornmentAriaLabel="Hiện mật khẩu" name="Input.Password" />
                     <ValidationMessage For="() => Input.Password" class="text-danger" />
+                    <div class="row">
+                        <div class="col-4 mt-3 d-flex">
+                        <InputCheckbox @bind-Value="Input.RememberMe" class="darker-border-checkbox form-check-input"  />
+                            <label for="Input.RememberMe" class="ms-1">Lưu đăng nhập</label>
+                        </div>
+                        <div class="form-link col-7 d-flex justify-content-end ms-7">
+                            <a href="/ForgotPassword" class="forgot-pass">Quên mật khẩu?</a>
+                        </div>
+                    </div>
+                    <div class="field button-field">
+                        <button type="submit">Đăng nhập vào Kaizen</button>
+                    </div>
+                </EditForm>
+                <div class="form-link">
+                    <span>Chưa có tài khoản? <a href="@(NavigationManager.GetUriWithQueryParameters("Account/Register", new Dictionary<string, object?> { ["ReturnUrl"] = ReturnUrl }))" class="link signup-link">Đăng kí</a></span>
                 </div>
-                <div class="checkbox mb-3">
-                    <label class="form-label">
-                        <InputCheckbox @bind-Value="Input.RememberMe" class="darker-border-checkbox form-check-input" />
-                        Remember me
-                    </label>
-                </div>
-                <div>
-                    <button type="submit" class="w-100 btn btn-lg btn-primary">Log in</button>
-                </div>
-                <div>
-                    <p>
-                        <a href="/ForgotPassword">Forgot your password?</a>
-                    </p>
-                    <p>
-                        <a href="@(NavigationManager.GetUriWithQueryParameters("Account/Register", new Dictionary<string, object?> { ["ReturnUrl"] = ReturnUrl }))">Register as a new user</a>
-                    </p>
-                    <p>
-                        <a href="Account/ResendEmailConfirmation">Resend email confirmation</a>
-                    </p>
-                </div>
-            </EditForm>
-        </section>
-    </div>
-    <div class="col-md-6 col-md-offset-2">
-        <section>
-            <h3>Use another service to log in.</h3>
-            <hr />
-            <ExternalLoginPicker />
-        </section>
-    </div>
+            </div>
+            <div class="line"></div>
+            <div class="media-options">
+                <ExternalLoginPicker />
+            </div>
+        </div>
+    </section>
 </div>
+<script>
+    // Lấy input element
+    const emailInput = document.querySelector('input[name="Input.Email"]');
+    const passwordlInput = document.querySelector('input[name="Input.Password"]');
+    // Lấy thẻ div cha bao bọc bên ngoài
+    const inputEmailWrapper = emailInput.closest('div.mud-input');
+    // Thêm sự kiện lắng nghe thay đổi của input
+    inputEmailWrapper.addEventListener('input', () => {
+        // Kiểm tra nếu input không rỗng
+        if (emailInput.value.trim() !== '') {
+            // Thêm class vào thẻ div cha
+            inputEmailWrapper.classList.add('mud-shrink');
+        } else {
+            // Loại bỏ class khỏi thẻ div cha
+            inputEmailWrapper.classList.remove('mud-shrink');
+        }
+    });
+    // Lấy thẻ div cha bao bọc bên ngoài
+    const inputPasswordlWrapper = passwordlInput.closest('div.mud-input');
+    // Thêm sự kiện lắng nghe thay đổi của input
+    inputPasswordlWrapper.addEventListener('input', () => {
+        // Kiểm tra nếu input không rỗng
+        if (passwordlInput.value.trim() !== '') {
+            // Thêm class vào thẻ div cha
+            inputPasswordlWrapper.classList.add('mud-shrink');
+        } else {
+            // Loại bỏ class khỏi thẻ div cha
+            inputPasswordlWrapper.classList.remove('mud-shrink');
+        }
+    });
+    // Tìm thẻ button đầu tiên có class cần tìm
+    const button = document.querySelector('.mud-button-root.mud-icon-button.mud-ripple.mud-ripple-icon.mud-icon-button-edge-end.mud-input-adornment-icon-button');
+    if (button) {
+        button.addEventListener('click', () => {
+            const currentContent = button.innerHTML;
+            if (currentContent.includes('path d="M0 0h24v24H0z"')) {
+                // Hide
+                button.innerHTML = `<!--!--><svg class="mud-icon-root mud-svg-icon mud-icon-size-medium" focusable="false" viewBox="0 0 24 24" aria-hidden="true" role="img"><!--!--><path d="M0 0h24v24H0zm0 0h24v24H0zm0 0h24v24H0zm0 0h24v24H0z" fill="none"></path><path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z"></path></svg>`;
+                passwordlInput.type = 'password';
 
+            } else {
+                // show
+                button.innerHTML = `<!--!--><svg class="mud-icon-root mud-svg-icon mud-icon-size-medium" focusable="false" viewBox="0 0 24 24" aria-hidden="true" role="img"><!--!--><path d="M0 0h24v24H0z" fill="none"></path><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"></path></svg>`;
+                passwordlInput.type = 'text';
+            }
+        });
+    }
+</script>
 @code {
     private string? errorMessage;
 
@@ -76,13 +106,23 @@
 
     [SupplyParameterFromQuery]
     private string? ReturnUrl { get; set; }
+    bool isShow;
+    InputType PasswordInput = InputType.Password;
+    string PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
 
-    protected override async Task OnInitializedAsync()
+    void ShowPassword()
     {
-        if (HttpMethods.IsGet(HttpContext.Request.Method))
+        @if (isShow)
         {
-            // Clear the existing external cookie to ensure a clean login process
-            await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
+            isShow = false;
+            PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+            PasswordInput = InputType.Password;
+        }
+        else
+        {
+            isShow = true;
+            PasswordInputIcon = Icons.Material.Filled.Visibility;
+            PasswordInput = InputType.Text;
         }
     }
 
@@ -115,11 +155,11 @@
 
     private sealed class InputModel
     {
-        [Required]
+        [Required(ErrorMessage = "Email không được bỏ trống!")]
         [EmailAddress]
         public string Email { get; set; } = "";
 
-        [Required]
+        [Required(ErrorMessage = "Mật khẩu không được bỏ trống!")]
         [DataType(DataType.Password)]
         public string Password { get; set; } = "";
 

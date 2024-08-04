@@ -1,16 +1,13 @@
-﻿
-using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
+﻿using Blazored.SessionStorage;
 using BlogWebsite.Components.Account;
 using BlogWebsite.Data;
 using Client.Components;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using MudBlazor;
 using MudBlazor.Services;
-using System;
-using System.Text.Json.Serialization;
-using Blazored.SessionStorage;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -22,6 +19,16 @@ builder.Services.AddBlazoredSessionStorage();
 //    options.Cookie.IsEssential = true;
 //});
 builder.Services.AddDistributedMemoryCache();
+var services = builder.Services;
+var configuration = builder.Configuration;
+
+services.AddAuthentication().AddGoogle(googleOptions =>
+{
+    googleOptions.ClientId = configuration["Authentication:Google:ClientId"];
+    googleOptions.ClientSecret = configuration["Authentication:Google:ClientSecret"];
+    googleOptions.ClaimActions.MapJsonKey("image", "picture");
+});
+
 
 builder.Services.AddMudServices(config =>
 {
