@@ -1,8 +1,11 @@
-﻿using BlogWebsite.Data;
+﻿using API.StaticClass;
+using BlogWebsite.Data;
 using Data.Database;
 using Data.Database.Table;
+using Data.DTO;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace API.Controllers
 {
@@ -10,13 +13,13 @@ namespace API.Controllers
     [ApiController]
     public class PostController : ControllerBase
     {
-       // private ApplicationDbContext _context;
+        private ApplicationDbContext _context;
         private List<Post> _lstPost = new List<Post>();
-        public PostController()
+        public PostController(ApplicationDbContext context)
         {
-           // _context = context;
+            _context = context;
 
-            for (int i = 1; i <= 100; i++)
+            for (int i = 1; i <= 103; i++)
             {
                 _lstPost.Add(new Post
                 {
@@ -31,35 +34,24 @@ namespace API.Controllers
                     IsDeleted = false,
                     User = null, // Assuming you have the ApplicationUser set up
                     TagPosts = null,
-                    PostSaves =null,
+                    PostSaves = null,
                     PaidPosts = null
                 });
             }
         }
 
-        [HttpGet("get_all")]
-        public IActionResult GetAllPost(int page = 1, string inputSearch = null)
+        [HttpGet("get-list-post")]
+        public IActionResult GetObject(int page = 1, string inputSearch = null)
         {
-            int pagesize = 10;
-            var postResult = _lstPost;
+            var listPost = _context.Posts.ToList();
+
             if (!string.IsNullOrEmpty(inputSearch))
             {
-                postResult = postResult.Where(x => x.Title.Contains(inputSearch)).ToList();
+
+                listPost = listPost.Where(x => x.Title.Contains(inputSearch)).ToList();
             }
-            var totalPages = (int)Math.Ceiling((decimal)postResult.Count / pagesize);
-            return Ok(new Pagination<Post>()
-            {
-                TotalPage = totalPages,
-                ListPage = postResult.Skip((page - 1) * pagesize)
-                .Take(pagesize)
-                .ToList()
-            });
+
+            return Ok(_lstPost.GetObject(page));
         }
-    }
-    // Lớp này sẽ tạo ở Data cho View dùng nữa
-    public class Pagination<T>
-    {
-        public List<T> ListPage { get; set; }
-        public int TotalPage { get; set; }
     }
 }

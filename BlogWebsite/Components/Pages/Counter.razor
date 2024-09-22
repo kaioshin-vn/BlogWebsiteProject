@@ -1,3 +1,15 @@
 ﻿@page "/counter"
 
 <Client.Components.ComponentCustom.LoadingLocal></Client.Components.ComponentCustom.LoadingLocal>
+@code {
+    protected override void OnInitialized()
+    {
+        
+        Console.WriteLine("on");
+    }
+
+    protected async override Task OnParametersSetAsync()
+    {
+        Console.WriteLine("set");
+    }
+}
