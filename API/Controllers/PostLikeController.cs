@@ -38,7 +38,7 @@ namespace API.Controllers
             {
                 // đã like mà bị dập phát nữa thì dis_like
                 _context.PostLikes.Remove(checkLike);
-                post.Like -= 1;
+                post.Like -=  1;
             }
             else
             {

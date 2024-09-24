@@ -21,6 +21,7 @@ namespace Data.Database.Table
 
         [ForeignKey("PostId")]
         public Post Post { get; set; }
+
         [ForeignKey("UserId")]
         public ApplicationUser User { get; set; }
 

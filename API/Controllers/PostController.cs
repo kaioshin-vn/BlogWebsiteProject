@@ -1,5 +1,4 @@
-﻿using BlogWebsite.Components.Account;
-using BlogWebsite.Data;
+﻿using BlogWebsite.Data;
 using Data.Database;
 using Data.Database.Table;
 using Data.DTO.EntitiDTO;
@@ -107,7 +106,7 @@ namespace API.Controllers
         }
 
 
-        [HttpPut("id")]
+        [HttpPut("updateId")]
         public async Task<IActionResult> EditPost(Guid id, PostDTO post)
         {
             //lấy id người dùng đã đăng nhập
@@ -132,7 +131,7 @@ namespace API.Controllers
             return Ok(existingPost);
         }
 
-        [HttpPut("id")]        
+        [HttpPut("deleteId")]        
         public IActionResult DeletePost(Guid id)
         {
             //lấy id người dùng đã đăng nhập

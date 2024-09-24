@@ -22,7 +22,7 @@ namespace Data.Database.Table
 
         public string Content { get; set; }
 
-        public string Likes { get; set; }
+        public int Like { get; set; }
 
         public int View { get; set; }
         public bool IsDeleted { get; set; } = false;
