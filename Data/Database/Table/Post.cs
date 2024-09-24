@@ -32,5 +32,13 @@ namespace Data.Database.Table
         public ICollection<PostTag>? TagPosts { get; set; }
         public ICollection<PostSave>? PostSaves { get; set; }
         public ICollection<PaidPost>? PaidPosts { get; set; }
+
+
+        // Đường dẫn tới ảnh
+        public string? ImagePath { get; set; }
+
+        public ICollection<PostComment> PostComments { get; set; }
+        public ICollection<PostLike> PostLikes { get; set; }
+        public ICollection<PostView> PostViews { get; set; }
     }
 }

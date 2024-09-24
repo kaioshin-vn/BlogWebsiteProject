@@ -20,6 +20,10 @@ namespace BlogWebsite.Data
         public ICollection<PaidPost>? PaidPosts { get; set; }
         public ICollection<Response>? Responses { get; set; }
         public ICollection<ReplyResponse>? ReplyResponses { get; set; }
+
+        public ICollection<PostComment> PostComments { get; set; }
+        public ICollection<PostLike> PostLikes { get; set; }
+        public ICollection<PostView> PostViews { get; set; }
     }
 
 }

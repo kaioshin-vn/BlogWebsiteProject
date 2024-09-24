@@ -24,6 +24,10 @@ namespace BlogWebsite.Data
         public DbSet<Response> Responses { get; set; }
         public DbSet<ReplyResponse> ReplyResponses { get; set; }
 
+        public DbSet<PostComment> PostComments { get; set; }
+        public DbSet<PostLike> PostLikes { get; set; }
+        public DbSet<PostView> PostViews { get; set; }
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             base.OnConfiguring(optionsBuilder);
