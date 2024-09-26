@@ -24,6 +24,8 @@ namespace BlogWebsite.Data
         public ICollection<PostComment> PostComments { get; set; }
         public ICollection<PostLike> PostLikes { get; set; }
         public ICollection<PostView> PostViews { get; set; }
+        public ICollection<Notice> NoticesSent { get; set; }
+        public ICollection<Notice> NoticesReceived { get; set; }
     }
 
 }

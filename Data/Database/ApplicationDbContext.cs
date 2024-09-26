@@ -1,4 +1,4 @@
-using Data.Database.Table;
+﻿using Data.Database.Table;
 using Data.Tables;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -55,8 +55,62 @@ namespace BlogWebsite.Data
             {
                 entity.HasIndex(e => e.TagName).IsUnique();
             });
+            modelBuilder.Entity<Exam>()
+    .HasOne(n => n.User)
+    .WithMany(u => u.Exams)
+    .HasForeignKey(n => n.IdUser)
+    .OnDelete(DeleteBehavior.Restrict);
+            modelBuilder.Entity<ExamHistory>()
+                .HasOne(n => n.User)
+                .WithMany(u => u.ExamHistories)
+                .HasForeignKey(n => n.IdUser)
+                .OnDelete(DeleteBehavior.Restrict);
+            modelBuilder.Entity<Notice>()
+                   .HasOne(n => n.UserReceive)
+                   .WithMany(u => u.NoticesReceived)
+                   .HasForeignKey(n => n.ToUser)
+                   .OnDelete(DeleteBehavior.Restrict);
 
-
+            modelBuilder.Entity<Notice>()
+                .HasOne(n => n.UserSend)
+                .WithMany(u => u.NoticesSent)
+                .HasForeignKey(n => n.FromUser)
+                .OnDelete(DeleteBehavior.Restrict);
+            modelBuilder.Entity<PaidPost>()
+                .HasOne(n => n.User)
+                .WithMany(u => u.PaidPosts)
+                .HasForeignKey(n => n.IdUser)
+                .OnDelete(DeleteBehavior.Restrict);     
+            modelBuilder.Entity<PostComment>()
+                .HasOne(n => n.User)
+                .WithMany(u => u.PostComments)
+                .HasForeignKey(n => n.UserId)
+                .OnDelete(DeleteBehavior.Restrict); 
+            modelBuilder.Entity<PostLike>()
+                .HasOne(n => n.User)
+                .WithMany(u => u.PostLikes)
+                .HasForeignKey(n => n.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+            modelBuilder.Entity<PostView>()
+                .HasOne(n => n.User)
+                .WithMany(u => u.PostViews)
+                .HasForeignKey(n => n.UserId)
+                .OnDelete(DeleteBehavior.Restrict);  
+            modelBuilder.Entity<PostSave>()
+                .HasOne(n => n.Save)
+                .WithMany(u => u.PostSaves)
+                .HasForeignKey(n => n.IdSave)
+                .OnDelete(DeleteBehavior.Restrict);  
+            modelBuilder.Entity<ReplyResponse>()
+                .HasOne(n => n.User)
+                .WithMany(u => u.ReplyResponses)
+                .HasForeignKey(n => n.IdUser)
+                .OnDelete(DeleteBehavior.Restrict);   
+            modelBuilder.Entity<Response>()
+                .HasOne(n => n.User)
+                .WithMany(u => u.Responses)
+                .HasForeignKey(n => n.IdUser)
+                .OnDelete(DeleteBehavior.Restrict);
 
 
             foreach (var entityType in modelBuilder.Model.GetEntityTypes())
