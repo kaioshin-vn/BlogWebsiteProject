@@ -7,6 +7,7 @@
     a:hover {
         color: unset;
     }
+
     .scrollbar {
         overflow: hidden; /* Ẩn thanh cuộn khi không hover */
         border: 1px solid #ccc;
@@ -34,13 +35,14 @@
                     <Authorized>
                         <div class="d-flex justify-content-end">
                             <div class="nav-item ">
-                                <NavLink class="nav-link" href="Account/Logout">
-                                    <MudButton Variant="Variant.Outlined"
-                                               Color="Color.Info"
-                                               Style="text-transform:none">
-                                        Đăng xuất
-                                    </MudButton>
-                                </NavLink>
+                                <form action="Account/Logout" method="post">
+                                    <AntiforgeryToken />
+                                    <input type="hidden" name="ReturnUrl" value="Account/Login" />
+                                    <button type="submit" class="nav-link d-flex justify-content-start ">
+                                        <MudIcon Style="margin: 3px;" Icon="@Icons.Material.Filled.Logout" Color="Color.Tertiary" Size="Size.Small" />
+                                        Đăng xuất
+                                    </button>
+                                </form>
                             </div>
                         </div>
                     </Authorized>
@@ -52,7 +54,7 @@
                                     <center>
                                         <button class="codepro-custom-btn codepro-btn-11" target="blank" title="Code Pro">
                                             Đăng ký
-                                       </button>
+                                        </button>
                                     </center>
                                 </NavLink>
                             </div>
@@ -63,7 +65,7 @@
                                             <span>Go!</span>
                                             <span>Đăng nhập</span>
                                         </button>
-                                     </center>
+                                    </center>
 
                                 </NavLink>
                             </div>
@@ -79,7 +81,7 @@
                 </div>
             </div>
 
-            <article class="content w-100 px-4 scrollbar" >
+            <article class="content w-100 px-4 scrollbar">
                 @Body
             </article>
         </div>
@@ -94,5 +96,5 @@
 
 @code {
     string Search;
-    protected int NoticeCount ;
+    protected int NoticeCount;
 }

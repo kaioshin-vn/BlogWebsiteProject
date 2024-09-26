@@ -46,7 +46,6 @@ builder.Services.AddMudServices(config =>
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-builder.Services.AddHttpContextAccessor();
 builder.Services.AddHttpClient("MyHttpClient", client =>
 {
     client.BaseAddress = new Uri("https://localhost:7272/"); // Địa chỉ cơ bản của API

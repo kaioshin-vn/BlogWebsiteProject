@@ -4,10 +4,12 @@
 @using System.ComponentModel.DataAnnotations
 @using System.Text.Encodings.Web
 @using Client.Components.Layout
+@using Microsoft.AspNetCore.Authentication
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.AspNetCore.WebUtilities
 @using BlogWebsite.Data
 @layout EmptyLayout
+@inject IHttpClientFactory HttpClientFactory
 @inject UserManager<ApplicationUser> UserManager
 @inject IUserStore<ApplicationUser> UserStore
 @inject SignInManager<ApplicationUser> SignInManager
@@ -22,14 +24,18 @@
         <div class="form login">
             <div class="form-content">
                 <header>K A I Z E N</header>
-                <EditForm Model="Input" method="post" OnValidSubmit="RegisterUser" FormName="Register">
+                <EditForm Model="Input" method="post" OnInvalidSubmit="InValid" OnValidSubmit="RegisterUser" FormName="Register">
                     <DataAnnotationsValidator />
+                    <ValidationSummary style="text-align:left" class="alert alert-info my-2 " />
+                    @if (Message != null)
+                    {
+                        <div style="text-align:left" class="alert alert-info my-3">
+                            <p class="py-3 px-2" style="color:red;">@Message</p>
+                        </div>
+                    }
                     <MudTextField @bind-Value="Input.Email" Label="Email" Variant="Variant.Outlined" InputType="@InputType.Email" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Person" name="Input.Email" />
-                    <ValidationMessage For="() => Input.Email" class="text-danger" />
-                    <MudTextField @bind-Value="Input.Password" Label="Mật khẩu" Variant="Variant.Outlined" InputType="@PasswordInput" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon" OnAdornmentClick="ShowPassword" AdornmentAriaLabel="Hiện mật khẩu" name="Input.Password" />
-                    <ValidationMessage For="() => Input.Password" class="text-danger" />
-                    <MudTextField @bind-Value="Input.ConfirmPassword" Label="Nhập lại mật khẩu" Variant="Variant.Outlined" InputType="@PasswordInput" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon" OnAdornmentClick="ShowPassword" AdornmentAriaLabel="Hiện mật khẩu" name="Input.ConfirmPassword" />
-                    <ValidationMessage For="() => Input.ConfirmPassword" class="text-danger" />
+                    <MudTextField @bind-Value="Input.Password" Label="Mật khẩu" Variant="Variant.Outlined" InputType="@PasswordInput" OnAdornmentClick="Fix" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon" AdornmentAriaLabel="Hiện mật khẩu" name="Input.Password" />
+                    <MudTextField @bind-Value="Input.ConfirmPassword" Label="Nhập lại mật khẩu" Variant="Variant.Outlined" InputType="@PasswordInput" OnAdornmentClick="Fix" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon" AdornmentAriaLabel="Hiện mật khẩu" name="Input.ConfirmPassword" />
                     <div class="field button-field">
                         <button type="submit">Đăng kí vào Kaizen</button>
                     </div>
@@ -42,13 +48,100 @@
                         <a href="/ForgotPassword" class="forgot-pass">Quên mật khẩu?</a>
                     </div>
                 </div>
+                <div class="media-options mt-5">
+                    <ExternalLoginPicker />
+                </div>
             </div>
         </div>
     </section>
 </div>
 
+<script>
+    // Lấy input element
+    const emailInput = document.querySelector('input[name="Input.Email"]');
+    const passwordlInput = document.querySelector('input[name="Input.Password"]');
+    const confirmPassword = document.querySelector('input[name="Input.ConfirmPassword"]');
+    // Lấy thẻ div cha bao bọc bên ngoài
+    const inputEmailWrapper = emailInput.closest('div.mud-input');
+    // Thêm sự kiện lắng nghe thay đổi của input
+    inputEmailWrapper.addEventListener('input', () => {
+        // Kiểm tra nếu input không rỗng
+        if (emailInput.value.trim() !== '') {
+            // Thêm class vào thẻ div cha
+            inputEmailWrapper.classList.add('mud-shrink');
+        } else {
+            // Loại bỏ class khỏi thẻ div cha
+            inputEmailWrapper.classList.remove('mud-shrink');
+        }
+    });
+    // Lấy thẻ div cha bao bọc bên ngoài
+    const inputPasswordlWrapper = passwordlInput.closest('div.mud-input');
+    // Lấy thẻ div cha bao bọc bên ngoài
+    const inputConfirmPasswordlWrapper = confirmPassword.closest('div.mud-input');
+    // Thêm sự kiện lắng nghe thay đổi của input
+    inputPasswordlWrapper.addEventListener('input', () => {
+        // Kiểm tra nếu input không rỗng
+        if (passwordlInput.value.trim() !== '') {
+            // Thêm class vào thẻ div cha
+            inputPasswordlWrapper.classList.add('mud-shrink');
+        } else {
+            // Loại bỏ class khỏi thẻ div cha
+            inputPasswordlWrapper.classList.remove('mud-shrink');
+        }
+    });
+
+    inputConfirmPasswordlWrapper.addEventListener('input', () => {
+        // Kiểm tra nếu input không rỗng
+        if (passwordlInput.value.trim() !== '') {
+            // Thêm class vào thẻ div cha
+            inputConfirmPasswordlWrapper.classList.add('mud-shrink');
+        } else {
+            // Loại bỏ class khỏi thẻ div cha
+            inputConfirmPasswordlWrapper.classList.remove('mud-shrink');
+        }
+    });
+
+    // Tìm thẻ button đầu tiên có class cần tìm
+    const buttons = document.querySelectorAll('.mud-button-root.mud-icon-button.mud-ripple.mud-ripple-icon.mud-icon-button-edge-end.mud-input-adornment-icon-button');
+    if (buttons) {
+        if (buttons[0]) {
+            buttons[0].classList.add("passWord");
+        }
+        if (buttons[1]) {
+            buttons[1].classList.add("confirmPassWord")
+        }
+        buttons.forEach(function (button) {
+            button.addEventListener('click', () => {
+                const currentContent = button.innerHTML;
+                if (currentContent.includes('path d="M0 0h24v24H0z"')) {
+                    // Hide
+                    if (button.classList.contains('passWord')) {
+                        button.innerHTML = `<!--!--><svg class="mud-icon-root mud-svg-icon mud-icon-size-medium" focusable="false" viewBox="0 0 24 24" aria-hidden="true" role="img"><!--!--><path d="M0 0h24v24H0zm0 0h24v24H0zm0 0h24v24H0zm0 0h24v24H0z" fill="none"></path><path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z"></path></svg>`;
+                        passwordlInput.type = 'password';
+                    }
+                    if (button.classList.contains('confirmPassWord')) {
+                        button.innerHTML = `<!--!--><svg class="mud-icon-root mud-svg-icon mud-icon-size-medium" focusable="false" viewBox="0 0 24 24" aria-hidden="true" role="img"><!--!--><path d="M0 0h24v24H0zm0 0h24v24H0zm0 0h24v24H0zm0 0h24v24H0z" fill="none"></path><path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z"></path></svg>`;
+                        confirmPassword.type = 'password';
+                    }
+
+                } else {
+                    // show
+                    if (button.classList.contains('passWord')) {
+                        button.innerHTML = `<!--!--><svg class="mud-icon-root mud-svg-icon mud-icon-size-medium" focusable="false" viewBox="0 0 24 24" aria-hidden="true" role="img"><!--!--><path d="M0 0h24v24H0z" fill="none"></path><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"></path></svg>`;
+                        passwordlInput.type = 'text';
+                    }
+                    if (button.classList.contains('confirmPassWord')) {
+                        button.innerHTML = `<!--!--><svg class="mud-icon-root mud-svg-icon mud-icon-size-medium" focusable="false" viewBox="0 0 24 24" aria-hidden="true" role="img"><!--!--><path d="M0 0h24v24H0z" fill="none"></path><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"></path></svg>`;
+                        confirmPassword.type = 'text';
+                    }
+                }
+            });
+        });
+    }
+</script>
 @code {
-    private IEnumerable<IdentityError>? identityErrors;
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
 
     [SupplyParameterFromForm]
     private InputModel Input { get; set; } = new();
@@ -56,28 +149,34 @@
     [SupplyParameterFromQuery]
     private string? ReturnUrl { get; set; }
 
-    private string? Message => identityErrors is null ? null : $"Error: {string.Join(", ", identityErrors.Select(error => error.Description))}";
+    private string? Message;
     bool isShow;
     InputType PasswordInput = InputType.Password;
     string PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
-    void ShowPassword()
+
+    // protected override async Task OnInitializedAsync()
+    // {
+    //     if (HttpMethods.IsGet(HttpContext.Request.Method))
+    //     {
+    //         // Clear the existing external cookie to ensure a clean login process
+    //         await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
+    //     }
+    // }
+
+    void InValid()
     {
-        @if (isShow)
-        {
-            isShow = false;
-            PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
-            PasswordInput = InputType.Password;
-        }
-        else
-        {
-            isShow = true;
-            PasswordInputIcon = Icons.Material.Filled.Visibility;
-            PasswordInput = InputType.Text;
-        }
+        Message = null;
     }
+
+    void Fix()
+    {
+
+    }
+
     public async Task RegisterUser(EditContext editContext)
     {
         var user = CreateUser();
+        user.Id = Guid.NewGuid();
 
         await UserStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
         var emailStore = GetEmailStore();
@@ -86,30 +185,27 @@
 
         if (!result.Succeeded)
         {
-            identityErrors = result.Errors;
+            if (result.Errors.Any(a => a.Code == "DuplicateUserName"))
+            {
+                Message = "Email này đã được đăng kí, hãy sử dụng email khác ";
+            }
             return;
         }
 
         Logger.LogInformation("User created a new account with password.");
 
-        var userId = await UserManager.GetUserIdAsync(user);
-        var code = await UserManager.GenerateEmailConfirmationTokenAsync(user);
-        code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
-        var callbackUrl = NavigationManager.GetUriWithQueryParameters(
-            NavigationManager.ToAbsoluteUri("Account/ConfirmEmail").AbsoluteUri,
-            new Dictionary<string, object?> { ["userId"] = userId, ["code"] = code, ["returnUrl"] = ReturnUrl });
+        // var _http = HttpClientFactory.CreateClient("MyHttpClient");
+        // var data = await _http.PostAsJsonAsync($"/UpdateUser/{user.Id}", new List<Guid>()
+        // {
+        //     Guid.Parse("d82e2a51-333b-47b2-6dd4-08dc97386c36")
+        // });
+        // if (data.IsSuccessStatusCode)
+        // {
 
-        await EmailSender.SendConfirmationLinkAsync(user, Input.Email, HtmlEncoder.Default.Encode(callbackUrl));
-
-        if (UserManager.Options.SignIn.RequireConfirmedAccount)
-        {
-            RedirectManager.RedirectTo(
-                "Account/RegisterConfirmation",
-                new() { ["email"] = Input.Email, ["returnUrl"] = ReturnUrl });
-        }
-
+        // }
         await SignInManager.SignInAsync(user, isPersistent: false);
-        RedirectManager.RedirectTo(ReturnUrl);
+        NavigationManager.NavigateTo("");
+
     }
 
     private ApplicationUser CreateUser()
@@ -136,20 +232,20 @@
 
     private sealed class InputModel
     {
-        [Required]
+        [Required(ErrorMessage = "Không được bỏ trống email !")]
         [EmailAddress]
         [Display(Name = "Email")]
         public string Email { get; set; } = "";
 
-        [Required]
-        [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
-        [DataType(DataType.Password)]
+        [Required(ErrorMessage = "Không được bỏ trống mật khẩu!")]
+        [RegularExpression("^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$", ErrorMessage = "Mật khẩu phải có ít nhất ít nhất có 8 kí tự, gồm ít nhất 1 kí tự in hoa, 1 kí tự thường,1 chữ số và 1 kí tự đặc biệt")]
         [Display(Name = "Password")]
         public string Password { get; set; } = "";
 
+        [Required(ErrorMessage = "Không được bỏ trống xác nhận mật khẩu!")]
         [DataType(DataType.Password)]
         [Display(Name = "Confirm password")]
-        [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
+        [Compare("Password", ErrorMessage = "Mật khẩu không khớp")]
         public string ConfirmPassword { get; set; } = "";
     }
 }

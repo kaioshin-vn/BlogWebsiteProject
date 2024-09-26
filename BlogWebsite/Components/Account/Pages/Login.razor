@@ -16,7 +16,7 @@
         <div class="form login">
             <div class="form-content">
                 <header>K A I Z E N</header>
-        <label>@errorMessage</label>
+                <label>@errorMessage</label>
                 <EditForm Model="Input" method="post" OnValidSubmit="LoginUser" FormName="login">
                     <DataAnnotationsValidator />
                     <MudTextField @bind-Value="Input.Email" Label="Email" Variant="Variant.Outlined" InputType="@InputType.Email" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Person" name="Input.Email" />
@@ -25,7 +25,7 @@
                     <ValidationMessage For="() => Input.Password" class="text-danger" />
                     <div class="row">
                         <div class="col-4 mt-3 d-flex">
-                        <InputCheckbox @bind-Value="Input.RememberMe" class="darker-border-checkbox form-check-input"  />
+                            <InputCheckbox @bind-Value="Input.RememberMe" class="darker-border-checkbox form-check-input" />
                             <label for="Input.RememberMe" class="ms-1">Lưu đăng nhập</label>
                         </div>
                         <div class="form-link col-7 d-flex justify-content-end ms-7">
