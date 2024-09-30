@@ -81,7 +81,7 @@
         {
             RedirectManager.RedirectToWithStatus("Account/Login", "Error loading external login information.", HttpContext);
         }
-
+      
         externalLoginInfo = info;
 
         if (HttpMethods.IsGet(HttpContext.Request.Method))
@@ -134,7 +134,10 @@
 
         await UserStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
         await emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
-
+        if (externalLoginInfo.Principal.HasClaim(c => c.Type == "image"))
+        {
+            user.Img = externalLoginInfo.Principal.FindFirstValue("image") ?? "Default";
+        }
         var result = await UserManager.CreateAsync(user);
         if (result.Succeeded)
         {
