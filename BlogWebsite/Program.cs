@@ -58,6 +58,7 @@ builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<IdentityUserAccessor>();
 builder.Services.AddScoped<IdentityRedirectManager>();
 builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
+builder.Services.AddScoped<UserManager<ApplicationUser>>();
 
 
 builder.Services.AddAuthentication(options =>
@@ -69,6 +70,8 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddAuthorizationCore();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+services.AddDbContextFactory<ApplicationDbContext>(options =>
+       options.UseSqlServer(connectionString));
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
     options.EnableSensitiveDataLogging(false);

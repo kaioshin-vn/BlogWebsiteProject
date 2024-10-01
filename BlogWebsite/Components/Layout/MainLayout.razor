@@ -34,12 +34,10 @@
                     <Authorized>
                         <div class="d-flex justify-content-end">
                             <div class="nav-item ">
-                                <NavLink class="nav-link" href="Account/Logout">
-                                    <MudButton Variant="Variant.Outlined"
-                                               Color="Color.Info"
-                                               Style="text-transform:none">
-                                        Đăng xuất
-                                    </MudButton>
+                                <NavLink class="nav-link" href="Account/Settings">
+                                    <MudAvatar>
+                                        <MudImage Src="@Avatar"></MudImage>
+                                    </MudAvatar>
                                 </NavLink>
                             </div>
                         </div>
@@ -95,4 +93,23 @@
 @code {
     string Search;
     protected int NoticeCount ;
+    public string Avatar;
+    private ClaimsPrincipal user;
+    protected override async Task OnInitializedAsync()
+    {
+        // Lấy trạng thái xác thực
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        user = authState.User;
+        // Lấy ID người dùng từ Claims
+        var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (userId != null)
+        {
+            var currentUser = await UserManager.FindByIdAsync(userId);
+            if (currentUser != null)
+            {
+                Avatar = currentUser.Img;
+            }
+        }
+    }
 }

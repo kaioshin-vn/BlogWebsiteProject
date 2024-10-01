@@ -1,0 +1,111 @@
+﻿@page "/Account/Settings"
+@using BlogWebsite.Data
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Components.Forms
+@using System.Security.Claims
+@using Microsoft.EntityFrameworkCore
+@inject UserManager<ApplicationUser> UserManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IDbContextFactory<ApplicationDbContext> ContextFactory
+<h2>Thông tin cá nhân</h2>
+<p>Quản lý thông tin cá nhân của bạn.</p>
+@if (showError)
+{
+    <MudAlert Severity="Severity.Error" Variant="Variant.Filled"  ShowCloseIcon="true" CloseIconClicked="(() => CloseMe())">@MessageError</MudAlert>
+}
+@if (showSuccess)
+{
+    <MudAlert Severity="Severity.Success" Variant="Variant.Filled" ShowCloseIcon="true" CloseIconClicked="(() => CloseMe())">@MessageSuccess</MudAlert>
+}
+<EditForm Model="@Input" OnValidSubmit="@HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+    <div class="form-group">
+        <label for="name">Tên đăng nhập: @Username</label>
+
+    </div>
+    <div class="form-group">
+        <label for="email">Email:</label>
+        <InputText id="email" type="email" class="form-control" @bind-Value="Input.Email" />
+        <ValidationMessage For="@(() => Input.Email)" />
+    </div>
+    <div class="form-group">
+        <label for="phone">Số điện thoại:</label>
+        <InputText id="phone" class="form-control" @bind-Value="Input.PhoneNumber" />
+        <ValidationMessage For="@(() => Input.PhoneNumber)" />
+    </div>
+    <div class="form-group">
+        <label for="phone">Mô tả:</label>
+        <InputTextArea id="phone" class="form-control" @bind-Value="Input.Descript" />
+        <ValidationMessage For="@(() => Input.Descript)" />
+    </div>
+    <div class="mt-3">
+        <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+        <a href="/Account/ChangePassword" class="btn btn-primary">Đổi mật khẩu</a>
+    </div>
+</EditForm>
+
+@code {
+    [SupplyParameterFromForm]
+    private UserSettingViewModel Input { get; set; } = new();
+    public string Username { get; set; }
+    public string MessageSuccess { get; set; }
+    public string MessageError { get; set; }
+    private bool showSuccess = true;
+    private bool showError = true;
+
+    private void CloseMe()
+    {
+        showError = false;
+        showSuccess = false;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        showError = false;
+        showSuccess = false;
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        if (user.Identity.IsAuthenticated)
+        {
+            var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            using (var context = ContextFactory.CreateDbContext())
+            {
+                var identityUser = await UserManager.FindByIdAsync(userId);
+                if (identityUser != null)
+                {
+                    Input.Id = identityUser.Id;
+                    Input.Email = identityUser.Email;
+                    Username = identityUser.UserName;
+                    Input.PhoneNumber = identityUser.PhoneNumber;
+                    Input.Descript = identityUser.Descript;
+                }
+            }
+        }
+    }
+    private async Task HandleValidSubmit()
+    {
+        // Xử lý lưu thông tin người dùng ở đây
+        var user = await UserManager.FindByIdAsync(Input.Id.ToString());
+        if (user != null)
+        {
+            user.Email = Input.Email;
+            user.PhoneNumber = Input.PhoneNumber;
+            user.Descript = Input.Descript;
+            // Cập nhật người dùng
+            var result = await UserManager.UpdateAsync(user);
+            if (result.Succeeded)
+            {
+                MessageSuccess = "Cập nhật thành công";
+                showSuccess = true;
+                StateHasChanged();
+            }
+            else
+            {
+                var errors = string.Join(",", result.Errors);
+                MessageError = errors;
+                showError = true;
+            }
+        }
+    }
+}
