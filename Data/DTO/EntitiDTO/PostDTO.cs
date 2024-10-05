@@ -12,16 +12,19 @@ namespace Data.DTO.EntitiDTO
         public Guid Id { get; set; }
 
         public Guid IdUser { get; set; }
-        public string Title { get; set; }
-        public string NomalizedTitle { get; set; }
-        public DateTime CreateDate { get; set; }
+        public string? Title { get; set; }
+        public string? Description { get; set; }
+        public DateTime? CreateDate { get; set; }
+        public DateTime? EditDate { get; set; } // lưu lại lịch sử sửa
+        public string Content { get; set; }
+
+        // Đường dẫn tới ảnh
+        public string? ImgFile { get; set; }
         public int Like { get; set; }
         public int View { get; set; }
-        public string Content { get; set; }
         public int TotalComment { get; set; }
         public bool IsDeleted { get; set; } = false;
 
-        // Đường dẫn tới ảnh
-        public string? ImagePath { get; set; }
+        
     }
 }

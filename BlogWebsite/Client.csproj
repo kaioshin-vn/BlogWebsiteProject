@@ -19,6 +19,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="Components\Pages\Post\CreateQuestion.razor" />
+    <None Include="Components\Pages\Post\Question.razor" />
+    <None Include="Components\Pages\Post\UpdateQuestion.razor" />
     <None Include="wwwroot\ForgotPassword.css" />
   </ItemGroup>
 
