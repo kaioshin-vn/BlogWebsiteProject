@@ -11,24 +11,29 @@
 @inject NavigationManager NavigationManager
 @inject IdentityRedirectManager RedirectManager
 <PageTitle>Đăng nhập</PageTitle>
-<div class="row">
-    <section class="container forms">
+<div class="">
+    <section class="containers forms">
         <div class="form login">
-            <div class="form-content">
+            <div class="form-content" style="">
                 <header>K A I Z E N</header>
-                <label>@errorMessage</label>
+                @if (errorMessage != null)
+                {
+                    <div style="text-align:left" class="alert alert-danger my-3">
+                        <p class="py-1 px-2" style="color:red;">@errorMessage</p>
+                    </div>
+                }
                 <EditForm Model="Input" method="post" OnValidSubmit="LoginUser" FormName="login">
                     <DataAnnotationsValidator />
-                    <MudTextField @bind-Value="Input.Email" Label="Email" Variant="Variant.Outlined" InputType="@InputType.Email" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Person" name="Input.Email" />
-                    <ValidationMessage For="() => Input.Email" class="text-danger" />
+                    <MudTextField @bind-Value="Input.PhoneNumber" Label="Số điện thoại" Variant="Variant.Outlined" InputType="@InputType.Telephone" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Smartphone" name="Input.PhoneNumber" />
+                    <ValidationMessage For="() => Input.PhoneNumber" style="text-align:left" class="alert alert-info my-2 " />
                     <MudTextField @bind-Value="Input.Password" Label="Mật khẩu" Variant="Variant.Outlined" InputType="@PasswordInput" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon" OnAdornmentClick="ShowPassword" AdornmentAriaLabel="Hiện mật khẩu" name="Input.Password" />
-                    <ValidationMessage For="() => Input.Password" class="text-danger" />
-                    <div class="row">
-                        <div class="col-4 mt-3 d-flex">
-                            <InputCheckbox @bind-Value="Input.RememberMe" class="darker-border-checkbox form-check-input" />
+                    <ValidationMessage For="() => Input.Password" style="text-align:left" class="alert alert-info my-2 " />
+                    <div class=" d-flex align-items-end justify-content-between">
+                        <div class="mt-3 d-flex">
                             <label for="Input.RememberMe" class="ms-1">Lưu đăng nhập</label>
+                            <InputCheckbox @bind-Value="Input.RememberMe" style="color:forestgreen;" class="ms-2 p-2 hover"></InputCheckbox>
                         </div>
-                        <div class="form-link col-7 d-flex justify-content-end ms-7">
+                        <div class="form-link d-flex justify-content-end ms-3">
                             <a href="/ForgotPassword" class="forgot-pass">Quên mật khẩu?</a>
                         </div>
                     </div>
@@ -41,15 +46,17 @@
                 </div>
             </div>
             <div class="line"></div>
-            <div class="media-options">
+            <div class="media-options mt-3 d-flex justify-content-center">
                 <ExternalLoginPicker />
             </div>
         </div>
     </section>
 </div>
 <script>
+    
+     
     // Lấy input element
-    const emailInput = document.querySelector('input[name="Input.Email"]');
+    const emailInput = document.querySelector('input[name="Input.PhoneNumber"]');
     const passwordlInput = document.querySelector('input[name="Input.Password"]');
     // Lấy thẻ div cha bao bọc bên ngoài
     const inputEmailWrapper = emailInput.closest('div.mud-input');
@@ -94,6 +101,7 @@
             }
         });
     }
+
 </script>
 @code {
     private string? errorMessage;
@@ -130,7 +138,7 @@
     {
         // This doesn't count login failures towards account lockout
         // To enable password failures to trigger account lockout, set lockoutOnFailure: true
-        var result = await SignInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
+        var result = await SignInManager.PasswordSignInAsync(Input.PhoneNumber, Input.Password, Input.RememberMe, lockoutOnFailure: false);
         if (result.Succeeded)
         {
             Logger.LogInformation("User logged in.");
@@ -149,15 +157,14 @@
         }
         else
         {
-            errorMessage = "Error: Invalid login attempt.";
+            errorMessage = "Số điện thoại hoặc mật khẩu không chính xác";
         }
     }
 
     private sealed class InputModel
     {
-        [Required(ErrorMessage = "Email không được bỏ trống!")]
-        [EmailAddress]
-        public string Email { get; set; } = "";
+        [Required(ErrorMessage = "Không được bỏ trống")]
+        public string PhoneNumber { get; set; } = "";
 
         [Required(ErrorMessage = "Mật khẩu không được bỏ trống!")]
         [DataType(DataType.Password)]

@@ -4,6 +4,7 @@ html, body {
 
 a, .btn-link {
     color: #006bb7;
+    text-decoration:none;
 }
 
 .btn-primary {
@@ -48,4 +49,8 @@ h1:focus {
 
 .darker-border-checkbox.form-check-input {
     border-color: #929292;
+}
+
+.hover:hover {
+    cursor:pointer;
 }

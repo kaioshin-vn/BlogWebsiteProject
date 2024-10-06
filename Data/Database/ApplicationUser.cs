@@ -10,7 +10,7 @@ namespace BlogWebsite.Data
     {
         public string? Descript { get; set; }
         public string? Img { get; set; }
-
+        public string? FullName { get; set; }
         public string? AnotherInfo { get; set; }    
         public ICollection<Exam>? Exams { get; set; }
 

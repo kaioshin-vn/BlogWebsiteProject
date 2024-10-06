@@ -18,37 +18,49 @@
 @inject NavigationManager NavigationManager
 @inject IdentityRedirectManager RedirectManager
 
-<PageTitle>Đăng kí</PageTitle>
-<div class="row">
-    <section class="container forms">
+<PageTitle>Đăng ký</PageTitle>
+<div class="">
+    <section class="containers forms" style="">
         <div class="form login">
             <div class="form-content">
                 <header>K A I Z E N</header>
                 <EditForm Model="Input" method="post" OnInvalidSubmit="InValid" OnValidSubmit="RegisterUser" FormName="Register">
                     <DataAnnotationsValidator />
-                    <ValidationSummary style="text-align:left" class="alert alert-info my-2 " />
                     @if (Message != null)
                     {
                         <div style="text-align:left" class="alert alert-info my-3">
-                            <p class="py-3 px-2" style="color:red;">@Message</p>
+                            <p class="py-1 px-2" style="color:red;">@Message</p>
                         </div>
                     }
-                    <MudTextField @bind-Value="Input.Email" Label="Email" Variant="Variant.Outlined" InputType="@InputType.Email" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Person" name="Input.Email" />
-                    <MudTextField @bind-Value="Input.Password" Label="Mật khẩu" Variant="Variant.Outlined" InputType="@PasswordInput" OnAdornmentClick="Fix" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon" AdornmentAriaLabel="Hiện mật khẩu" name="Input.Password" />
-                    <MudTextField @bind-Value="Input.ConfirmPassword" Label="Nhập lại mật khẩu" Variant="Variant.Outlined" InputType="@PasswordInput" OnAdornmentClick="Fix" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon" AdornmentAriaLabel="Hiện mật khẩu" name="Input.ConfirmPassword" />
-                    <div class="field button-field">
-                        <button type="submit">Đăng kí vào Kaizen</button>
+
+                    <div class="d-flex justify-content-between">
+                        <div style="width : 300px;">
+                            <MudTextField Class="mt-3" @bind-Value="Input.FullName" Label="Tên đăng nhập" Variant="Variant.Outlined" InputType="@InputType.Text" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Person" AdornmentAriaLabel="Tên đăng nhập" name="Input.FullName" />
+                            <ValidationMessage For="() => Input.FullName" style="text-align:left" class="alert alert-info my-2 " />
+                            <MudTextField Class="mt-3" @bind-Value="Input.NumberPhone" Label="Số điện thoại" Variant="Variant.Outlined" InputType="@InputType.Telephone" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Smartphone" name="Input.NumberPhone" />
+                            <ValidationMessage For="() => Input.NumberPhone" style="text-align:left" class="alert alert-info my-2 " />
+                        </div>
+                        <div style="width : 300px;">
+                            <MudTextField Class="mt-3" @bind-Value="Input.Password" Label="Mật khẩu" Variant="Variant.Outlined" InputType="@PasswordInput" OnAdornmentClick="Fix" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon" AdornmentAriaLabel="Hiện mật khẩu" name="Input.Password" />
+                            <ValidationMessage For="() => Input.Password" style="text-align:left" class="alert alert-info my-2 " />
+                            <MudTextField Class="mt-3" @bind-Value="Input.ConfirmPassword" Label="Nhập lại mật khẩu" Variant="Variant.Outlined" InputType="@PasswordInput" OnAdornmentClick="Fix" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon" AdornmentAriaLabel="Hiện mật khẩu" name="Input.ConfirmPassword" />
+                            <ValidationMessage For="() => Input.ConfirmPassword" style="text-align:left" class="alert alert-info my-2 " />
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-center mt-5 mb-2  " style="">
+                        <button class="codepro-btn-13 py-2" style="border-radius:4px; width:182px;font:900;" type="submit">ĐĂNG KÝ</button>
                     </div>
                 </EditForm>
                 <div class="row">
-                    <div class="form-link col-6">
-                        <span>Đã có tài khoản? <a href="Account/Login" class="link signup-link">Đăng nhập</a></span>
+                    <div class="form-link col-6 d-flex  justify-content-start">
+                        <span>Đã có tài khoản?<a href="Account/Login" class="link signup-link">Đăng nhập</a></span>
                     </div>
                     <div class="form-link col-6 d-flex justify-content-end">
                         <a href="/ForgotPassword" class="forgot-pass">Quên mật khẩu?</a>
                     </div>
                 </div>
-                <div class="media-options mt-5">
+                <div class="media-options mt-3 d-flex justify-content-center">
                     <ExternalLoginPicker />
                 </div>
             </div>
@@ -58,7 +70,8 @@
 
 <script>
     // Lấy input element
-    const emailInput = document.querySelector('input[name="Input.Email"]');
+    const emailInput = document.querySelector('input[name="Input.NumberPhone"]');
+    const nameInput = document.querySelector('input[name="Input.FullName"]');
     const passwordlInput = document.querySelector('input[name="Input.Password"]');
     const confirmPassword = document.querySelector('input[name="Input.ConfirmPassword"]');
     // Lấy thẻ div cha bao bọc bên ngoài
@@ -72,6 +85,19 @@
         } else {
             // Loại bỏ class khỏi thẻ div cha
             inputEmailWrapper.classList.remove('mud-shrink');
+        }
+    });
+
+    const inputNameWrapper = nameInput.closest('div.mud-input');
+    // Thêm sự kiện lắng nghe thay đổi của input
+    inputNameWrapper.addEventListener('input', () => {
+        // Kiểm tra nếu input không rỗng
+        if (nameInput.value.trim() !== '') {
+            // Thêm class vào thẻ div cha
+            inputNameWrapper.classList.add('mud-shrink');
+        } else {
+            // Loại bỏ class khỏi thẻ div cha
+            inputNameWrapper.classList.remove('mud-shrink');
         }
     });
     // Lấy thẻ div cha bao bọc bên ngoài
@@ -138,6 +164,7 @@
             });
         });
     }
+    
 </script>
 @code {
     [CascadingParameter]
@@ -177,17 +204,18 @@
     {
         var user = CreateUser();
         user.Id = Guid.NewGuid();
+        user.FullName = Input.FullName;
 
-        await UserStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
-        var emailStore = GetEmailStore();
-        await emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
+        await UserStore.SetUserNameAsync(user, Input.NumberPhone, CancellationToken.None);
+        // var emailStore = GetEmailStore();
+        // await emailStore.SetEmailAsync(user, Input.NumberPhone, CancellationToken.None);
         var result = await UserManager.CreateAsync(user, Input.Password);
 
         if (!result.Succeeded)
         {
             if (result.Errors.Any(a => a.Code == "DuplicateUserName"))
             {
-                Message = "Email này đã được đăng kí, hãy sử dụng email khác ";
+                Message = "Số điện thoại này đã được đăng kí, hãy sử dụng số điện thoại khác ";
             }
             return;
         }
@@ -232,10 +260,14 @@
 
     private sealed class InputModel
     {
-        [Required(ErrorMessage = "Không được bỏ trống email !")]
-        [EmailAddress]
-        [Display(Name = "Email")]
-        public string Email { get; set; } = "";
+        [Required(ErrorMessage = "Không được bỏ trống tên")]
+        [Display(Name = "FullName")]
+        public string FullName { get; set; } = "";
+
+        [RegularExpression(@"^(0|\+84)(3|5|7|8|9)\d{8}$", ErrorMessage = "Hãy nhập số điện thoại hợp lệ")]
+        [Required(ErrorMessage = "Không được bỏ trống số điện thoại !")]
+        [Display(Name = "NumberPhone")]
+        public string NumberPhone { get; set; } = "";
 
         [Required(ErrorMessage = "Không được bỏ trống mật khẩu!")]
         [RegularExpression("^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$", ErrorMessage = "Mật khẩu phải có ít nhất ít nhất có 8 kí tự, gồm ít nhất 1 kí tự in hoa, 1 kí tự thường,1 chữ số và 1 kí tự đặc biệt")]

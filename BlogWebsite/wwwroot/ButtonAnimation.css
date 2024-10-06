@@ -393,8 +393,8 @@
     }
 
 .codepro-btn-8 {
-    background-color: #f0ecfc;
-    background-image: linear-gradient(315deg,#f0ecfc 0%,#c797eb 74%);
+    background-color: lightgreen;
+    background-image: linear-gradient(315deg, #ecfcf5 0%, #97ebb9 74%);
     line-height: 42px;
     padding: 0;
     border: none
@@ -412,7 +412,7 @@
         content: "";
         right: 0;
         bottom: 0;
-        background: #c797eb;
+        background: #ecfcf5;
         transition: all 0.3s ease
     }
 
@@ -657,7 +657,7 @@
 
 .codepro-btn-13 {
     background-color: #89d8d3;
-    background-image: linear-gradient(315deg,#89d8d3 0%,#03c8a8 74%);
+    background-image: linear-gradient(315deg, #89d8d3 0%, #03bbc8 74%);
     border: none;
     z-index: 1
 }
