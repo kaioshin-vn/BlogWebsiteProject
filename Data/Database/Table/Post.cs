@@ -15,15 +15,14 @@ namespace Data.Database.Table
         public Guid Id { get; set; }
 
         public Guid IdUser { get; set; }
-        public string Title { get; set; }
-        public string NomalizedTitle { get; set; }
-
-        public DateTime CreateDate { get; set; }
-
-        public string Content { get; set; }
-
-        public int Like { get; set; }
-
+        public string? Title { get; set; }
+        public string? Description { get; set; }
+        public DateTime? CreateDate { get; set; }
+        public DateTime? EditDate { get; set; } // lưu lại lịch sử sửa
+        public string? Content { get; set; }
+        // Đường dẫn tới ảnh
+        public string? ImgFile { get; set; }
+        public int Like { get; set; } 
         public int View { get; set; }
         public bool IsDeleted { get; set; } = false;
 
@@ -34,11 +33,10 @@ namespace Data.Database.Table
         public ICollection<PaidPost>? PaidPosts { get; set; }
 
 
-        // Đường dẫn tới ảnh
-        public string? ImagePath { get; set; }
+        
 
-        public ICollection<PostComment> PostComments { get; set; }
-        public ICollection<PostLike> PostLikes { get; set; }
-        public ICollection<PostView> PostViews { get; set; }
+        public ICollection<PostComment>? PostComments { get; set; }
+        public ICollection<PostLike>? PostLikes { get; set; }
+        public ICollection<PostView>? PostViews { get; set; }
     }
 }

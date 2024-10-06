@@ -1,0 +1,218 @@
+﻿@page "/question";
+
+@using Data.Database.Table
+
+@inject NavigationManager Navigation
+@inject IHttpClientFactory HttpClientFactory
+@inject UserManager<ApplicationUser> UserManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+
+@if (lstPostDTO == null || postDTO == null)
+{
+    <MudText>loading...</MudText>
+}
+<MudContainer Fixed="true">
+    <MudGrid>
+        <MudItem xs="9">
+            <MudGrid xs="12" Justify="Justify.SpaceBetween">
+                <MudItem>
+                    <MudGrid Class="pt-3">
+                        <MudItem>
+                            <MudIcon Icon="@Icons.Material.Filled.Diamond"></MudIcon>
+                        </MudItem>
+                        <MudItem>
+                            <MudText Typo="Typo.h5">All Question</MudText>
+                        </MudItem>
+                    </MudGrid>
+                </MudItem>
+                <MudItem Class="d-flex justify-content-end">
+                    <MudToolBar>
+                        <MudSpacer />
+                        <MudButton Variant="Variant.Filled" Color="Color.Default" Href="/createQuestion" StartIcon="@Icons.Material.Filled.Add">Create Question</MudButton>
+                        <MudIconButton  Icon="@Icons.Material.Filled.Notifications" Color="Color.Default" />
+                        <MudIconButton Icon="@Icons.Material.Filled.MoreVert" Color="Color.Default" />
+                    </MudToolBar>
+                </MudItem>
+            </MudGrid>
+
+            <MudDivider />
+
+            <MudGrid Class="mt-2" Justify="Justify.FlexEnd">
+                <MudItem xs="2">
+                    <MudSelect T="string" Label="Sort by" @bind-Value="selectedValue" Disabled="false" UncheckedIcon="true" CheckedIcon="true" DisableUnderLine="true" HideSelectedItem="true">
+                        @foreach (var item in lstTag)
+                        {
+                            <MudSelectItem Value="@item.TagName">@item.TagName</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+            </MudGrid>
+            @foreach (var item in lstPostDTO)
+            {
+                <MudGrid Class="mt-1" Justify="Justify.Center">
+                    <MudItem xs="12">
+                        <MudCard Style="border-radius:15px" Outlined="true">
+                            <MudContainer>
+                                <MudCardHeader Class="p-3">
+                                    <CardHeaderAvatar>
+                                        <MudAvatar Color="Color.Secondary">U</MudAvatar>
+                                    </CardHeaderAvatar>
+                                    <CardHeaderContent>
+                                        <MudText Typo="Typo.body2">@item.CreateDate</MudText>
+                                    </CardHeaderContent>
+                                    <CardHeaderActions>
+                                        <MudMenu Icon="@Icons.Material.Filled.MoreHoriz" Color="Color.Default"
+                                                 AriaLabel="Open user menu">
+                                            <MudMenuItem>View</MudMenuItem>
+                                            <MudMenuItem @onclick="async ()=> await UpdateQuestion(item.Id)" >Edit</MudMenuItem>
+                                            <MudMenuItem @onclick="async ()=> await DeletePost(item.Id)">Delete</MudMenuItem>
+                                           @*  <MudMenuItem @onclick="(async ()=> await DeletePost(item.Id))">Delete</MudMenuItem> *@
+                                        </MudMenu>
+                                    </CardHeaderActions>
+                                </MudCardHeader>
+                                <MudGrid Justify="Justify.Center">
+                                    <MudItem xs="11" Style="width:100%; height:100%;">
+                                        <MudCard>
+                                            <MudCardContent>
+                                                <MudText Typo="Typo.body2">@item.Title</MudText> <br />
+                                                @((MarkupString)item.Content) <!-- Sử dụng MarkupString để hiển thị HTML -->
+                                            </MudCardContent>
+                                            <MudCardMedia Image="@($"https://localhost:7272/uploads/{item.ImgFile}")" @onclick="()=> OpenImageModal()" />
+                                        </MudCard>
+                                    </MudItem>
+                                </MudGrid>
+                                <MudGrid Class="m-2" Justify="Justify.SpaceEvenly">
+                                    <MudItem xs="4" sm="2">
+                                        <MudButton Class="animated-button" Variant="Variant.Outlined" @onclick="(async ()=> await LikePost(item.Id))" StartIcon="@Icons.Material.Filled.ThumbUp">
+                                            @item.Like
+                                        </MudButton>
+                                    </MudItem>
+                                    <MudItem xs="4" sm="2">
+                                        <MudButton Class="animated-button" Variant="Variant.Outlined"  StartIcon="@Icons.Material.Filled.ModeComment">
+                                            Comment
+                                        </MudButton>
+                                    </MudItem>
+                                    <MudItem xs="4" sm="2">
+                                        <MudButton Class="animated-button" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Share">
+                                            Share
+                                        </MudButton>
+                                    </MudItem>
+                                </MudGrid>
+                            </MudContainer>
+                        </MudCard>
+                    </MudItem>
+                </MudGrid>
+            }
+        </MudItem>
+        <MudItem xs="3">
+            <MudGrid>
+                <MudItem>
+                    <MudCard>
+                        <MudCardMedia Image="icon.png" Height="100" />
+                        <MudCardContent>
+                            <MudText Typo="Typo.h5">Old Paint</MudText>
+                            <MudText Typo="Typo.body2">Old paint found on a stone house door.</MudText>
+                            <MudText Typo="Typo.body2">This photo was taken in a small village in Istra Croatia.</MudText>
+                        </MudCardContent>
+                        <MudCardActions>
+                            <MudButton Variant="Variant.Text" Color="Color.Primary">Share</MudButton>
+                            <MudButton Variant="Variant.Text" Color="Color.Primary">Learn More</MudButton>
+                        </MudCardActions>
+                    </MudCard>
+                </MudItem>
+            </MudGrid>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+<MudDialog @bind-IsOpen="_isImageModelOpen">
+     <>View Image</>
+    <MudDialogContent>
+        <MudImage Src="fotor-ai-20240912225454.jpg" Style="width:100%; height:auto;" />
+    </MudDialogContent>
+    <MudDialogActions>
+        <MudButton OnClick="@CloseImageModal">Close</MudButton>
+    </MudDialogActions> 
+
+</MudDialog>
+
+
+
+<style>
+    .animated-button {
+        transition: transform 0.2s, background-color 0.2s;
+    }
+
+        .animated-button:hover {
+            transform: scale(1.1);
+            background-color: rgba(0, 0, 0, 0.1);
+        }
+</style>
+
+
+@code {
+
+    List<PostDTO> lstPostDTO = new List<PostDTO>();
+    PostDTO postDTO = new PostDTO();
+
+    private string selectedValue = string.Empty;
+
+    private bool _isImageModelOpen = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+        lstPostDTO = await httpClient.GetFromJsonAsync<List<PostDTO>>("/api/post/getall");
+    }
+
+    public async Task LikePost(Guid id)
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        var userCurrent = await UserManager.GetUserAsync(user);
+        var idUser = userCurrent.Id;
+
+        var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+        var response = await httpClient.PutAsJsonAsync($"/api/postlike/updateLike/{id}", idUser);
+        if (response.IsSuccessStatusCode)
+        {
+            Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
+        }
+    }
+    public async Task UpdateQuestion(Guid id)
+    {
+        if (id != null)
+        {
+            Navigation.NavigateTo($"/updateQuestion/"+ id);
+        }
+    }
+
+    private async Task DeletePost(Guid id)
+    {
+        var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+        postDTO = await httpClient.GetFromJsonAsync<PostDTO>($"/api/post/getById/{id}");
+
+        var response = await httpClient.PutAsJsonAsync($"/api/post/deletePost/{id}", postDTO);
+        if (response.IsSuccessStatusCode)
+        {
+            Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
+        }
+    }
+
+    private void OpenImageModal()
+    {
+        _isImageModelOpen = true;
+    }
+
+    private void CloseImageModal()
+    {
+        _isImageModelOpen = false;
+    }
+
+    List<Tag> lstTag = new List<Tag>()
+    {
+        new Tag() {Id=Guid.NewGuid(), TagName = "New" },
+        new Tag() {Id=Guid.NewGuid(), TagName = "Old" },
+        new Tag() {Id=Guid.NewGuid(), TagName = "Tăng Dần" },
+    };
+}

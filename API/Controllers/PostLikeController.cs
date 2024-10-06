@@ -1,5 +1,6 @@
 ﻿using BlogWebsite.Data;
 using Data.Database.Table;
+using Data.DTO.EntitiDTO;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -16,44 +17,42 @@ namespace API.Controllers
         {
             _context = context;
         }
-        [HttpPost("id")]
-        public async Task<IActionResult> ToggleLikePost(Guid id)
+        [HttpPut("/updateLike/{id}")]
+        public async Task<IActionResult> ToggleLikePost(Guid id, PostDTO _post)
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-            if (userIdClaim == null)
+            if (id == null)
             {
-                return Unauthorized(); // đã đăng nhập đâu
+                return BadRequest();
             }
-            Guid userId = Guid.Parse(userIdClaim.Value);
-
             //tìm post muốn like
-            var post = await _context.Posts.FindAsync(id);
-            if (post == null || post.IsDeleted)
+            var post = await _context.Posts.FindAsync(_post.Id);
+
+            if (post == null)
             {
                 return NotFound(); // Không tìm thấy
             }
             // kiểm tra xem đã like chưa
-            var checkLike = await _context.PostLikes.FirstOrDefaultAsync(p => p.PostId == id && p.UserId == userId); // nếu thoả mãn thì đã like rồi 
-            if (checkLike != null)
+            var userLike = await _context.PostLikes.FirstOrDefaultAsync(p => p.PostId == _post.Id && p.UserId == _post.IdUser); // nếu thoả mãn thì đã like rồi 
+            if (userLike != null)
             {
-                // đã like mà bị dập phát nữa thì dis_like
-                _context.PostLikes.Remove(checkLike);
+                // đã like
+                _context.PostLikes.Remove(userLike);
                 post.Like -=  1;
             }
             else
             {
-                // nếu chưa thích thì thích thôi, ngại gì vết bẩn
+                // nếu chưa thích thì thích thôi
                 var postLiked = new PostLike()
                 {
                     Id = Guid.NewGuid(),
                     PostId = id,
-                    UserId = userId,
+                    UserId = _post.IdUser,   // chỗ này hơi sai sai
                 };
                 await _context.PostLikes.AddAsync(postLiked);
                 post.Like += 1;
             }
 
-            _context.Entry(post).State = EntityState.Modified;
+            _context.Entry(post).State = EntityState.Modified; // update
             await _context.SaveChangesAsync();
             return Ok();
         }

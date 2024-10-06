@@ -5,6 +5,8 @@ using Data.DTO.EntitiDTO;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System;
+using System.Net.WebSockets;
 using System.Security.Claims;
 
 namespace API.Controllers
@@ -13,22 +15,16 @@ namespace API.Controllers
     [ApiController]
     public class PostController : ControllerBase
     {
-        ApplicationDbContext _context;
-
-        private readonly string _storagePath = Path.Combine(Directory.GetCurrentDirectory(), "Uploads");
-        public PostController(ApplicationDbContext context) 
+        private readonly ApplicationDbContext _context;
+        private readonly IWebHostEnvironment _environment;
+        public PostController(ApplicationDbContext context, IWebHostEnvironment environment) 
         {
             _context = context;
-
-            // Tạo thư mục lưu trữ nếu chưa tồn tại
-            if (!Directory.Exists(_storagePath))
-            {
-                Directory.CreateDirectory(_storagePath);
-            }
+            _environment = environment;
         }
 
         [HttpGet("get_all")]
-        public IActionResult GetAllPost(int page = 1, string inputSearch = null)
+        public IActionResult GetAllPostPage(int page = 1, string inputSearch = null)
         {
             int pageSize = 10;
             // Truy vấn csdl
@@ -54,102 +50,86 @@ namespace API.Controllers
             });
         }
 
-        [HttpPost("create")]
-        public async Task<IActionResult> CreatePostAsync([FromBody] PostDTO _post, IFormFile image)
+        [HttpGet("getall")]        
+        public async Task<IActionResult> GetAllPost()
         {
-            // claim check
-            // lấy IdUser của người claim của người đã đăng nhập
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-            if (userIdClaim == null)
+            var lstPost = await _context.Posts.Where(x => !x.IsDeleted).ToListAsync();
+            return Ok(lstPost);
+        }
+
+        [HttpGet("getById/{id}")]
+        public async Task<IActionResult> GetById(Guid id)
+        {
+            var getIdPost = await _context.Posts.FindAsync(id);
+            if (getIdPost == null)
             {
-                return Unauthorized(); // người dùng chưa đăng nhập
+                return NotFound();
             }
-            //chuyển chuổi thành Guid
-            var userId = Guid.Parse(userIdClaim.Value);
-
-            if (image != null && image.Length > 0)
-            {
-                // Kiểm tra định dạng tệp
-                var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
-                var fileExtension = Path.GetExtension(image.FileName).ToLower();
-                if (!allowedExtensions.Contains(fileExtension))
-                {
-                    return BadRequest("Định dạng tệp không hợp lệ. Chỉ cho phép .jpg, .jpeg, .png, .gif");
-                }
-
-                var fileName = Path.GetFileNameWithoutExtension(image.FileName);
-                var newFileName = $"{fileName}_{Guid.NewGuid()}{fileExtension}";
-                var filePath = Path.Combine(_storagePath, newFileName);
-
-                using (var stream = new FileStream(filePath, FileMode.Create))
-                {
-                    await image.CopyToAsync(stream);
-                }
-
-                _post.ImagePath = $"Uploads/{newFileName}";
-            }
-
-
-            //add
-            var post = new Post()
-            {
-                Id = Guid.NewGuid(),
-                IdUser = userId,
-                Title = _post.Title,
-                NomalizedTitle = _post.NomalizedTitle, // định danhh nghĩa hoá
-                CreateDate = DateTime.Now,
-                Content = _post.Content,
-            };
-            _context.Posts.Add(post);
-             await _context.SaveChangesAsync();
-            return Ok(post);   
+            return Ok(getIdPost);
         }
 
 
-        [HttpPut("updateId")]
-        public async Task<IActionResult> EditPost(Guid id, PostDTO post)
+
+        [HttpPost("createPost")]
+        public async Task<IActionResult> CreatePostAsync([FromForm] PostDTO _post, IFormFile imgFile)
         {
-            //lấy id người dùng đã đăng nhập
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier); 
-            if (userIdClaim == null)
+            if (_post.IdUser == null)
             {
-                return Unauthorized();
+                return BadRequest();
             }
-            // chuyển thành guid
-            var userId = Guid.Parse(userIdClaim.Value);
-            var existingPost = _context.Posts.FirstOrDefault(p => p.Id == id && p.IdUser == userId);
-            if (existingPost == null || !existingPost.IsDeleted)
+            var path = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", imgFile.FileName);
+
+            using (var stream = new FileStream(path, FileMode.Create))
+            {
+                await imgFile.CopyToAsync(stream); // Sử dụng CopyToAsync để sao chép tệp
+            }
+            var post = new Post()
+            {
+                Id = Guid.NewGuid(),
+                IdUser = _post.IdUser,
+                Title = _post.Title,
+                Description = _post.Description,
+                Content = _post.Content,
+                CreateDate = DateTime.Now,
+                ImgFile = imgFile.FileName
+            };
+            _context.Posts.Add(post);
+             await _context.SaveChangesAsync();
+            return Ok(post);    
+        }
+
+
+        [HttpPut("updatePost/{idPost}")]
+        public async Task<IActionResult> EditPost(Guid idPost, PostDTO post)
+        {
+            
+            var existingPost = await _context.Posts.FirstOrDefaultAsync(p => p.Id == idPost && p.IdUser == post.IdUser);
+            if (existingPost == null)
             {
                 return NotFound(); // không tìm thầy bài viết
             }
             existingPost.Title = post.Title;
-            existingPost.NomalizedTitle = post.NomalizedTitle;
-            existingPost.CreateDate = DateTime.Now;
+            existingPost.Description = post.Description;
             existingPost.Content = post.Content;
+            existingPost.EditDate = DateTime.Now;
+            existingPost.ImgFile = post.ImgFile;
+
             _context.Posts.Update(existingPost);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
             return Ok(existingPost);
         }
 
-        [HttpPut("deleteId")]        
-        public IActionResult DeletePost(Guid id)
+        [HttpPut("deletePost/{idPost}")]        
+        public async Task<IActionResult> DeletePost(Guid idPost, PostDTO post)
         {
-            //lấy id người dùng đã đăng nhập
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-            if (userIdClaim == null)
-            {
-                return Unauthorized();
-            }
-            // chuyển thành guid
-            var userId = Guid.Parse(userIdClaim.Value);
-            var deletePost = _context.Posts.FirstOrDefault(p => p.Id == id && p.IdUser == userId);
+            var deletePost = _context.Posts.FirstOrDefault(p => p.Id == idPost && p.IdUser == post.IdUser);
             if (deletePost == null)
             {
                 return NotFound();
             }
             deletePost.IsDeleted = true;
             _context.Posts.Update(deletePost);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
             return Ok();
         }
     }

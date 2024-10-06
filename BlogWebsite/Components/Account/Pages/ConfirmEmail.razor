@@ -5,7 +5,7 @@
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.AspNetCore.WebUtilities
 @using BlogWebsite.Data
-
+@inject SignInManager<ApplicationUser> SignInManager
 @inject UserManager<ApplicationUser> UserManager
 @inject IdentityRedirectManager RedirectManager
 
@@ -32,7 +32,8 @@
         {
             RedirectManager.RedirectTo("");
         }
-
+        var info = await SignInManager.GetExternalLoginInfoAsync(UserId);
+        var picture = info.Principal.FindFirst("image").Value;
         var user = await UserManager.FindByIdAsync(UserId);
         if (user is null)
         {
@@ -42,6 +43,7 @@
         else
         {
             var code = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(Code));
+            user.Img = picture;
             var result = await UserManager.ConfirmEmailAsync(user, code);
             statusMessage = result.Succeeded ? "Thank you for confirming your email." : "Error confirming your email.";
         }
