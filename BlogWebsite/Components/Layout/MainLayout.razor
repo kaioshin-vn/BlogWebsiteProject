@@ -1,12 +1,27 @@
-﻿@inherits LayoutComponentBase
+﻿@using BlogWebsite.Data
+@using Microsoft.AspNetCore.Identity
+@using System.Security.Claims
+@inherits LayoutComponentBase
 <MudThemeProvider />
 <MudPopoverProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserManager<ApplicationUser> UserManager
 <style>
     a:hover {
         color: unset;
     }
+
+    .scrollbar {
+        overflow: hidden; /* Ẩn thanh cuộn khi không hover */
+        border: 1px solid #ccc;
+        transition: overflow 0.5s ease; /* Thêm hiệu ứng chuyển đổi */
+    }
+
+        .scrollbar:hover {
+            overflow-y: auto; /* Hiện thanh cuộn khi hover */
+        }
 </style>
 <div class="page">
     <main>
@@ -25,13 +40,19 @@
                     <Authorized>
                         <div class="d-flex justify-content-end">
                             <div class="nav-item ">
-                                <NavLink class="nav-link" href="Account/Logout">
-                                    <MudButton Variant="Variant.Outlined"
-                                               Color="Color.Info"
-                                               Style="text-transform:none">
-                                        Đăng xuất
-                                    </MudButton>
+                                <NavLink class="nav-link" href="Account/Settings">
+                                    <MudAvatar>
+                                        <MudImage Src="@Avatar"></MudImage>
+                                    </MudAvatar>
                                 </NavLink>
+                                <form action="Account/Logout" method="post">
+                                    <AntiforgeryToken />
+                                    <input type="hidden" name="ReturnUrl" value="Account/Login" />
+                                    <button type="submit" class="nav-link d-flex justify-content-start ">
+                                        <MudIcon Style="margin: 3px;" Icon="@Icons.Material.Filled.Logout" Color="Color.Tertiary" Size="Size.Small" />
+                                        Đăng xuất
+                                    </button>
+                                </form>
                             </div>
                         </div>
                     </Authorized>
@@ -40,20 +61,22 @@
                         <div class="d-flex justify-content-end">
                             <div class="nav-item ">
                                 <NavLink class="nav-link" href="Account/Register">
-                                    <MudButton Variant="Variant.Outlined"
-                                               Color="Color.Info"
-                                               Style="text-transform:none">
-                                        Đăng ký
-                                    </MudButton>
+                                    <center>
+                                        <button class="codepro-custom-btn codepro-btn-11" target="blank" title="Code Pro">
+                                            Đăng ký
+                                        </button>
+                                    </center>
                                 </NavLink>
                             </div>
                             <div class="nav-item">
                                 <NavLink class="nav-link" href="Account/Login">
-                                    <MudButton Variant="Variant.Outlined"
-                                               Color="Color.Success"
-                                               Style="text-transform:none">
-                                        Đăng nhập
-                                    </MudButton>
+                                    <center>
+                                        <button class="codepro-custom-btn codepro-btn-12" target="blank" title="Code Pro">
+                                            <span>Go!</span>
+                                            <span>Đăng nhập</span>
+                                        </button>
+                                    </center>
+
                                 </NavLink>
                             </div>
                         </div>
@@ -62,11 +85,13 @@
             </div>
         </div>
         <div class="d-flex " style="margin-top:64px">
-            <div class="" style="height : 100% ; position: sticky;top: 64px;">
-                <NavMenu />
+            <div class="pe-3  scrollbar" style="height : 91vh;width : 290px; position: sticky;top: 64px;overflow-x : hidden;">
+                <div class="me-3 " style="width:auto;">
+                    <NavMenu />
+                </div>
             </div>
 
-            <article class="content w-100 px-4">
+            <article class="content w-100 px-4 scrollbar">
                 @Body
             </article>
         </div>
@@ -81,4 +106,24 @@
 
 @code {
     string Search;
+    protected int NoticeCount ;
+    public string Avatar;
+    private ClaimsPrincipal user;
+    protected override async Task OnInitializedAsync()
+    {
+        // Lấy trạng thái xác thực
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        user = authState.User;
+        // Lấy ID người dùng từ Claims
+        var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (userId != null)
+        {
+            var currentUser = await UserManager.FindByIdAsync(userId);
+            if (currentUser != null)
+            {
+                Avatar = currentUser.Img;
+            }
+        }
+    }
 }

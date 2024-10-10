@@ -10,7 +10,7 @@ namespace BlogWebsite.Data
     {
         public string? Descript { get; set; }
         public string? Img { get; set; }
-
+        public string? FullName { get; set; }
         public string? AnotherInfo { get; set; }    
         public ICollection<Exam>? Exams { get; set; }
 
@@ -20,8 +20,18 @@ namespace BlogWebsite.Data
         public ICollection<PaidPost>? PaidPosts { get; set; }
         public ICollection<Response>? Responses { get; set; }
         public ICollection<ReplyResponse>? ReplyResponses { get; set; }
+<<<<<<< HEAD
 		public ICollection<PaymentTransaction> PaymentTransactions { get; set; } = new List<PaymentTransaction>();
 		public ICollection<PaymentRequest> PaymentRequests { get; set; } = new List<PaymentRequest>();
 	}
+=======
+
+        public ICollection<PostComment> PostComments { get; set; }
+        public ICollection<PostLike> PostLikes { get; set; }
+        public ICollection<PostView> PostViews { get; set; }
+        public ICollection<Notice> NoticesSent { get; set; }
+        public ICollection<Notice> NoticesReceived { get; set; }
+    }
+>>>>>>> be11ec0564bf42a230404e5d88977f8170774da0
 
 }

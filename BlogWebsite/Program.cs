@@ -47,7 +47,6 @@ builder.Services.AddMudServices(config =>
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-builder.Services.AddHttpContextAccessor();
 builder.Services.AddHttpClient("MyHttpClient", client =>
 {
     client.BaseAddress = new Uri("https://localhost:7272/"); // Địa chỉ cơ bản của API
@@ -66,6 +65,7 @@ builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<IdentityUserAccessor>();
 builder.Services.AddScoped<IdentityRedirectManager>();
 builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
+builder.Services.AddScoped<UserManager<ApplicationUser>>();
 
 builder.Services.AddServerSideBlazor()
         .AddCircuitOptions(options => { options.DetailedErrors = true; });
@@ -79,6 +79,8 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddAuthorizationCore();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+services.AddDbContextFactory<ApplicationDbContext>(options =>
+       options.UseSqlServer(connectionString));
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
     options.EnableSensitiveDataLogging(false);

@@ -6,6 +6,9 @@
 
 @inject SignInManager<ApplicationUser> SignInManager
 @inject IdentityRedirectManager RedirectManager
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+
 
 @if (externalLogins.Length == 0)
 {
@@ -20,17 +23,18 @@
 }
 else
 {
-    <form class="form-horizontal" action="Account/PerformExternalLogin" method="post">
+    <form style="width:452px;" class="" action="Account/PerformExternalLogin" method="post">
         <div>
-            <AntiforgeryToken />
+            <input type="hidden" name="__RequestVerificationToken" value="@AntiforgeryToken" />
             <input type="hidden" name="ReturnUrl" value="@ReturnUrl" />
-            <MudButton Class="field google" ButtonType="ButtonType.Submit" Color="Color.Default" Variant="Variant.Filled" name="provider" value="Google" title="Sử dụng tài khoản Google để đăng nhập">  <img src="/Img/Logo-google-icon-PNG.png" class="pe-5" style="width:15%">Đăng nhập bằng Google</MudButton>
+            <MudButton Class="field google" ButtonType="ButtonType.Submit" Color="Color.Default" Variant="Variant.Filled" name="provider" value="Google" title="Sử dụng tài khoản Google để đăng nhập">  <img src="/Img/Logo-google-icon-PNG.png" class="pe-5" style="width:12%">Đăng nhập bằng Google</MudButton>
         </div>
     </form>
 }
 
 @code {
     private AuthenticationScheme[] externalLogins = [];
+    private string AntiforgeryToken;
 
     [SupplyParameterFromQuery]
     private string? ReturnUrl { get; set; }
@@ -38,5 +42,8 @@ else
     protected override async Task OnInitializedAsync()
     {
         externalLogins = (await SignInManager.GetExternalAuthenticationSchemesAsync()).ToArray();
+        var tokens = Antiforgery.GetAndStoreTokens(HttpContextAccessor.HttpContext);
+        AntiforgeryToken = tokens.RequestToken;
     }
+
 }

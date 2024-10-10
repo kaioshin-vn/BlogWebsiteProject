@@ -15,14 +15,23 @@
   </ItemGroup>
 
   <ItemGroup>
+    <_ContentIncludedByDefault Remove="wwwroot\ButtonAnimation.css" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Components\Pages\Post\CreateQuestion.razor" />
+    <None Include="Components\Pages\Post\Question.razor" />
+    <None Include="Components\Pages\Post\UpdateQuestion.razor" />
     <None Include="wwwroot\ForgotPassword.css" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Blazored.SessionStorage" Version="2.4.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="8.0.6" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Forms" Version="8.0.8" />
     <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="8.0.6" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.6" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="8.0.8" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.6" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.6" />
     <PackageReference Include="MudBlazor" Version="7.3.0" />

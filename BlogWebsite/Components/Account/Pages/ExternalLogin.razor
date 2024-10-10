@@ -5,11 +5,13 @@
 @using System.Text
 @using System.Text.Encodings.Web
 @using BlogWebsite.Components.Account
+@using Client.Components.Layout
 @using Microsoft.AspNetCore.Components.Forms
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.AspNetCore.WebUtilities
 @using BlogWebsite.Data
 
+@layout EmptyLayout
 @inject SignInManager<ApplicationUser> SignInManager
 @inject UserManager<ApplicationUser> UserManager
 @inject IUserStore<ApplicationUser> UserStore
@@ -18,36 +20,51 @@
 @inject IdentityRedirectManager RedirectManager
 @inject ILogger<ExternalLogin> Logger
 
-<PageTitle>Register</PageTitle>
+<PageTitle>Đăng ký tài khoản</PageTitle>
 
-<StatusMessage Message="@message" />
-<h1>Register</h1>
-<h2>Associate your @ProviderDisplayName account.</h2>
-<hr />
 
-<div  class="alert alert-info">
-    You've successfully authenticated with <strong>@ProviderDisplayName</strong>.
-    Please enter an email address for this site below and click the Register button to finish
-    logging in.
-</div>
+<MudOverlay Visible="isVisible" DarkBackground="true" Absolute="true">
+    <EditForm Model="Input" OnValidSubmit="OnValidSubmitAsync" FormName="confirmation" method="post">
+        <MudCard Class="pa-4" Style="width:500px;">
+                <MudText>Hãy điền tên đăng nhập của bạn</MudText>
+                <InputText @bind-Value="Input.Email" class="form-control" style="display:none;"/>
+                <MudTextField Class="mt-3" @bind-Value="Input.FullName" Label="Tên đăng nhập" Variant="Variant.Outlined" InputType="@InputType.Text" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Person" AdornmentAriaLabel="Tên đăng nhập" name="Input.FullName" />
+                @if (message != null)
+                {
+                    <div style="text-align:left" class="alert alert-danger my-3">
+                        <p class=" px-2" style="color:red;">@message</p>
+                    </div>
+                }
+                <div class="d-flex mt-3">
+                    <MudButton Color="Color.Error" Variant="Variant.Filled">
+                        <a class="py-2 px-4" style="color:black;" href="/Account/Register">Hủy</a>
+                    </MudButton>
+                    <button class="py-2 ms-3 px-4" style="background-color:lightgreen;font:bolder;border-radius:6px;" type="submit">ĐĂNG KÝ</button>
+                </div>
+        </MudCard>
+    </EditForm>
+</MudOverlay>
 
-<div class="row">
-    <div class="col-md-4">
-        <EditForm Model="Input" OnValidSubmit="OnValidSubmitAsync" FormName="confirmation" method="post">
-            <DataAnnotationsValidator />
-            <ValidationSummary class="text-danger" role="alert" />
-            <div class="form-floating mb-3">
-                <InputText @bind-Value="Input.Email" class="form-control" autocomplete="email" placeholder="Please enter your email." />
-                <label for="email" class="form-label">Email</label>
-                <ValidationMessage For="() => Input.Email" />
-            </div>
-            <button type="submit" class="w-100 btn btn-lg btn-primary">Register</button>
-        </EditForm>
-    </div>
-</div>
+<script>
+
+    const nameInput = document.querySelector('input[name="Input.FullName"]');
+    const inputNameWrapper = nameInput.closest('div.mud-input');
+    // Thêm sự kiện lắng nghe thay đổi của input
+    inputNameWrapper.addEventListener('input', () => {
+        // Kiểm tra nếu input không rỗng
+        if (nameInput.value.trim() !== '') {
+            // Thêm class vào thẻ div cha
+            inputNameWrapper.classList.add('mud-shrink');
+        } else {
+            // Loại bỏ class khỏi thẻ div cha
+            inputNameWrapper.classList.remove('mud-shrink');
+        }
+    });
+</script>
 
 @code {
     public const string LoginCallbackAction = "LoginCallback";
+    bool isVisible = true;
 
     private string? message;
     private ExternalLoginInfo externalLoginInfo = default!;
@@ -129,12 +146,21 @@
 
     private async Task OnValidSubmitAsync()
     {
+        if (Input.FullName == "")
+        {
+            message = "Không thể bỏ trống tên đăng nhập";
+            return;
+        }
         var emailStore = GetEmailStore();
         var user = CreateUser();
 
+        user.FullName = Input.FullName;
         await UserStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
         await emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
-
+        if (externalLoginInfo.Principal.HasClaim(c => c.Type == "image"))
+        {
+            user.Img = externalLoginInfo.Principal.FindFirstValue("image") ?? "Default";
+        }
         var result = await UserManager.CreateAsync(user);
         if (result.Succeeded)
         {
@@ -193,5 +219,8 @@
         [Required]
         [EmailAddress]
         public string Email { get; set; } = "";
+
+        [Required]
+        public string FullName { get; set; } = "";
     }
 }
