@@ -20,6 +20,8 @@ namespace BlogWebsite.Data
         public ICollection<PaidPost>? PaidPosts { get; set; }
         public ICollection<Response>? Responses { get; set; }
         public ICollection<ReplyResponse>? ReplyResponses { get; set; }
-    }
+		public ICollection<PaymentTransaction> PaymentTransactions { get; set; } = new List<PaymentTransaction>();
+		public ICollection<PaymentRequest> PaymentRequests { get; set; } = new List<PaymentRequest>();
+	}
 
 }

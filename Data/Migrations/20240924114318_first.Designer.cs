@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20240714031557_Update_Identity")]
-    partial class Update_Identity
+    [Migration("20240924114318_first")]
+    partial class first
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -163,6 +163,71 @@ namespace Data.Migrations
                     b.HasIndex("IdUser");
 
                     b.ToTable("PaidPosts");
+                });
+
+            modelBuilder.Entity("Data.Database.Table.PaymentRequest", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("IdUser")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IdUser");
+
+                    b.ToTable("PaymentRequests");
+                });
+
+            modelBuilder.Entity("Data.Database.Table.PaymentTransaction", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdUser")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("OrderId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PaymentId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PaymentMethod")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("Success")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TransactionId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("VnPayResponseCode")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IdUser");
+
+                    b.ToTable("PaymentTransactions");
                 });
 
             modelBuilder.Entity("Data.Database.Table.Post", b =>
@@ -701,6 +766,28 @@ namespace Data.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Data.Database.Table.PaymentRequest", b =>
+                {
+                    b.HasOne("BlogWebsite.Data.ApplicationUser", "User")
+                        .WithMany("PaymentRequests")
+                        .HasForeignKey("IdUser")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Data.Database.Table.PaymentTransaction", b =>
+                {
+                    b.HasOne("BlogWebsite.Data.ApplicationUser", "User")
+                        .WithMany("PaymentTransactions")
+                        .HasForeignKey("IdUser")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Data.Database.Table.Post", b =>
                 {
                     b.HasOne("BlogWebsite.Data.ApplicationUser", "User")
@@ -909,6 +996,10 @@ namespace Data.Migrations
                     b.Navigation("Exams");
 
                     b.Navigation("PaidPosts");
+
+                    b.Navigation("PaymentRequests");
+
+                    b.Navigation("PaymentTransactions");
 
                     b.Navigation("Post");
 

@@ -1,4 +1,5 @@
 using BlogWebsite.Data;
+using Client.VNPayService;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
 
@@ -19,7 +20,14 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.EnableSensitiveDataLogging(false);
     options.UseSqlServer(connectionString);
 }, ServiceLifetime.Transient);
-
+builder.Services.AddScoped<VnPayService>();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll",
+        builder => builder.AllowAnyOrigin()
+                          .AllowAnyMethod()
+                          .AllowAnyHeader());
+});
 
 var app = builder.Build();
 

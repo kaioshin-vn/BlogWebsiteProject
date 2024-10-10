@@ -2,6 +2,7 @@
 using BlogWebsite.Components.Account;
 using BlogWebsite.Data;
 using Client.Components;
+using Client.VNPayService;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -51,6 +52,13 @@ builder.Services.AddHttpClient("MyHttpClient", client =>
 {
     client.BaseAddress = new Uri("https://localhost:7272/"); // Địa chỉ cơ bản của API
 });
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll",
+        builder => builder.AllowAnyOrigin()
+                          .AllowAnyMethod()
+                          .AllowAnyHeader());
+});
 
 builder.Services.AddEndpointsApiExplorer();
 
@@ -59,6 +67,8 @@ builder.Services.AddScoped<IdentityUserAccessor>();
 builder.Services.AddScoped<IdentityRedirectManager>();
 builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
 
+builder.Services.AddServerSideBlazor()
+        .AddCircuitOptions(options => { options.DetailedErrors = true; });
 
 builder.Services.AddAuthentication(options =>
 {
@@ -100,6 +110,7 @@ builder.Services.AddIdentityCore<ApplicationUser>(options => { })
 
 
 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
+builder.Services.AddScoped<VnPayService>();
 
 
 var app = builder.Build();

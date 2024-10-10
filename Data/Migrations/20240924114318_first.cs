@@ -83,7 +83,7 @@ namespace Data.Migrations
                         column: x => x.RoleId,
                         principalTable: "Roles",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.NoAction);
                 });
 
             migrationBuilder.CreateTable(
@@ -138,6 +138,51 @@ namespace Data.Migrations
                     table.ForeignKey(
                         name: "FK_Notices_Users_ToUser",
                         column: x => x.ToUser,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.NoAction);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "PaymentRequests",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    IdUser = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Amount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PaymentRequests", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_PaymentRequests_Users_IdUser",
+                        column: x => x.IdUser,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.NoAction);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "PaymentTransactions",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    IdUser = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Success = table.Column<bool>(type: "bit", nullable: false),
+                    PaymentMethod = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    OrderId = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    PaymentId = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    TransactionId = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Token = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    VnPayResponseCode = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PaymentTransactions", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_PaymentTransactions_Users_IdUser",
+                        column: x => x.IdUser,
                         principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.NoAction);
@@ -243,7 +288,7 @@ namespace Data.Migrations
                         column: x => x.RoleId,
                         principalTable: "Roles",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.NoAction);
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_UserRoles_Users_UserId",
                         column: x => x.UserId,
@@ -532,6 +577,16 @@ namespace Data.Migrations
                 column: "IdUser");
 
             migrationBuilder.CreateIndex(
+                name: "IX_PaymentRequests_IdUser",
+                table: "PaymentRequests",
+                column: "IdUser");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PaymentTransactions_IdUser",
+                table: "PaymentTransactions",
+                column: "IdUser");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Posts_IdUser",
                 table: "Posts",
                 column: "IdUser");
@@ -633,6 +688,12 @@ namespace Data.Migrations
 
             migrationBuilder.DropTable(
                 name: "PaidPosts");
+
+            migrationBuilder.DropTable(
+                name: "PaymentRequests");
+
+            migrationBuilder.DropTable(
+                name: "PaymentTransactions");
 
             migrationBuilder.DropTable(
                 name: "PostSaves");

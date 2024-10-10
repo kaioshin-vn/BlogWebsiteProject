@@ -1,0 +1,88 @@
+﻿@page "/payment-status"
+@using System.Net.Http.Json
+@inject HttpClient Http
+@inject IHttpClientFactory HttpClientFactory
+@inject NavigationManager NavigationManager
+
+<style>
+    .container-fluid {
+        background-color: #f8f9fa; /* Nền sáng cho trang */
+    }
+
+    .bg-light {
+        background-color: #ffffff; /* Nền trắng cho hộp thông báo */
+    }
+
+    .text-primary {
+        color: #007bff; /* Màu chữ chính */
+    }
+
+    .text-danger {
+        color: #dc3545; /* Màu chữ lỗi */
+    }
+
+    .btn-primary {
+        background-color: #007bff; /* Màu nút chính */
+        border-color: #007bff;
+    }
+
+    .btn-secondary {
+        background-color: #6c757d; /* Màu nút phụ */
+        border-color: #6c757d;
+    }
+
+    .alert {
+        padding: 15px;
+        margin-bottom: 20px;
+        border-radius: 5px;
+    }
+</style>
+
+<h3>Kiểm Tra Trạng Thái Thanh Toán</h3>
+
+<button class="btn btn-primary" @onclick="CheckPaymentStatus">Kiểm Tra</button>
+
+@if (!string.IsNullOrEmpty(message))
+{
+    <div class="container-fluid contact py-5">
+        <div class="container">
+            <div class="p-5 bg-light rounded">
+                <div class="row g-4">
+                    <div class="col-12">
+                        <div class="text-center mx-auto" style="max-width: 700px;">
+                            <h1 class="text-primary">Kết Quả Thanh Toán</h1>
+                            <h3 class="text-danger">@message</h3>
+                            <button class="btn btn-secondary" @onclick="GoHome">Quay Lại Trang Chủ</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private string message;
+
+    private async Task CheckPaymentStatus()
+    {
+        var client = HttpClientFactory.CreateClient("MyHttpClient");
+        var response = await client.GetAsync("api/payment/callback");
+
+        if (response.IsSuccessStatusCode)
+        {
+            var result = await response.Content.ReadFromJsonAsync<dynamic>();
+            message = result.message;
+        }
+        else
+        {
+            var error = await response.Content.ReadFromJsonAsync<dynamic>();
+            message = error.message;
+        }
+    }
+
+    private void GoHome()
+    {
+        NavigationManager.NavigateTo("/");
+    }
+}
