@@ -1,0 +1,47 @@
+﻿@page "/payment"
+@using Data.Database.Table
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject IHttpClientFactory HttpClientFactory
+
+<h3>Thanh toán</h3>
+
+<div>
+    <label>Số tiền:</label>
+    <InputNumber @bind-Value="paymentModel.Amount" required />
+</div>
+
+<div>
+    <label>Phương thức thanh toán:</label>
+    <select @bind="selectedPaymentMethod" required>
+        <option value="VnPay">VnPay</option>
+    </select>
+</div>
+
+<button class="btn btn-primary" @onclick="HandleValidSubmit">Thanh toán</button>
+
+@code {
+    private PaymentRequest paymentModel = new PaymentRequest();
+    private string selectedPaymentMethod = "VnPay"; // Gán giá trị mặc định
+
+    private async Task HandleValidSubmit()
+    {
+        // Gán giá trị PaymentMethod từ selectedPaymentMethod
+        paymentModel.PaymentMethod = selectedPaymentMethod;
+
+        var client = HttpClientFactory.CreateClient("MyHttpClient");
+        var response = await client.PostAsJsonAsync("api/payment/Check-out", paymentModel);
+
+        if (response.IsSuccessStatusCode)
+        {
+            var paymentUrl = await response.Content.ReadAsStringAsync();
+            NavigationManager.NavigateTo(paymentUrl, true);
+        }
+        else
+        {
+            var errorMessage = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"Error: {errorMessage}"); // Ghi log lỗi để debug
+            NavigationManager.NavigateTo("/fail");
+        }
+    }
+}
