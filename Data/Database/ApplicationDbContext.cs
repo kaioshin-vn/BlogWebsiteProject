@@ -23,12 +23,18 @@ namespace BlogWebsite.Data
         public DbSet<PaidPost> PaidPosts { get; set; }
         public DbSet<Response> Responses { get; set; }
         public DbSet<ReplyResponse> ReplyResponses { get; set; }
+		public DbSet<PaymentRequest> PaymentRequests { get; set; }
+		public DbSet<PaymentTransaction> PaymentTransactions { get; set; }
 
+<<<<<<< HEAD
+		protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+=======
         public DbSet<PostComment> PostComments { get; set; }
         public DbSet<PostLike> PostLikes { get; set; }
         public DbSet<PostView> PostViews { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+>>>>>>> be11ec0564bf42a230404e5d88977f8170774da0
         {
             base.OnConfiguring(optionsBuilder);
             optionsBuilder.UseSqlServer("Server=.;Database=DATN;Trusted_Connection=True; TrustServerCertificate=true");

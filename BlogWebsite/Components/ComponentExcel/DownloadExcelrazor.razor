@@ -1,0 +1,59 @@
+﻿@page "/download-excel"
+@inject IJSRuntime JSRuntime
+@inject IHttpClientFactory HttpClientFactory
+
+<h3>Click Button to download Excel</h3>
+<button @onclick="@(async () => await DownloadFile())"> Download </button>
+<br/>
+
+@if (IsDownloadStarted == 1)
+{
+        <img src="/Img/download.gif" />
+}
+else if (IsDownloadStarted == 2)
+{
+        <p>Download Complete.</p>
+}
+
+@code {
+    public int IsDownloadStarted { get; set; } = 0; 
+
+    protected async Task DownloadFile()
+    {
+        // Kiểm tra xác nhận từ người dùng
+        bool confirmExport = await JSRuntime.InvokeAsync<bool>("confirm", "Do you want to Export?");
+
+        if (confirmExport)
+        {
+            IsDownloadStarted = 1;
+            StateHasChanged();
+
+            var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+            var response = await httpClient.GetAsync("api/files/DownloadExcel"); 
+
+            if (response.IsSuccessStatusCode)
+            {
+                var fileBytes = await response.Content.ReadAsByteArrayAsync();
+                var fileName = $"MyReport{DateTime.Now.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture)}.xlsx";
+                await JSRuntime.InvokeAsync<object>("saveAsFile", fileName, Convert.ToBase64String(fileBytes));
+                IsDownloadStarted = 2; 
+            }
+            else
+            {
+                // Xử lý lỗi ở đây nếu cần
+                Console.WriteLine($"Error: {response.StatusCode} - {response.ReasonPhrase}");
+            }
+        }
+    }
+}
+
+<script>
+    window.saveAsFile = function (fileName, byteBase64) {
+        var link = document.createElement('a');
+        link.download = fileName;
+        link.href = "data:application/octet-stream;base64," + byteBase64;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+</script>
