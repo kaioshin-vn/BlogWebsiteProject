@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20241006104134_f")]
+    [Migration("20241012141605_f")]
     partial class f
     {
         /// <inheritdoc />
@@ -34,7 +34,7 @@ namespace Data.Migrations
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
 
-                    b.Property<string>("AnotherInfo")
+                    b.Property<string>("Address")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ConcurrencyStamp")
@@ -55,6 +55,9 @@ namespace Data.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Img")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ImgCover")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("LockoutEnabled")
@@ -101,6 +104,21 @@ namespace Data.Migrations
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
 
                     b.ToTable("Users", (string)null);
+                });
+
+            modelBuilder.Entity("Data.Database.Table.Flower", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdFlower")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id", "IdFlower");
+
+                    b.HasIndex("IdFlower");
+
+                    b.ToTable("Flower");
                 });
 
             modelBuilder.Entity("Data.Database.Table.Notice", b =>
@@ -744,6 +762,17 @@ namespace Data.Migrations
                     b.HasKey("UserId", "LoginProvider", "Name");
 
                     b.ToTable("UserTokens", (string)null);
+                });
+
+            modelBuilder.Entity("Data.Database.Table.Flower", b =>
+                {
+                    b.HasOne("BlogWebsite.Data.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("IdFlower")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Data.Database.Table.Notice", b =>

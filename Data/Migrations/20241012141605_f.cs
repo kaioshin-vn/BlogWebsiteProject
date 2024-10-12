@@ -45,7 +45,8 @@ namespace Data.Migrations
                     Descript = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Img = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     FullName = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    AnotherInfo = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ImgCover = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Address = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
@@ -112,6 +113,24 @@ namespace Data.Migrations
                         principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Flower",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    IdFlower = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Flower", x => new { x.Id, x.IdFlower });
+                    table.ForeignKey(
+                        name: "FK_Flower_Users_IdFlower",
+                        column: x => x.IdFlower,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -599,6 +618,11 @@ namespace Data.Migrations
                 column: "IdUser");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Flower_IdFlower",
+                table: "Flower",
+                column: "IdFlower");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Notices_FromUser",
                 table: "Notices",
                 column: "FromUser");
@@ -749,6 +773,9 @@ namespace Data.Migrations
         {
             migrationBuilder.DropTable(
                 name: "ExamHistoryDetails");
+
+            migrationBuilder.DropTable(
+                name: "Flower");
 
             migrationBuilder.DropTable(
                 name: "Notices");

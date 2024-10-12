@@ -1,6 +1,7 @@
 ﻿@using BlogWebsite.Data
 @using Microsoft.AspNetCore.Identity
 @using System.Security.Claims
+@using Microsoft.AspNetCore.Antiforgery
 @inherits LayoutComponentBase
 <MudThemeProvider />
 <MudPopoverProvider />
@@ -8,6 +9,8 @@
 <MudSnackbarProvider />
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject UserManager<ApplicationUser> UserManager
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
 <style>
     a:hover {
         color: unset;
@@ -21,6 +24,15 @@
 
         .scrollbar:hover {
             overflow-y: auto; /* Hiện thanh cuộn khi hover */
+        }
+
+    .avatar {
+        transition: border-width 0.2s ease;
+    }
+
+        .avatar:hover {
+            border-width: 2px; /* Độ dày border khi hover */
+            border-color: lightgray;
         }
 </style>
 <div class="page">
@@ -39,21 +51,56 @@
                 <AuthorizeView>
                     <Authorized>
                         <div class="d-flex justify-content-end">
-                            <div class="nav-item ">
-                                <NavLink class="nav-link" href="Account/Settings">
-                                    <MudAvatar>
+                            <div class="d-flex justify-content-between align-items-center me-4">
+
+                                <MudIconButton Class="mx-1" Icon="@Icons.Material.Filled.Chat"></MudIconButton>
+
+                                <MudTooltip Class="mx-1" Text="Thêm mới bài viết">
+                                    <MudFab Class="mx-1" StartIcon="@Icons.Material.Filled.Add" Size="Size.Medium" Style="border:none;box-shadow:none;background-color:none;" Label="Tạo mới" />
+                                </MudTooltip>
+
+                                <MudBadge Dot="true" Color="Color.Info" Overlap="true" Class="">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Notifications"></MudIconButton>
+                                </MudBadge>
+                            </div>
+
+                            <MudMenu Class="py-2"  ActivationEvent="@MouseEvent.MouseOver" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.BottomRight">
+                                <ActivatorContent>
+                                    <MudAvatar Class="avatar" Variant="Variant.Outlined">
                                         <MudImage Src="@Avatar"></MudImage>
                                     </MudAvatar>
-                                </NavLink>
-                                <form action="Account/Logout" method="post">
-                                    <AntiforgeryToken />
-                                    <input type="hidden" name="ReturnUrl" value="Account/Login" />
-                                    <button type="submit" class="nav-link d-flex justify-content-start ">
-                                        <MudIcon Style="margin: 3px;" Icon="@Icons.Material.Filled.Logout" Color="Color.Tertiary" Size="Size.Small" />
-                                        Đăng xuất
-                                    </button>
-                                </form>
-                            </div>
+                                </ActivatorContent>
+                                <ChildContent>
+                                    <MudMenuItem>
+                                        <div class="d-flex justify-content-start align-items-center ">
+                                            <MudFab class="p-0 me-3" StartIcon="@Icons.Material.Filled.Person" Color="Color.Tertiary" Size="Size.Small" />
+                                            <b>Trang cá nhân</b>
+                                        </div>
+                                    </MudMenuItem>
+                                    <MudMenuItem>
+                                        <div class="d-flex justify-content-start align-items-center ">
+                                            <MudFab class="p-0 me-3" StartIcon="@Icons.Material.Filled.Settings" Color="Color.Tertiary" Size="Size.Small" />
+                                            <b>Cài đặt</b>
+                                        </div>
+                                    </MudMenuItem>
+                                    <MudMenuItem>
+                                        <div class="d-flex justify-content-start align-items-center ">
+                                            <MudFab class="p-0 me-3" StartIcon="@Icons.Material.Filled.Groups" Color="Color.Tertiary" Size="Size.Small" />
+                                            <b>Danh sách theo dõi</b>
+                                        </div>
+                                    </MudMenuItem>
+                                    <MudMenuItem>
+                                        <form action="Account/Logout" class="p-0" method="post">
+                                            <input type="hidden" name="__RequestVerificationToken" value="@AntiforgeryToken" />
+                                            <input type="hidden" name="ReturnUrl" value="Account/Login" />
+                                            <button type="submit" style="width:200px;" class="d-flex justify-content-start ">
+                                                <MudFab class="p-0 me-3" StartIcon="@Icons.Material.Filled.Logout" Color="Color.Tertiary" Size="Size.Small" />
+                                                <b>Đăng xuất</b>
+                                            </button>
+                                        </form>
+                                    </MudMenuItem>
+                                </ChildContent>
+                            </MudMenu>
                         </div>
                     </Authorized>
 
@@ -105,12 +152,19 @@
 </div>
 
 @code {
+
     string Search;
-    protected int NoticeCount ;
+
+    private string AntiforgeryToken;
+
+    protected int NoticeCount;
     public string Avatar;
     private ClaimsPrincipal user;
     protected override async Task OnInitializedAsync()
     {
+        var tokens = Antiforgery.GetAndStoreTokens(HttpContextAccessor.HttpContext);
+        AntiforgeryToken = tokens.RequestToken;
+
         // Lấy trạng thái xác thực
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         user = authState.User;

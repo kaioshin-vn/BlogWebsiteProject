@@ -22,6 +22,7 @@ namespace Data.Database.Table
         public string? Content { get; set; }
         // Đường dẫn tới ảnh
         public string? ImgFile { get; set; }
+        public string? VideoFile { get; set; }
         public int Like { get; set; } 
         public int View { get; set; }
         public bool IsDeleted { get; set; } = false;

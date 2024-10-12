@@ -68,19 +68,31 @@
         var user = authState.User;
         if (user.Identity.IsAuthenticated)
         {
-            var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            using (var context = ContextFactory.CreateDbContext())
-            {
-                var identityUser = await UserManager.FindByIdAsync(userId);
-                if (identityUser != null)
-                {
-                    Input.Id = identityUser.Id;
-                    Input.Email = identityUser.Email;
-                    Username = identityUser.UserName;
-                    Input.PhoneNumber = identityUser.PhoneNumber;
-                    Input.Descript = identityUser.Descript;
-                }
-            }
+            //---------code sửa
+            // var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            // var user = authState.User;
+
+            // var userCurrent = UserManager.GetUserId(user);
+            // var idUser = Guid.Parse(userCurrent);
+
+            // var _httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+            // var response = await _httpClient.GetAsync($"/GetExams/{idUser}");
+
+
+            //---------code cũ
+            // var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            // using (var context = ContextFactory.CreateDbContext())
+            // {
+            //     var identityUser = await UserManager.FindByIdAsync(userId);
+            //     if (identityUser != null)
+            //     {
+            //         Input.Id = identityUser.Id;
+            //         Input.Email = identityUser.Email;
+            //         Username = identityUser.UserName;
+            //         Input.PhoneNumber = identityUser.PhoneNumber;
+            //         Input.Descript = identityUser.Descript;
+            //     }
+            // }
         }
     }
     private async Task HandleValidSubmit()

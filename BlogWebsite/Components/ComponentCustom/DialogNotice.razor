@@ -14,4 +14,21 @@
     [Parameter] public Color Color { get; set; }
 
     void Submit() => MudDialog.Close(DialogResult.Ok(true));
+
+
+//     var parameters = new DialogParameters<Dialog>();
+//     parameters.Add(x => x.ContentText, "Bạn chưa nộp bài, xác nhận rời đi?");
+//     parameters.Add(x => x.ButtonText, "Rời đi");
+//     parameters.Add(x => x.Color, Color.Warning);
+
+//     var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+//     var result = await DialogService.Show<Dialog>("Xác nhận", parameters, options).Result;
+//     if (result.Data != null)
+//     {
+//         if ((bool) result.Data)
+//         {
+//             Navigation.NavigateTo("");
+//         }
+// }
 }

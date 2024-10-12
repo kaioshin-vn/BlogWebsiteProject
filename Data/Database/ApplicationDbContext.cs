@@ -38,6 +38,10 @@ namespace BlogWebsite.Data
         {
             base.OnModelCreating(modelBuilder);
 
+            modelBuilder.Entity<Flower>()
+            .HasKey(o => new { o.Id, o.IdFlower });
+
+
             modelBuilder.Entity<PostTag>().HasKey(u => new
             {
                 u.IdTag,

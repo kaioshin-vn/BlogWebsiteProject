@@ -54,7 +54,7 @@
                 </EditForm>
                 <div class="row">
                     <div class="form-link col-6 d-flex  justify-content-start">
-                        <span>Đã có tài khoản?<a href="Account/Login" class="link signup-link">Đăng nhập</a></span>
+                        <span>Đã có tài khoản?<a href=""  class="link signup-link">Đăng nhập</a></span>
                     </div>
                     <div class="form-link col-6 d-flex justify-content-end">
                         <a href="/ForgotPassword" class="forgot-pass">Quên mật khẩu?</a>
@@ -69,6 +69,14 @@
 </div>
 
 <script>
+
+    const signUP = document.querySelector('.signup-link');
+
+    signUP.addEventListener('click', () => { 
+         window.location.href = 'Account/Login';
+
+    }) ;
+
     // Lấy input element
     const emailInput = document.querySelector('input[name="Input.NumberPhone"]');
     const nameInput = document.querySelector('input[name="Input.FullName"]');
@@ -205,6 +213,8 @@
         var user = CreateUser();
         user.Id = Guid.NewGuid();
         user.FullName = Input.FullName;
+        user.PhoneNumber = Input.NumberPhone;
+        user.Img = @"\Img\avatar_default1.jpg";
 
         await UserStore.SetUserNameAsync(user, Input.NumberPhone, CancellationToken.None);
         // var emailStore = GetEmailStore();

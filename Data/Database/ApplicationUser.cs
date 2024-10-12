@@ -11,7 +11,8 @@ namespace BlogWebsite.Data
         public string? Descript { get; set; }
         public string? Img { get; set; }
         public string? FullName { get; set; }
-        public string? AnotherInfo { get; set; }    
+        public string? ImgCover { get; set; }    
+        public string? Address { get; set; }
         public ICollection<Exam>? Exams { get; set; }
 
         public ICollection<ExamHistory>? ExamHistories { get; set; }

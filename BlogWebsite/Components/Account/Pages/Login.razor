@@ -42,7 +42,7 @@
                     </div>
                 </EditForm>
                 <div class="form-link">
-                    <span>Chưa có tài khoản? <a href="@(NavigationManager.GetUriWithQueryParameters("Account/Register", new Dictionary<string, object?> { ["ReturnUrl"] = ReturnUrl }))" class="link signup-link">Đăng kí</a></span>
+                    <span>Chưa có tài khoản? <a href="" class="link signup-link">Đăng kí</a></span>
                 </div>
             </div>
             <div class="line"></div>
@@ -53,7 +53,12 @@
     </section>
 </div>
 <script>
-    
+    const signUP = document.querySelector('.signup-link');
+
+    signUP.addEventListener('click', () => { 
+         window.location.href = 'Account/Register';
+
+    }) ;
      
     // Lấy input element
     const emailInput = document.querySelector('input[name="Input.PhoneNumber"]');
