@@ -11,11 +11,13 @@ namespace Data.Database.Table
 {
     public class Flower
     {
-        public Guid Id { get; set; }
+        public Guid IdUser { get; set; }
 
         public Guid IdFlower { get; set; }
 
         [ForeignKey("IdFlower")]
+        public ApplicationUser? UserFlower { get; set; }
+        [ForeignKey("IdUser")]
         public ApplicationUser? User { get; set; }
     }
 }

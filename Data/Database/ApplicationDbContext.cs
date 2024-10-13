@@ -43,7 +43,7 @@ namespace BlogWebsite.Data
             base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<Flower>()
-            .HasKey(o => new { o.Id, o.IdFlower });
+            .HasKey(o => new { o.IdUser, o.IdFlower });
 
 
             modelBuilder.Entity<PostTag>().HasKey(u => new
@@ -117,6 +117,12 @@ namespace BlogWebsite.Data
             modelBuilder.Entity<Response>()
                 .HasOne(n => n.User)
                 .WithMany(u => u.Responses)
+                .HasForeignKey(n => n.IdUser)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Flower>()
+                .HasOne(n => n.User)
+                .WithMany(u => u.Flowers)
                 .HasForeignKey(n => n.IdUser)
                 .OnDelete(DeleteBehavior.Restrict);
 

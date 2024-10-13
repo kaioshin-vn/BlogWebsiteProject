@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20240924115759_second")]
-    partial class second
+    [Migration("20241013165516_f")]
+    partial class f
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -34,7 +34,7 @@ namespace Data.Migrations
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
 
-                    b.Property<string>("AnotherInfo")
+                    b.Property<string>("Address")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ConcurrencyStamp")
@@ -51,7 +51,13 @@ namespace Data.Migrations
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("bit");
 
+                    b.Property<string>("FullName")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Img")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ImgCover")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("LockoutEnabled")
@@ -98,6 +104,21 @@ namespace Data.Migrations
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
 
                     b.ToTable("Users", (string)null);
+                });
+
+            modelBuilder.Entity("Data.Database.Table.Flower", b =>
+                {
+                    b.Property<Guid>("IdUser")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdFlower")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("IdUser", "IdFlower");
+
+                    b.HasIndex("IdFlower");
+
+                    b.ToTable("Flower");
                 });
 
             modelBuilder.Entity("Data.Database.Table.Notice", b =>
@@ -171,14 +192,20 @@ namespace Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<decimal>("Amount")
-                        .HasColumnType("decimal(18,2)");
+                    b.Property<double>("Amount")
+                        .HasColumnType("float");
 
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid>("IdUser")
+                    b.Property<Guid?>("IdUser")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("PaymentMethod")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -193,7 +220,7 @@ namespace Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("IdUser")
+                    b.Property<Guid?>("IdUser")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("OrderId")
@@ -231,28 +258,33 @@ namespace Data.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Content")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("CreateDate")
+                    b.Property<DateTime?>("CreateDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("EditDate")
                         .HasColumnType("datetime2");
 
                     b.Property<Guid>("IdUser")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("ImgFile")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
-                    b.Property<string>("Likes")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("NomalizedTitle")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("Like")
+                        .HasColumnType("int");
 
                     b.Property<string>("Title")
-                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("VideoFile")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("View")
@@ -263,6 +295,63 @@ namespace Data.Migrations
                     b.HasIndex("IdUser");
 
                     b.ToTable("Posts");
+                });
+
+            modelBuilder.Entity("Data.Database.Table.PostComment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreateDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid?>("ParentCommentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("PostId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ParentCommentId");
+
+                    b.HasIndex("PostId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("PostComments");
+                });
+
+            modelBuilder.Entity("Data.Database.Table.PostLike", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("PostId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PostId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("PostLikes");
                 });
 
             modelBuilder.Entity("Data.Database.Table.PostSave", b =>
@@ -293,6 +382,27 @@ namespace Data.Migrations
                     b.HasIndex("IdPost");
 
                     b.ToTable("PostTags");
+                });
+
+            modelBuilder.Entity("Data.Database.Table.PostView", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("PostId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PostId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("PostViews");
                 });
 
             modelBuilder.Entity("Data.Database.Table.ReplyResponse", b =>
@@ -722,18 +832,37 @@ namespace Data.Migrations
                     b.ToTable("UserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("Data.Database.Table.Notice", b =>
+            modelBuilder.Entity("Data.Database.Table.Flower", b =>
                 {
-                    b.HasOne("BlogWebsite.Data.ApplicationUser", "UserSend")
+                    b.HasOne("BlogWebsite.Data.ApplicationUser", "UserFlower")
                         .WithMany()
-                        .HasForeignKey("FromUser")
+                        .HasForeignKey("IdFlower")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("BlogWebsite.Data.ApplicationUser", "User")
+                        .WithMany("Flowers")
+                        .HasForeignKey("IdUser")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("User");
+
+                    b.Navigation("UserFlower");
+                });
+
+            modelBuilder.Entity("Data.Database.Table.Notice", b =>
+                {
+                    b.HasOne("BlogWebsite.Data.ApplicationUser", "UserSend")
+                        .WithMany("NoticesSent")
+                        .HasForeignKey("FromUser")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("BlogWebsite.Data.ApplicationUser", "UserReceive")
-                        .WithMany()
+                        .WithMany("NoticesReceived")
                         .HasForeignKey("ToUser")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("UserReceive");
@@ -752,7 +881,7 @@ namespace Data.Migrations
                     b.HasOne("BlogWebsite.Data.ApplicationUser", "User")
                         .WithMany("PaidPosts")
                         .HasForeignKey("IdUser")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Post");
@@ -764,9 +893,7 @@ namespace Data.Migrations
                 {
                     b.HasOne("BlogWebsite.Data.ApplicationUser", "User")
                         .WithMany("PaymentRequests")
-                        .HasForeignKey("IdUser")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("IdUser");
 
                     b.Navigation("User");
                 });
@@ -775,9 +902,7 @@ namespace Data.Migrations
                 {
                     b.HasOne("BlogWebsite.Data.ApplicationUser", "User")
                         .WithMany("PaymentTransactions")
-                        .HasForeignKey("IdUser")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("IdUser");
 
                     b.Navigation("User");
                 });
@@ -793,6 +918,50 @@ namespace Data.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Data.Database.Table.PostComment", b =>
+                {
+                    b.HasOne("Data.Database.Table.PostComment", "ParentComment")
+                        .WithMany("Replies")
+                        .HasForeignKey("ParentCommentId");
+
+                    b.HasOne("Data.Database.Table.Post", "Post")
+                        .WithMany("PostComments")
+                        .HasForeignKey("PostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BlogWebsite.Data.ApplicationUser", "User")
+                        .WithMany("PostComments")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("ParentComment");
+
+                    b.Navigation("Post");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Data.Database.Table.PostLike", b =>
+                {
+                    b.HasOne("Data.Database.Table.Post", "Post")
+                        .WithMany("PostLikes")
+                        .HasForeignKey("PostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BlogWebsite.Data.ApplicationUser", "User")
+                        .WithMany("PostLikes")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Post");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Data.Database.Table.PostSave", b =>
                 {
                     b.HasOne("Data.Database.Table.Post", "Post")
@@ -804,7 +973,7 @@ namespace Data.Migrations
                     b.HasOne("Data.Database.Table.Save", "Save")
                         .WithMany("PostSaves")
                         .HasForeignKey("IdSave")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Post");
@@ -831,6 +1000,25 @@ namespace Data.Migrations
                     b.Navigation("Tag");
                 });
 
+            modelBuilder.Entity("Data.Database.Table.PostView", b =>
+                {
+                    b.HasOne("Data.Database.Table.Post", "Post")
+                        .WithMany("PostViews")
+                        .HasForeignKey("PostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BlogWebsite.Data.ApplicationUser", "User")
+                        .WithMany("PostViews")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Post");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Data.Database.Table.ReplyResponse", b =>
                 {
                     b.HasOne("Data.Database.Table.Response", "Response")
@@ -842,7 +1030,7 @@ namespace Data.Migrations
                     b.HasOne("BlogWebsite.Data.ApplicationUser", "User")
                         .WithMany("ReplyResponses")
                         .HasForeignKey("IdUser")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Response");
@@ -861,7 +1049,7 @@ namespace Data.Migrations
                     b.HasOne("BlogWebsite.Data.ApplicationUser", "User")
                         .WithMany("Responses")
                         .HasForeignKey("IdUser")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Post");
@@ -885,7 +1073,7 @@ namespace Data.Migrations
                     b.HasOne("BlogWebsite.Data.ApplicationUser", "User")
                         .WithMany("Exams")
                         .HasForeignKey("IdUser")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("User");
@@ -902,7 +1090,7 @@ namespace Data.Migrations
                     b.HasOne("BlogWebsite.Data.ApplicationUser", "User")
                         .WithMany("ExamHistories")
                         .HasForeignKey("IdUser")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Exam");
@@ -989,6 +1177,12 @@ namespace Data.Migrations
 
                     b.Navigation("Exams");
 
+                    b.Navigation("Flowers");
+
+                    b.Navigation("NoticesReceived");
+
+                    b.Navigation("NoticesSent");
+
                     b.Navigation("PaidPosts");
 
                     b.Navigation("PaymentRequests");
@@ -996,6 +1190,12 @@ namespace Data.Migrations
                     b.Navigation("PaymentTransactions");
 
                     b.Navigation("Post");
+
+                    b.Navigation("PostComments");
+
+                    b.Navigation("PostLikes");
+
+                    b.Navigation("PostViews");
 
                     b.Navigation("ReplyResponses");
 
@@ -1008,9 +1208,20 @@ namespace Data.Migrations
                 {
                     b.Navigation("PaidPosts");
 
+                    b.Navigation("PostComments");
+
+                    b.Navigation("PostLikes");
+
                     b.Navigation("PostSaves");
 
+                    b.Navigation("PostViews");
+
                     b.Navigation("TagPosts");
+                });
+
+            modelBuilder.Entity("Data.Database.Table.PostComment", b =>
+                {
+                    b.Navigation("Replies");
                 });
 
             modelBuilder.Entity("Data.Database.Table.Save", b =>

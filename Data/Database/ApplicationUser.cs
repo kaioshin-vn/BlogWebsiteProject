@@ -14,6 +14,7 @@ namespace BlogWebsite.Data
         public string? ImgCover { get; set; }
         public string? Address { get; set; }
         public ICollection<Exam>? Exams { get; set; }
+        public ICollection<Flower>? Flowers { get; set; }
 
         public ICollection<ExamHistory>? ExamHistories { get; set; }
         public ICollection<Post>? Post { get; set; }

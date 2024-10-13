@@ -105,13 +105,13 @@ namespace Data.Migrations
 
             modelBuilder.Entity("Data.Database.Table.Flower", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<Guid>("IdUser")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("IdFlower")
                         .HasColumnType("uniqueidentifier");
 
-                    b.HasKey("Id", "IdFlower");
+                    b.HasKey("IdUser", "IdFlower");
 
                     b.HasIndex("IdFlower");
 
@@ -279,6 +279,9 @@ namespace Data.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Title")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("VideoFile")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("View")
@@ -828,13 +831,21 @@ namespace Data.Migrations
 
             modelBuilder.Entity("Data.Database.Table.Flower", b =>
                 {
-                    b.HasOne("BlogWebsite.Data.ApplicationUser", "User")
+                    b.HasOne("BlogWebsite.Data.ApplicationUser", "UserFlower")
                         .WithMany()
                         .HasForeignKey("IdFlower")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("BlogWebsite.Data.ApplicationUser", "User")
+                        .WithMany("Flowers")
+                        .HasForeignKey("IdUser")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.Navigation("User");
+
+                    b.Navigation("UserFlower");
                 });
 
             modelBuilder.Entity("Data.Database.Table.Notice", b =>
@@ -1162,6 +1173,8 @@ namespace Data.Migrations
                     b.Navigation("ExamHistories");
 
                     b.Navigation("Exams");
+
+                    b.Navigation("Flowers");
 
                     b.Navigation("NoticesReceived");
 
