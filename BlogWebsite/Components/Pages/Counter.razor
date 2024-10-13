@@ -1,15 +1,69 @@
 ﻿@page "/counter"
+@using Client.Components.Layout
+@using Client.Hub
+@using Microsoft.AspNetCore.SignalR.Client
+@using System.Security.Claims
 
-<Client.Components.ComponentCustom.LoadingLocal></Client.Components.ComponentCustom.LoadingLocal>
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+@inject UserManager<ApplicationUser> UserManager
+@inject IHttpClientFactory HttpClientFactory
+
+
+<button @onclick="Click">Click</button>
+<button @onclick="Check">Check</button>
 <script>
     console.log("ddd")
 </script>
 @code {
+
+
+    private HubConnection? hubNotice;
+
+    protected int NoticeCount = 0;
+    public string Avatar;
+    private ClaimsPrincipal user;
+
+    [CascadingParameter]
+    public MainLayout Layout { get; set; }
     protected override void OnInitialized()
     {
-        
+
         Console.WriteLine("on");
     }
+    async Task Click()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        user = authState.User;
+        // Lấy ID người dùng từ Claims
+        var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (userId != null)
+        {
+            hubNotice = new HubConnectionBuilder()
+            .WithUrl(Navigation.ToAbsoluteUri("/hubNotice"))
+            .Build();
+
+            await hubNotice.StartAsync();
+
+            await hubNotice.SendAsync("RegisterConnection", userId);
+            await hubNotice.SendAsync("SendPrivateMessage", userId, 12);
+        }
+    }
+
+    async Task Check()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        user = authState.User;
+        // Lấy ID người dùng từ Claims
+        var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (userId != null)
+        {
+            await Notice.RaiseNotice(Guid.Parse(userId), HttpClientFactory, Navigation);
+        }
+    }
+
 
     protected async override Task OnParametersSetAsync()
     {

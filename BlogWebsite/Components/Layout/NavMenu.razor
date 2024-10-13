@@ -51,69 +51,7 @@
         <MudNavLink Href="/security" Icon="@Icons.Material.Filled.Security" IconColor="Color.Info" Class="rounded-3 overflow-hidden m-3">Liên hệ </MudNavLink>
         <MudNavLink Href="/security" Icon="@Icons.Material.Filled.Security" IconColor="Color.Info" Class="rounded-3 overflow-hidden m-3">Best of Kaizen</MudNavLink>
     </MudNavGroup>
-
->>>>>>> be11ec0564bf42a230404e5d88977f8170774da0
 </MudNavMenu>
-
-@*
-<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
-    <nav class="flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="counter">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Counter
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="weather">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="auth">
-                <span class="bi bi-lock-nav-menu" aria-hidden="true"></span> Auth Required
-            </NavLink>
-        </div>
-
-        <AuthorizeView>
-            <Authorized>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="Account/Manage">
-                        <span class="bi bi-person-fill-nav-menu" aria-hidden="true"></span> @context.User.Identity?.Name
-                    </NavLink>
-                </div>
-                <div class="nav-item px-3">
-                    <form action="Account/Logout" method="post">
-                        <AntiforgeryToken />
-                        <input type="hidden" name="ReturnUrl" value="@currentUrl" />
-                        <button type="submit" class="nav-link">
-                            <span class="bi bi-arrow-bar-left-nav-menu" aria-hidden="true"></span> Logout
-                        </button>
-                    </form>
-                </div>
-            </Authorized>
-            <NotAuthorized>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="Account/Register">
-                        <span class="bi bi-person-nav-menu" aria-hidden="true"></span> Register
-                    </NavLink>
-                </div>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="Account/Login">
-                        <span class="bi bi-person-badge-nav-menu" aria-hidden="true"></span> Login
-                    </NavLink>
-                </div>
-            </NotAuthorized>
-        </AuthorizeView>
-    </nav>
-</div> *@
 
 @code {
     private string? currentUrl;
@@ -139,28 +77,5 @@
 @code {
     public bool ToolbarCheckBox { get; set; } = false;
     string _selectedFolder = "Inbox";
-
-    private void ItemUpdated(MudItemDropInfo<DropItem> dropItem)
-    {
-        dropItem.Item.Identifier = dropItem.DropzoneIdentifier;
-
-    }
-
-    private List<DropItem> _items = new()
-    {
-        new DropItem(){ Name = "Your exchange rate and Klarna benefits here", Identifier = "Inbox" },
-        new DropItem(){ Name = "IKEA - Betalningsbekräftelse för din order", Identifier = "Inbox" },
-        new DropItem(){ Name = "Leverans beställd till dig​", Identifier = "Inbox" },
-        new DropItem(){ Name = "You’ve Got Sales! Cotton Bureau On Demand Report for Thursday, February 24, 2022", Identifier = "Inbox" },
-        new DropItem(){ Name = "Answer: Offer to buy mudblazor", Identifier = "Drafts" },
-        new DropItem(){ Name = "Inloggningsvarning för Facebook Messenger for Android", Identifier = "Social" },
-        new DropItem(){ Name = "Nya privata meddelanden på SweClockers", Identifier = "Forums" },
-    };
-
-    public class DropItem
-    {
-        public string Name { get; init; }
-        public string Identifier { get; set; }
-    }
 }
 

@@ -2,15 +2,22 @@
 @using Microsoft.AspNetCore.Identity
 @using System.Security.Claims
 @using Microsoft.AspNetCore.Antiforgery
+@using Microsoft.AspNetCore.SignalR.Client
+
 @inherits LayoutComponentBase
 <MudThemeProvider />
 <MudPopoverProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
+
+@inject NavigationManager Navigation
+@inject IHttpClientFactory HttpClientFactory
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject UserManager<ApplicationUser> UserManager
 @inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
 @inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+@inject IJSRuntime JS
+
 <style>
     a:hover {
         color: unset;
@@ -59,12 +66,16 @@
                                     <MudFab Class="mx-1" StartIcon="@Icons.Material.Filled.Add" Size="Size.Medium" Style="border:none;box-shadow:none;background-color:none;" Label="Tạo mới" />
                                 </MudTooltip>
 
-                                <MudBadge Dot="true" Color="Color.Info" Overlap="true" Class="">
-                                    <MudIconButton Icon="@Icons.Material.Filled.Notifications"></MudIconButton>
-                                </MudBadge>
+                                <MudIconButton Style="overflow:visible;">
+                                    <MudBadge Content="NoticeCount" Color="Color.Tertiary" Overlap="true" Class="">
+                                        <MudIcon Icon="@Icons.Material.Filled.Notifications">
+                                        </MudIcon>
+                                    </MudBadge>
+                                </MudIconButton>
+
                             </div>
 
-                            <MudMenu Class="py-2"  ActivationEvent="@MouseEvent.MouseOver" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.BottomRight">
+                            <MudMenu Class="py-2" ActivationEvent="@MouseEvent.MouseOver" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.BottomRight">
                                 <ActivatorContent>
                                     <MudAvatar Class="avatar" Variant="Variant.Outlined">
                                         <MudImage Src="@Avatar"></MudImage>
@@ -93,7 +104,7 @@
                                         <form action="Account/Logout" class="p-0" method="post">
                                             <input type="hidden" name="__RequestVerificationToken" value="@AntiforgeryToken" />
                                             <input type="hidden" name="ReturnUrl" value="Account/Login" />
-                                            <button type="submit" style="width:200px;" class="d-flex justify-content-start ">
+                                            <button type="submit" style="width:230px;" class="d-flex justify-content-start ">
                                                 <MudFab class="p-0 me-3" StartIcon="@Icons.Material.Filled.Logout" Color="Color.Tertiary" Size="Size.Small" />
                                                 <b>Đăng xuất</b>
                                             </button>
@@ -123,7 +134,6 @@
                                             <span>Đăng nhập</span>
                                         </button>
                                     </center>
-
                                 </NavLink>
                             </div>
                         </div>
@@ -137,11 +147,11 @@
                     <NavMenu />
                 </div>
             </div>
-
-            <article class="content w-100 px-4 scrollbar">
-                @Body
-            </article>
+                <article class="content w-100 px-4 scrollbar">
+                    @Body
+                </article>
         </div>
+        <audio id="audioPlayer" src="audio/newNoticeSound.mp3"></audio>
     </main>
 </div>
 
@@ -151,13 +161,24 @@
     <a class="dismiss">🗙</a>
 </div>
 
+<script>
+    function playAudio() {
+        var audioPlayer = document.getElementById('audioPlayer');
+        if (audioPlayer) {
+            audioPlayer.play();
+        }
+    }
+</script>
+
 @code {
 
     string Search;
 
     private string AntiforgeryToken;
 
-    protected int NoticeCount;
+    private HubConnection? hubNotice;
+
+    protected int NoticeCount = 13;
     public string Avatar;
     private ClaimsPrincipal user;
     protected override async Task OnInitializedAsync()
@@ -174,6 +195,29 @@
         if (userId != null)
         {
             var currentUser = await UserManager.FindByIdAsync(userId);
+
+            hubNotice = new HubConnectionBuilder()
+            .WithUrl(Navigation.ToAbsoluteUri("/hubNotice"))
+            .Build();
+
+            hubNotice.On<int>("ReceiveNotification", async (noticeCount) =>
+            {
+                this.NoticeCount = noticeCount;
+                await InvokeAsync(StateHasChanged);
+                await JS.InvokeVoidAsync("playAudio");
+            });
+
+            var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+            var response = await httpClient.GetStringAsync($"/getAmountNoticeUser/{userId}");
+            if (response != null)
+            {
+                NoticeCount = Convert.ToInt32(response);
+            }
+
+            await hubNotice.StartAsync();
+
+            await hubNotice.SendAsync("RegisterConnection", userId);
+
             if (currentUser != null)
             {
                 Avatar = currentUser.Img;

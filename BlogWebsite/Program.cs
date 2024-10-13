@@ -6,6 +6,7 @@ using Client.VNPayService;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using MudBlazor;
 using MudBlazor.Services;
@@ -136,6 +137,9 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.UseAntiforgery();
 //app.UseSession();
+
+app.MapHub<NoticeHub>("/hubNotice");
+
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
