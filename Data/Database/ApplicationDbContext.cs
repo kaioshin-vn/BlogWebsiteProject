@@ -35,7 +35,7 @@ namespace BlogWebsite.Data
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             base.OnConfiguring(optionsBuilder);
-            optionsBuilder.UseSqlServer("Server=ADMIN-PC\\SQLEXPRESS01;Database=DATN;Trusted_Connection=True; TrustServerCertificate=true");
+            optionsBuilder.UseSqlServer("Server=.;Database=DATN;Trusted_Connection=True; TrustServerCertificate=true");
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

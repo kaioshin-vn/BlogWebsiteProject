@@ -1,4 +1,6 @@
 ﻿@page "/create-community2"
+
+
 @inject IJSRuntime JS
 @inject NavigationManager Navigate
 
@@ -14,11 +16,12 @@
                         <MudTextField T="string" Label="Icon" Variant="Variant.Filled" FullWidth="true" @bind-Value="@IconFileName" ReadOnly="true" />
                     </MudItem>
                     <MudItem xs="4" class="d-flex align-items-center justify-end">
-                        <MudFileUpload T="IBrowserFile" FilesChanged="UploadIconFile">
+                        <MudFileUpload @ref="fileUploadIcon" T="IBrowserFile" FilesChanged="UploadIconFile" AcceptedFileTypes="new string[] { 'image/jpeg', 'image/png', 'image/jpg', 'image/webp'}">
                             <ActivatorContent>
                                 <MudFab Color="Color.Secondary"
                                         StartIcon="@Icons.Material.Filled.Image"
-                                        Label="@iconButtonLabel" />
+                                        Label="@iconButtonLabel" 
+                                        for=""/>
                             </ActivatorContent>
                         </MudFileUpload>
                     </MudItem>
@@ -37,7 +40,7 @@
                         <MudTextField T="string" Label="Banner" Variant="Variant.Filled" FullWidth="true" @bind-Value="@BannerFileName" ReadOnly="true" />
                     </MudItem>
                     <MudItem xs="4" class="d-flex align-items-center justify-end">
-                        <MudFileUpload T="IBrowserFile" FilesChanged="UploadBannerFile">
+                        <MudFileUpload @ref="fileUploadBanner" T="IBrowserFile" FilesChanged="UploadBannerFile">
                             <ActivatorContent>
                                 <MudFab Color="Color.Secondary"
                                         StartIcon="@Icons.Material.Filled.Image"
@@ -99,7 +102,9 @@
     private string iconButtonLabel = "Add";  
     private string bannerButtonLabel = "Add"; 
     private bool isIconUploaded = false; 
-    private bool isBannerUploaded = false; 
+    private bool isBannerUploaded = false;
+    private MudFileUpload<IBrowserFile> fileUploadIcon;
+    private MudFileUpload<IBrowserFile> fileUploadBanner;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -116,17 +121,20 @@
         Console.WriteLine("Uploading Icon...");
         if (file != null)
         {
-            IconFileName = file.Name;
-            var buffer = new byte[file.Size];
-            await file.OpenReadStream().ReadAsync(buffer);
-            var imageBase64 = Convert.ToBase64String(buffer);
-            iconUrl = $"data:image/png;base64,{imageBase64}";
+            using (var stream = file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024))
+            {
+                using (var memoryStream = new MemoryStream())
+                {
+                    await stream.CopyToAsync(memoryStream);
+                    var buffer = memoryStream.ToArray();
 
-            isIconUploaded = true; 
-            Console.WriteLine($"Icon uploaded: {IconFileName}");
+                    // Chuyển đổi buffer sang base64 string
+                    iconUrl = $"data:{file.ContentType};base64,{Convert.ToBase64String(buffer)}";
+                    isIconUploaded = true;
+                    StateHasChanged();
+                }
+            }
 
-            iconButtonLabel = "Change"; 
-            StateHasChanged(); 
         }
         else
         {
@@ -139,16 +147,19 @@
         Console.WriteLine("Uploading Banner...");
         if (file != null)
         {
-            BannerFileName = file.Name;
-            var buffer = new byte[file.Size];
-            await file.OpenReadStream().ReadAsync(buffer);
-            var imageBase64 = Convert.ToBase64String(buffer);
-            bannerUrl = $"data:image/png;base64,{imageBase64}"; 
+            using (var stream = file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024))
+            {
+                using (var memoryStream = new MemoryStream())
+                {
+                    await stream.CopyToAsync(memoryStream);
+                    var buffer = memoryStream.ToArray();
 
-            isBannerUploaded = true; 
-
-            bannerButtonLabel = "Change";
-            StateHasChanged(); 
+                    // Chuyển đổi buffer sang base64 string
+                    bannerUrl = $"data:{file.ContentType};base64,{Convert.ToBase64String(buffer)}";
+                    isBannerUploaded = true;
+                    StateHasChanged();
+                }
+            }
         }
         else
         {
@@ -156,14 +167,15 @@
         }
     }
 
-    private void RemoveIcon()
+    private async Task RemoveIcon()
     {
         try
         {
             iconUrl = "/img/icon.jpg";
             IconFileName = "";
             isIconUploaded = false;
-            iconButtonLabel = "Add"; 
+            iconButtonLabel = "Add";
+            await fileUploadIcon.ClearAsync();
             StateHasChanged();
         }
         catch (Exception ex)
@@ -172,7 +184,7 @@
         }
     }
 
-    private void RemoveBanner()
+    private async Task RemoveBanner()
     {
         Console.WriteLine("Removing Banner...");
         try
@@ -181,6 +193,7 @@
             BannerFileName = "";
             isBannerUploaded = false; 
             bannerButtonLabel = "Add"; 
+            await fileUploadBanner.ClearAsync();
             StateHasChanged(); 
         }
         catch (Exception ex)
