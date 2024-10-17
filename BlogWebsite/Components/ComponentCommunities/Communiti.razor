@@ -1,0 +1,122 @@
+﻿@page "/create-community"
+@inject IJSRuntime JS
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigate
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="p-4">
+    <MudPaper Class="p-4" Elevation="3">
+        <MudText Typo="Typo.h4" Class="mb-3">Tell us about your community</MudText>
+        <MudText Typo="Typo.body1" Class="mb-4">A name and description help people understand what your community is all about.</MudText>
+
+        <MudForm>
+            <MudGrid Spacing="3">
+                <MudItem xs="8">
+                    <MudTextField @bind-Value="CommunityName"
+                                  Label="Community name *"
+                                  Variant="Variant.Filled"
+                                  FullWidth="true"
+                                  @onblur="@(() => SaveToLocalStorage("CommunityName", CommunityName))" />
+                    <MudText Typo="Typo.caption">@CommunityName.Length/21</MudText>
+
+                    <MudTextField @bind-Value="Description"
+                                  Label="Description *"
+                                  Variant="Variant.Filled"
+                                  Lines="7"
+                                  @onblur="@(() => SaveToLocalStorage("Description", Description))" />
+                    <MudText Typo="Typo.caption">@Description.Length/500</MudText>
+                </MudItem>
+                <MudItem xs="4">
+                    <MudCard Class="p-2">
+                        <MudText Typo="Typo.h6">
+                            @if (string.IsNullOrEmpty(CommunityName))
+                            {
+                                <span>Community</span>
+                            }
+                            else
+                            {
+                                @CommunityName
+                            }
+                        </MudText>
+                        <MudText Typo="Typo.caption">1 member · 1 online</MudText>
+                        <MudText Typo="Typo.body2">
+                            @if (string.IsNullOrEmpty(Description))
+                            {
+                                <span>Your community description</span>
+                            }
+                            else
+                            {
+                                @Description
+                            }
+                        </MudText>
+                    </MudCard>
+                </MudItem>
+
+                <MudItem xs="12" Class="d-flex justify-between">
+                    <MudButton Variant="Variant.Text" OnClick="@Cancel" StartIcon="@Icons.Material.Filled.Cancel">Cancel</MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@Next">Next</MudButton>
+                </MudItem>
+            </MudGrid>
+        </MudForm>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private string CommunityName { get; set; } = "";
+    private string Description { get; set; } = "";
+    // private string IconFileName { get; set; } = "";
+    // private string BannerFileName { get; set; } = "";
+    private bool _hasRendered = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            CommunityName = await JS.InvokeAsync<string>("localStorage.getItem", "CommunityName") ?? "";
+            Description = await JS.InvokeAsync<string>("localStorage.getItem", "Description") ?? "";
+            // IconFileName = await JS.InvokeAsync<string>("localStorage.getItem", "IconFileName") ?? "";
+            // BannerFileName = await JS.InvokeAsync<string>("localStorage.getItem", "BannerFileName") ?? "";
+            _hasRendered = true;
+            StateHasChanged(); 
+        }
+      
+    }
+
+    private async Task SaveToLocalStorage(string key, string value)
+    {
+        await JS.InvokeVoidAsync("localStorage.setItem", key, value);
+    }
+
+
+    private async void Cancel()
+    {
+        // Xóa dữ liệu khỏi localStorage
+       await JS.InvokeVoidAsync("localStorage.removeItem", "CommunityName");
+       await JS.InvokeVoidAsync("localStorage.removeItem", "Description");
+        // await JS.InvokeVoidAsync("localStorage.removeItem", "IconFileName");
+        // await JS.InvokeVoidAsync("localStorage.removeItem", "BannerFileName");
+        Navigate.NavigateTo("/");
+    }
+
+    private async void Next()
+    {
+        if (string.IsNullOrWhiteSpace(CommunityName) || CommunityName.Length > 21)
+        {
+            Snackbar.Add("Tên cộng đồng không được bỏ trống và không quá 21 ký tự.", Severity.Warning);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(Description) || Description.Length > 500)
+        {
+            Snackbar.Add("Mô tả không được bỏ trống và không quá 500 ký tự.", Severity.Warning);
+            return;
+        }
+        // Lưu vào localStorage trước khi chuyển trang
+        await SaveToLocalStorage("CommunityName", CommunityName);
+        await SaveToLocalStorage("Description", Description); 
+        // await SaveToLocalStorage("IconFileName", IconFileName);
+        // await SaveToLocalStorage("BannerFileName", BannerFileName);
+        Navigate.NavigateTo("/create-community2");
+    }
+
+   
+}
