@@ -33,9 +33,6 @@
                 </MudCardActions>
                 <MudForm @ref="form">
                     <MudGrid>
-                        <MudItem xs="12">
-                            <MudTextField Style="border-radius:20px" @bind-Value="createPost.IdUser" Label="Id User" Variant="Variant.Outlined"></MudTextField>
-                        </MudItem>
                          <MudItem xs="12">
                             <MudTextField Style="border-radius:20px" @bind-Value="createPost.Title" Label="Tiêu đề" Variant="Variant.Outlined"></MudTextField>
                         </MudItem>
@@ -129,13 +126,29 @@
             fileName = imgFile.Name;
     }
 
+    public class ViewModelTest
+    {
+        public Guid Id;
+        public string Title;
+        public string Description;
+
+    }
+
     public async Task CreatePostSubmit()
     {
         var content = new MultipartFormDataContent();
-        content.Add(new StringContent(createPost.IdUser.ToString()), "idUser");
+
+
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        var userCurrent = await UserManager.GetUserAsync(user);
+        var userId = userCurrent.Id;
+        createPost.IdUser = userId;
+
+        content.Add(new StringContent(createPost.IdUser.ToString()), "userId");
         content.Add(new StringContent(createPost.Title), "title");
         content.Add(new StringContent(createPost.Description), "description");
-        content.Add(new StringContent(createPost.Content = await JSRunTime.InvokeAsync<string>("getSummernoteContent")), "content");
+        content.Add(new StringContent(await JSRunTime.InvokeAsync<string>("getSummernoteContent")), "content");
 
         // Lấy nội dung từ Summernote
         if (imgFile != null)
@@ -143,17 +156,21 @@
             var fileContent = new StreamContent(imgFile.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024));
             fileContent.Headers.ContentType = new MediaTypeHeaderValue(imgFile.ContentType);
             content.Add(fileContent, "imgFile", imgFile.Name);
-
         }
+
         var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
-        var response = await httpClient.PostAsync("/api/post/createPost", content);
+        var response = await httpClient.PostAsync("/api/post/createPost", content); 
         if (response.IsSuccessStatusCode)
         {
             Navigation.NavigateTo("/question");
         }
-        var errorMessage = await response.Content.ReadAsStringAsync();
-        Console.WriteLine($"Error: {errorMessage}");
+        else
+        {
+            var errorMessage = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"Error: {errorMessage}");
+        }
     }
+
 
     private void ComeBack()
     {

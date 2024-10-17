@@ -162,7 +162,7 @@
     protected override async Task OnInitializedAsync()
     {
         var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
-        lstPostDTO = await httpClient.GetFromJsonAsync<List<PostDTO>>("/api/post/getall");
+        lstPostDTO = await httpClient.GetFromJsonAsync<List<PostDTO>>("/api/post/getPost");
     }
 
     public async Task LikePost(Guid id)

@@ -23,7 +23,7 @@ namespace API.Controllers
             _environment = environment;
         }
 
-        [HttpGet("get_all")]
+        [HttpGet("getPostPagination")]
         public IActionResult GetAllPostPage(int page = 1, string inputSearch = null)
         {
             int pageSize = 10;
@@ -50,14 +50,14 @@ namespace API.Controllers
             });
         }
 
-        [HttpGet("getall")]        
+        [HttpGet("getPost")]        
         public async Task<IActionResult> GetAllPost()
         {
             var lstPost = await _context.Posts.Where(x => !x.IsDeleted).ToListAsync();
             return Ok(lstPost);
         }
 
-        [HttpGet("getById/{id}")]
+        [HttpGet("getByIdPost/{id}")]
         public async Task<IActionResult> GetById(Guid id)
         {
             var getIdPost = await _context.Posts.FindAsync(id);
