@@ -28,7 +28,7 @@
         <MudCard Class="pa-4" Style="width:500px;">
                 <MudText>Hãy điền tên đăng nhập của bạn</MudText>
                 <InputText @bind-Value="Input.Email" class="form-control" style="display:none;"/>
-                <MudTextField Class="mt-3" @bind-Value="Input.FullName" Label="Tên đăng nhập" Variant="Variant.Outlined" InputType="@InputType.Text" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Person" AdornmentAriaLabel="Tên đăng nhập" name="Input.FullName" />
+                <MudTextField Class="mt-3" @bind-Value="Input.FullName" Label="Tên đăng nhập" Variant="MudBlazor.Variant.Outlined" InputType="@InputType.Text" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Person" AdornmentAriaLabel="Tên đăng nhập" name="Input.FullName" />
                 @if (message != null)
                 {
                     <div style="text-align:left" class="alert alert-danger my-3">

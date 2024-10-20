@@ -2,6 +2,7 @@
 using BlogWebsite.Components.Account;
 using BlogWebsite.Data;
 using Client.Components;
+using Client.StaticClass;
 using Client.VNPayService;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -10,6 +11,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using MudBlazor;
 using MudBlazor.Services;
+using Radzen;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -42,7 +44,7 @@ builder.Services.AddMudServices(config =>
     config.SnackbarConfiguration.VisibleStateDuration = 1200;
     config.SnackbarConfiguration.HideTransitionDuration = 250;
     config.SnackbarConfiguration.ShowTransitionDuration = 250;
-    config.SnackbarConfiguration.SnackbarVariant = Variant.Filled;
+    config.SnackbarConfiguration.SnackbarVariant = MudBlazor.Variant.Filled;
 });
 // Add services to the container.
 builder.Services.AddRazorComponents()
@@ -114,7 +116,7 @@ builder.Services.AddIdentityCore<ApplicationUser>(options => { })
 
 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
 builder.Services.AddScoped<VnPayService>();
-
+builder.Services.AddRadzenComponents();
 
 var app = builder.Build();
 // Configure the HTTP request pipeline.
@@ -128,6 +130,11 @@ else
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
+
+app.MapGroup("minimalApi")
+    .WithTags("UploadFile Apis v1")
+    .ApiUploadFile();
+
 
 
 app.UseHttpsRedirection();

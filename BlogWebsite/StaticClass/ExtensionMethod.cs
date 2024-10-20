@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Components.Forms;
+﻿using Azure.Core;
+using Microsoft.AspNetCore.Components.Forms;
 using System.Text;
 
 namespace ASM_PH35423.StaticClass
@@ -40,5 +41,6 @@ namespace ASM_PH35423.StaticClass
             var base64EncodedBytes = Convert.FromBase64String(base64EncodedData);
             return Encoding.UTF8.GetString(base64EncodedBytes);
         }
+
     }
 }
