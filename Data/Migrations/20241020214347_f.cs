@@ -6,11 +6,27 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Data.Migrations
 {
     /// <inheritdoc />
-    public partial class first : Migration
+    public partial class f : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.CreateTable(
+                name: "Groups",
+                columns: table => new
+                {
+                    IdGroup = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ImgGroup = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ImgCover = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    StateGroup = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Groups", x => x.IdGroup);
+                });
+
             migrationBuilder.CreateTable(
                 name: "Roles",
                 columns: table => new
@@ -68,6 +84,24 @@ namespace Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Topics",
+                columns: table => new
+                {
+                    IdTopic = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    TopicName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    GroupIdGroup = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Topics", x => x.IdTopic);
+                    table.ForeignKey(
+                        name: "FK_Topics_Groups_GroupIdGroup",
+                        column: x => x.GroupIdGroup,
+                        principalTable: "Groups",
+                        principalColumn: "IdGroup");
+                });
+
+            migrationBuilder.CreateTable(
                 name: "RoleClaims",
                 columns: table => new
                 {
@@ -84,6 +118,30 @@ namespace Data.Migrations
                         name: "FK_RoleClaims_Roles_RoleId",
                         column: x => x.RoleId,
                         principalTable: "Roles",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "AdminGroups",
+                columns: table => new
+                {
+                    IdGroup = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    IdAdmin = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AdminGroups", x => new { x.IdGroup, x.IdAdmin });
+                    table.ForeignKey(
+                        name: "FK_AdminGroups_Groups_IdGroup",
+                        column: x => x.IdGroup,
+                        principalTable: "Groups",
+                        principalColumn: "IdGroup",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_AdminGroups_Users_IdAdmin",
+                        column: x => x.IdAdmin,
+                        principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -137,6 +195,30 @@ namespace Data.Migrations
                         principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "MemberGroups",
+                columns: table => new
+                {
+                    IdGroup = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    IdMember = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_MemberGroups", x => new { x.IdGroup, x.IdMember });
+                    table.ForeignKey(
+                        name: "FK_MemberGroups_Groups_IdGroup",
+                        column: x => x.IdGroup,
+                        principalTable: "Groups",
+                        principalColumn: "IdGroup",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_MemberGroups_Users_IdMember",
+                        column: x => x.IdMember,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -227,7 +309,7 @@ namespace Data.Migrations
                     Content = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     ImgFile = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     VideoFile = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Like = table.Column<int>(type: "int", nullable: false),
+                    Like = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     View = table.Column<int>(type: "int", nullable: false),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
@@ -347,6 +429,30 @@ namespace Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "GroupTopics",
+                columns: table => new
+                {
+                    IdGroup = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    IdTopic = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_GroupTopics", x => new { x.IdGroup, x.IdTopic });
+                    table.ForeignKey(
+                        name: "FK_GroupTopics_Groups_IdGroup",
+                        column: x => x.IdGroup,
+                        principalTable: "Groups",
+                        principalColumn: "IdGroup",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_GroupTopics_Topics_IdTopic",
+                        column: x => x.IdTopic,
+                        principalTable: "Topics",
+                        principalColumn: "IdTopic",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "ExamHistories",
                 columns: table => new
                 {
@@ -403,6 +509,30 @@ namespace Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "GroupPosts",
+                columns: table => new
+                {
+                    IdGroup = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    IdPost = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_GroupPosts", x => new { x.IdGroup, x.IdPost });
+                    table.ForeignKey(
+                        name: "FK_GroupPosts_Groups_IdGroup",
+                        column: x => x.IdGroup,
+                        principalTable: "Groups",
+                        principalColumn: "IdGroup",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_GroupPosts_Posts_IdPost",
+                        column: x => x.IdPost,
+                        principalTable: "Posts",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "PaidPosts",
                 columns: table => new
                 {
@@ -424,65 +554,6 @@ namespace Data.Migrations
                     table.ForeignKey(
                         name: "FK_PaidPosts_Users_IdUser",
                         column: x => x.IdUser,
-                        principalTable: "Users",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "PostComments",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    PostId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Content = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    CreateDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
-                    ParentCommentId = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_PostComments", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_PostComments_PostComments_ParentCommentId",
-                        column: x => x.ParentCommentId,
-                        principalTable: "PostComments",
-                        principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_PostComments_Posts_PostId",
-                        column: x => x.PostId,
-                        principalTable: "Posts",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_PostComments_Users_UserId",
-                        column: x => x.UserId,
-                        principalTable: "Users",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "PostLikes",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    PostId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_PostLikes", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_PostLikes_Posts_PostId",
-                        column: x => x.PostId,
-                        principalTable: "Posts",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_PostLikes_Users_UserId",
-                        column: x => x.UserId,
                         principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
@@ -650,6 +721,11 @@ namespace Data.Migrations
                 });
 
             migrationBuilder.CreateIndex(
+                name: "IX_AdminGroups_IdAdmin",
+                table: "AdminGroups",
+                column: "IdAdmin");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_ExamHistories_IdExam",
                 table: "ExamHistories",
                 column: "IdExam");
@@ -673,6 +749,21 @@ namespace Data.Migrations
                 name: "IX_Flower_IdFlower",
                 table: "Flower",
                 column: "IdFlower");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_GroupPosts_IdPost",
+                table: "GroupPosts",
+                column: "IdPost");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_GroupTopics_IdTopic",
+                table: "GroupTopics",
+                column: "IdTopic");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_MemberGroups_IdMember",
+                table: "MemberGroups",
+                column: "IdMember");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Notices_FromUser",
@@ -703,31 +794,6 @@ namespace Data.Migrations
                 name: "IX_PaymentTransactions_IdUser",
                 table: "PaymentTransactions",
                 column: "IdUser");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_PostComments_ParentCommentId",
-                table: "PostComments",
-                column: "ParentCommentId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_PostComments_PostId",
-                table: "PostComments",
-                column: "PostId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_PostComments_UserId",
-                table: "PostComments",
-                column: "UserId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_PostLikes_PostId",
-                table: "PostLikes",
-                column: "PostId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_PostLikes_UserId",
-                table: "PostLikes",
-                column: "UserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Posts_IdUser",
@@ -803,6 +869,11 @@ namespace Data.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_Topics_GroupIdGroup",
+                table: "Topics",
+                column: "GroupIdGroup");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_UserClaims_UserId",
                 table: "UserClaims",
                 column: "UserId");
@@ -834,10 +905,22 @@ namespace Data.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
+                name: "AdminGroups");
+
+            migrationBuilder.DropTable(
                 name: "ExamHistoryDetails");
 
             migrationBuilder.DropTable(
                 name: "Flower");
+
+            migrationBuilder.DropTable(
+                name: "GroupPosts");
+
+            migrationBuilder.DropTable(
+                name: "GroupTopics");
+
+            migrationBuilder.DropTable(
+                name: "MemberGroups");
 
             migrationBuilder.DropTable(
                 name: "Notices");
@@ -850,12 +933,6 @@ namespace Data.Migrations
 
             migrationBuilder.DropTable(
                 name: "PaymentTransactions");
-
-            migrationBuilder.DropTable(
-                name: "PostComments");
-
-            migrationBuilder.DropTable(
-                name: "PostLikes");
 
             migrationBuilder.DropTable(
                 name: "PostSaves");
@@ -891,6 +968,9 @@ namespace Data.Migrations
                 name: "ExamHistories");
 
             migrationBuilder.DropTable(
+                name: "Topics");
+
+            migrationBuilder.DropTable(
                 name: "Saves");
 
             migrationBuilder.DropTable(
@@ -904,6 +984,9 @@ namespace Data.Migrations
 
             migrationBuilder.DropTable(
                 name: "Exams");
+
+            migrationBuilder.DropTable(
+                name: "Groups");
 
             migrationBuilder.DropTable(
                 name: "Posts");

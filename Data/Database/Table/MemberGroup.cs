@@ -9,17 +9,13 @@ using System.Threading.Tasks;
 
 namespace Data.Database.Table
 {
-    public class PostLike
+    public class MemberGroup
     {
-        [Key]
-        public Guid Id { get; set; }
-        public Guid PostId { get; set; }
-        public Guid UserId { get; set; }
-
-        [ForeignKey("PostId")]
-        public Post Post { get; set; }
-
-        [ForeignKey("UserId")]
+        public Guid IdGroup { get; set; }
+        public Guid IdMember { get; set; }
+        [ForeignKey("IdMember")]
         public ApplicationUser? User { get; set; }
+        [ForeignKey("IdGroup")]
+        public Group? Group { get; set; }
     }
 }

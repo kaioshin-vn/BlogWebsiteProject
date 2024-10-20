@@ -25,12 +25,14 @@ namespace BlogWebsite.Data
         public DbSet<ReplyResponse> ReplyResponses { get; set; }
 		public DbSet<PaymentRequest> PaymentRequests { get; set; }
 		public DbSet<PaymentTransaction> PaymentTransactions { get; set; }
-
-        public DbSet<PostComment> PostComments { get; set; }
-        public DbSet<PostLike> PostLikes { get; set; }
         public DbSet<PostView> PostViews { get; set; }
 
-        public DbSet<Category> Categories { get; set; }
+        public DbSet<Group> Groups { get; set; }
+        public DbSet<GroupPost> GroupPosts { get; set; }
+        public DbSet<GroupTopic> GroupTopics { get; set; }
+        public DbSet<AdminGroup> AdminGroups { get; set; }
+        public DbSet<MemberGroup> MemberGroups { get; set; }
+        public DbSet<Topic> Topics { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -42,9 +44,35 @@ namespace BlogWebsite.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<Flower>()
-            .HasKey(o => new { o.IdUser, o.IdFlower });
+            modelBuilder.Entity<Flower>().HasKey(o => new 
+            { 
+                o.IdUser,
+                o.IdFlower 
+            });
 
+            modelBuilder.Entity<GroupPost>().HasKey(u => new
+            {
+                u.IdGroup,
+                u.IdPost
+            });
+
+            modelBuilder.Entity<GroupTopic>().HasKey(u => new
+            {
+                u.IdGroup,
+                u.IdTopic
+            });
+
+            modelBuilder.Entity<AdminGroup>().HasKey(u => new
+            {
+                u.IdGroup,
+                u.IdAdmin
+            });
+
+            modelBuilder.Entity<MemberGroup>().HasKey(u => new
+            {
+                u.IdGroup,
+                u.IdMember
+            });
 
             modelBuilder.Entity<PostTag>().HasKey(u => new
             {
@@ -63,21 +91,24 @@ namespace BlogWebsite.Data
             {
                 entity.HasIndex(e => e.TagName).IsUnique();
             });
+
             modelBuilder.Entity<Exam>()
-    .HasOne(n => n.User)
-    .WithMany(u => u.Exams)
-    .HasForeignKey(n => n.IdUser)
-    .OnDelete(DeleteBehavior.Restrict);
+                .HasOne(n => n.User)
+                .WithMany(u => u.Exams)
+                .HasForeignKey(n => n.IdUser)
+                .OnDelete(DeleteBehavior.Restrict);
+
             modelBuilder.Entity<ExamHistory>()
                 .HasOne(n => n.User)
                 .WithMany(u => u.ExamHistories)
                 .HasForeignKey(n => n.IdUser)
                 .OnDelete(DeleteBehavior.Restrict);
+
             modelBuilder.Entity<Notice>()
-                   .HasOne(n => n.UserReceive)
-                   .WithMany(u => u.NoticesReceived)
-                   .HasForeignKey(n => n.ToUser)
-                   .OnDelete(DeleteBehavior.Restrict);
+                 .HasOne(n => n.UserReceive)
+                 .WithMany(u => u.NoticesReceived)
+                 .HasForeignKey(n => n.ToUser)
+                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Notice>()
                 .HasOne(n => n.UserSend)
@@ -89,31 +120,25 @@ namespace BlogWebsite.Data
                 .WithMany(u => u.PaidPosts)
                 .HasForeignKey(n => n.IdUser)
                 .OnDelete(DeleteBehavior.Restrict);     
-            modelBuilder.Entity<PostComment>()
-                .HasOne(n => n.User)
-                .WithMany(u => u.PostComments)
-                .HasForeignKey(n => n.UserId)
-                .OnDelete(DeleteBehavior.Restrict); 
-            modelBuilder.Entity<PostLike>()
-                .HasOne(n => n.User)
-                .WithMany(u => u.PostLikes)
-                .HasForeignKey(n => n.UserId)
-                .OnDelete(DeleteBehavior.Restrict);
+
             modelBuilder.Entity<PostView>()
                 .HasOne(n => n.User)
                 .WithMany(u => u.PostViews)
                 .HasForeignKey(n => n.UserId)
                 .OnDelete(DeleteBehavior.Restrict);  
+
             modelBuilder.Entity<PostSave>()
                 .HasOne(n => n.Save)
                 .WithMany(u => u.PostSaves)
                 .HasForeignKey(n => n.IdSave)
                 .OnDelete(DeleteBehavior.Restrict);  
+
             modelBuilder.Entity<ReplyResponse>()
                 .HasOne(n => n.User)
                 .WithMany(u => u.ReplyResponses)
                 .HasForeignKey(n => n.IdUser)
                 .OnDelete(DeleteBehavior.Restrict);   
+
             modelBuilder.Entity<Response>()
                 .HasOne(n => n.User)
                 .WithMany(u => u.Responses)
@@ -125,6 +150,7 @@ namespace BlogWebsite.Data
                 .WithMany(u => u.Flowers)
                 .HasForeignKey(n => n.IdUser)
                 .OnDelete(DeleteBehavior.Restrict);
+
 
 
             foreach (var entityType in modelBuilder.Model.GetEntityTypes())

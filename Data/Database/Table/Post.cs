@@ -23,7 +23,7 @@ namespace Data.Database.Table
         // Đường dẫn tới ảnh
         public string? ImgFile { get; set; }
         public string? VideoFile { get; set; }
-        public int Like { get; set; } 
+        public string? Like { get; set; }
         public int View { get; set; }
         public bool IsDeleted { get; set; } = false;
 
@@ -32,12 +32,7 @@ namespace Data.Database.Table
         public ICollection<PostTag>? TagPosts { get; set; }
         public ICollection<PostSave>? PostSaves { get; set; }
         public ICollection<PaidPost>? PaidPosts { get; set; }
-
-
-        
-
-        public ICollection<PostComment>? PostComments { get; set; }
-        public ICollection<PostLike>? PostLikes { get; set; }
+        public ICollection<GroupPost>? GroupPost { get; set; }
         public ICollection<PostView>? PostViews { get; set; }
     }
 }

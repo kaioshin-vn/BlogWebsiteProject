@@ -20,7 +20,7 @@ namespace Data.Database.Table
         public DateTime CreateDate { get; set; }
 
         public string Content { get; set; }
-        public string Likes { get; set; }
+        public string Likes { get; set; } = "";
 
         public bool IsDeleted { get; set; }
         public Guid? Mention { get; set; }

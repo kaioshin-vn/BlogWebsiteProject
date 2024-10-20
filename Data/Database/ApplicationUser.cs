@@ -24,11 +24,10 @@ namespace BlogWebsite.Data
         public ICollection<ReplyResponse>? ReplyResponses { get; set; }
         public ICollection<PaymentTransaction> PaymentTransactions { get; set; } = new List<PaymentTransaction>();
         public ICollection<PaymentRequest> PaymentRequests { get; set; } = new List<PaymentRequest>();
-
-        public ICollection<PostComment> PostComments { get; set; }
-        public ICollection<PostLike> PostLikes { get; set; }
         public ICollection<PostView> PostViews { get; set; }
         public ICollection<Notice> NoticesSent { get; set; }
         public ICollection<Notice> NoticesReceived { get; set; }
+        public ICollection<AdminGroup> AdminGroups { get; set; }
+        public ICollection<MemberGroup> MemberGroups { get; set; }
     }
 }

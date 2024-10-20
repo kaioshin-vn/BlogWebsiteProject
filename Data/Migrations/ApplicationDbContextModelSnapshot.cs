@@ -103,6 +103,21 @@ namespace Data.Migrations
                     b.ToTable("Users", (string)null);
                 });
 
+            modelBuilder.Entity("Data.Database.Table.AdminGroup", b =>
+                {
+                    b.Property<Guid>("IdGroup")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdAdmin")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("IdGroup", "IdAdmin");
+
+                    b.HasIndex("IdAdmin");
+
+                    b.ToTable("AdminGroups");
+                });
+
             modelBuilder.Entity("Data.Database.Table.Flower", b =>
                 {
                     b.Property<Guid>("IdUser")
@@ -116,6 +131,81 @@ namespace Data.Migrations
                     b.HasIndex("IdFlower");
 
                     b.ToTable("Flower");
+                });
+
+            modelBuilder.Entity("Data.Database.Table.Group", b =>
+                {
+                    b.Property<Guid>("IdGroup")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ImgCover")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ImgGroup")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("StateGroup")
+                        .HasColumnType("int");
+
+                    b.HasKey("IdGroup");
+
+                    b.ToTable("Groups");
+                });
+
+            modelBuilder.Entity("Data.Database.Table.GroupPost", b =>
+                {
+                    b.Property<Guid>("IdGroup")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdPost")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("IdGroup", "IdPost");
+
+                    b.HasIndex("IdPost");
+
+                    b.ToTable("GroupPosts");
+                });
+
+            modelBuilder.Entity("Data.Database.Table.GroupTopic", b =>
+                {
+                    b.Property<Guid>("IdGroup")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdTopic")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("IdGroup", "IdTopic");
+
+                    b.HasIndex("IdTopic");
+
+                    b.ToTable("GroupTopics");
+                });
+
+            modelBuilder.Entity("Data.Database.Table.MemberGroup", b =>
+                {
+                    b.Property<Guid>("IdGroup")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdMember")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("IdGroup", "IdMember");
+
+                    b.HasIndex("IdMember");
+
+                    b.ToTable("MemberGroups");
                 });
 
             modelBuilder.Entity("Data.Database.Table.Notice", b =>
@@ -275,8 +365,8 @@ namespace Data.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
-                    b.Property<int>("Like")
-                        .HasColumnType("int");
+                    b.Property<string>("Like")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Title")
                         .HasColumnType("nvarchar(max)");
@@ -292,63 +382,6 @@ namespace Data.Migrations
                     b.HasIndex("IdUser");
 
                     b.ToTable("Posts");
-                });
-
-            modelBuilder.Entity("Data.Database.Table.PostComment", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Content")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("CreateDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<Guid?>("ParentCommentId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("PostId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ParentCommentId");
-
-                    b.HasIndex("PostId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("PostComments");
-                });
-
-            modelBuilder.Entity("Data.Database.Table.PostLike", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("PostId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PostId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("PostLikes");
                 });
 
             modelBuilder.Entity("Data.Database.Table.PostSave", b =>
@@ -514,6 +547,26 @@ namespace Data.Migrations
                         .IsUnique();
 
                     b.ToTable("Tags");
+                });
+
+            modelBuilder.Entity("Data.Database.Table.Topic", b =>
+                {
+                    b.Property<Guid>("IdTopic")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("GroupIdGroup")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("TopicName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("IdTopic");
+
+                    b.HasIndex("GroupIdGroup");
+
+                    b.ToTable("Topics");
                 });
 
             modelBuilder.Entity("Data.Tables.Exam", b =>
@@ -829,6 +882,25 @@ namespace Data.Migrations
                     b.ToTable("UserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("Data.Database.Table.AdminGroup", b =>
+                {
+                    b.HasOne("BlogWebsite.Data.ApplicationUser", "User")
+                        .WithMany("AdminGroups")
+                        .HasForeignKey("IdAdmin")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Data.Database.Table.Group", "Group")
+                        .WithMany("AdminGroups")
+                        .HasForeignKey("IdGroup")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Group");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Data.Database.Table.Flower", b =>
                 {
                     b.HasOne("BlogWebsite.Data.ApplicationUser", "UserFlower")
@@ -846,6 +918,63 @@ namespace Data.Migrations
                     b.Navigation("User");
 
                     b.Navigation("UserFlower");
+                });
+
+            modelBuilder.Entity("Data.Database.Table.GroupPost", b =>
+                {
+                    b.HasOne("Data.Database.Table.Group", "Group")
+                        .WithMany()
+                        .HasForeignKey("IdGroup")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Data.Database.Table.Post", "Post")
+                        .WithMany("GroupPost")
+                        .HasForeignKey("IdPost")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Group");
+
+                    b.Navigation("Post");
+                });
+
+            modelBuilder.Entity("Data.Database.Table.GroupTopic", b =>
+                {
+                    b.HasOne("Data.Database.Table.Group", "Group")
+                        .WithMany()
+                        .HasForeignKey("IdGroup")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Data.Database.Table.Topic", "Topic")
+                        .WithMany("GroupTopics")
+                        .HasForeignKey("IdTopic")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Group");
+
+                    b.Navigation("Topic");
+                });
+
+            modelBuilder.Entity("Data.Database.Table.MemberGroup", b =>
+                {
+                    b.HasOne("Data.Database.Table.Group", "Group")
+                        .WithMany("MemberGroups")
+                        .HasForeignKey("IdGroup")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BlogWebsite.Data.ApplicationUser", "User")
+                        .WithMany("MemberGroups")
+                        .HasForeignKey("IdMember")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Group");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Data.Database.Table.Notice", b =>
@@ -911,50 +1040,6 @@ namespace Data.Migrations
                         .HasForeignKey("IdUser")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("Data.Database.Table.PostComment", b =>
-                {
-                    b.HasOne("Data.Database.Table.PostComment", "ParentComment")
-                        .WithMany("Replies")
-                        .HasForeignKey("ParentCommentId");
-
-                    b.HasOne("Data.Database.Table.Post", "Post")
-                        .WithMany("PostComments")
-                        .HasForeignKey("PostId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("BlogWebsite.Data.ApplicationUser", "User")
-                        .WithMany("PostComments")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("ParentComment");
-
-                    b.Navigation("Post");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("Data.Database.Table.PostLike", b =>
-                {
-                    b.HasOne("Data.Database.Table.Post", "Post")
-                        .WithMany("PostLikes")
-                        .HasForeignKey("PostId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("BlogWebsite.Data.ApplicationUser", "User")
-                        .WithMany("PostLikes")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Post");
 
                     b.Navigation("User");
                 });
@@ -1065,6 +1150,13 @@ namespace Data.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Data.Database.Table.Topic", b =>
+                {
+                    b.HasOne("Data.Database.Table.Group", null)
+                        .WithMany("Topics")
+                        .HasForeignKey("GroupIdGroup");
+                });
+
             modelBuilder.Entity("Data.Tables.Exam", b =>
                 {
                     b.HasOne("BlogWebsite.Data.ApplicationUser", "User")
@@ -1170,11 +1262,15 @@ namespace Data.Migrations
 
             modelBuilder.Entity("BlogWebsite.Data.ApplicationUser", b =>
                 {
+                    b.Navigation("AdminGroups");
+
                     b.Navigation("ExamHistories");
 
                     b.Navigation("Exams");
 
                     b.Navigation("Flowers");
+
+                    b.Navigation("MemberGroups");
 
                     b.Navigation("NoticesReceived");
 
@@ -1188,10 +1284,6 @@ namespace Data.Migrations
 
                     b.Navigation("Post");
 
-                    b.Navigation("PostComments");
-
-                    b.Navigation("PostLikes");
-
                     b.Navigation("PostViews");
 
                     b.Navigation("ReplyResponses");
@@ -1201,24 +1293,26 @@ namespace Data.Migrations
                     b.Navigation("Saves");
                 });
 
+            modelBuilder.Entity("Data.Database.Table.Group", b =>
+                {
+                    b.Navigation("AdminGroups");
+
+                    b.Navigation("MemberGroups");
+
+                    b.Navigation("Topics");
+                });
+
             modelBuilder.Entity("Data.Database.Table.Post", b =>
                 {
+                    b.Navigation("GroupPost");
+
                     b.Navigation("PaidPosts");
-
-                    b.Navigation("PostComments");
-
-                    b.Navigation("PostLikes");
 
                     b.Navigation("PostSaves");
 
                     b.Navigation("PostViews");
 
                     b.Navigation("TagPosts");
-                });
-
-            modelBuilder.Entity("Data.Database.Table.PostComment", b =>
-                {
-                    b.Navigation("Replies");
                 });
 
             modelBuilder.Entity("Data.Database.Table.Save", b =>
@@ -1229,6 +1323,11 @@ namespace Data.Migrations
             modelBuilder.Entity("Data.Database.Table.Tag", b =>
                 {
                     b.Navigation("TagPosts");
+                });
+
+            modelBuilder.Entity("Data.Database.Table.Topic", b =>
+                {
+                    b.Navigation("GroupTopics");
                 });
 
             modelBuilder.Entity("Data.Tables.Exam", b =>
