@@ -4,220 +4,251 @@
 @inject IJSRuntime JS
 @inject NavigationManager Navigate
 
+
 <MudContainer MaxWidth="MaxWidth.Medium" Class="d-flex justify-center align-center flex-column py-8">
-    <MudPaper Elevation="3" Class="pa-8">
-        <MudText Typo="Typo.h4" Class="mb-6">Style your community</MudText>
-        <MudText Typo="Typo.body1" Class="mb-8">Adding visual flair will catch new members attention and help establish your community's culture! You can update this at any time.</MudText>
+	<MudPaper Elevation="3" Class="pa-8">
+		<MudText Typo="Typo.h4" Class="mb-6">Style your community</MudText>
+		<MudText Typo="Typo.body1" Class="mb-8">Adding visual flair will catch new members attention and help establish your community's culture! You can update this at any time.</MudText>
 
-        <MudGrid Spacing="14">
-            <MudItem xs="7">
-                <MudGrid Spacing="2">
-                    <MudItem xs="8">
-                        <MudTextField T="string" Label="Icon" Variant="Variant.Filled" FullWidth="true" @bind-Value="@IconFileName" ReadOnly="true" />
-                    </MudItem>
-                    <MudItem xs="4" class="d-flex align-items-center justify-end">
-                        <MudFileUpload @ref="fileUploadIcon" T="IBrowserFile" FilesChanged="UploadIconFile" AcceptedFileTypes="new string[] { 'image/jpeg', 'image/png', 'image/jpg', 'image/webp'}">
-                            <ActivatorContent>
-                                <MudFab Color="Color.Secondary"
-                                        StartIcon="@Icons.Material.Filled.Image"
-                                        Label="@iconButtonLabel" 
-                                        for=""/>
-                            </ActivatorContent>
-                        </MudFileUpload>
-                    </MudItem>
-                    @if (isIconUploaded == true)
-                    {
-                        <MudItem xs="12" Class="d-flex">
-                            <MudText Typo="Typo.body2" Class="p-2">@IconFileName</MudText>
-                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Class="ms-auto p-2" Color="Color.Error" OnClick="RemoveIcon" />
-                        </MudItem>
-                    }
-                </MudGrid>
+		<MudGrid Spacing="14">
+			<MudItem xs="7">
+				<MudGrid Spacing="2" Style="transition: background-color 0.3s;"
+						 onmouseover="this.style.backgroundColor='#f0f0f0'; this.style.padding='3px';"
+						 onmouseout="this.style.backgroundColor=''; this.style.padding='3px';">
+					<MudItem xs="8">
+						<MudText Typo="Typo.h6" Style="color: #5e5254;
+                     padding-left: 8px;
+                     font-size: 18px;
+                     font-family: -webkit-body;">Icon</MudText>
+					</MudItem>
+					<MudItem xs="4" class="d-flex align-items-center justify-end" Style="padding:0 ">
+						<MudFileUpload @ref="fileUploadIcon" T="IBrowserFile" FilesChanged="UploadIconFile" AcceptedFileTypes="new string[] { 'image/jpeg', 'image/png', 'image/jpg', 'image/webp'}">
+							<ActivatorContent>
+								<MudFab StartIcon="@Icons.Material.Filled.Image"
+										Label="@iconButtonLabel"
+										Style="height: 32px;" />
+							</ActivatorContent>
+						</MudFileUpload>
+					</MudItem>
+				</MudGrid>
 
-                <!-- Dòng cho Banner -->
-                <MudGrid xs="12">
-                    <MudItem xs="8">
-                        <MudTextField T="string" Label="Banner" Variant="Variant.Filled" FullWidth="true" @bind-Value="@BannerFileName" ReadOnly="true" />
-                    </MudItem>
-                    <MudItem xs="4" class="d-flex align-items-center justify-end">
-                        <MudFileUpload @ref="fileUploadBanner" T="IBrowserFile" FilesChanged="UploadBannerFile">
-                            <ActivatorContent>
-                                <MudFab Color="Color.Secondary"
-                                        StartIcon="@Icons.Material.Filled.Image"
-                                        Label="@bannerButtonLabel" />
-                            </ActivatorContent>
-                        </MudFileUpload>
-                    </MudItem>
-                    @if (isBannerUploaded == true)
-                    {
-                        <MudItem xs="12" Class="d-flex">
-                            <MudText Typo="Typo.body2" Class="p-2">@BannerFileName</MudText>
-                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Class="ms-auto p-2" Color="Color.Error" OnClick="RemoveBanner" />
-                        </MudItem>
-                    }
-                </MudGrid>
-            </MudItem>
+				@if (isIconUploaded == true)
+				{
+					<MudGrid Spacing="2" Style="margin-top: 12px; padding: 4px transition: background-color 0.3s; "
+							 onmouseover="this.style.backgroundColor='#f0f0f0';"
+							 onmouseout="this.style.backgroundColor='';">
+						<MudItem xs="12" Class="d-flex align-items-center justify-content-between" Style="border: 1px solid #ccc; border-radius: 4px; height: 46px  ">
+							<MudText Typo="Typo.body2"  >@IconFileName</MudText>
+							<MudIconButton Icon="@Icons.Material.Filled.Delete" Style="margin-top: -7px;" OnClick="RemoveIcon" />
+						</MudItem>
+					</MudGrid>
+				}
 
-            <MudItem xs="5">
-                <MudCard>
-                    <MudCardHeader>
-                        <!-- Hiển thị Banner trong Header -->
-                        <img src="@bannerUrl" alt="Community Banner" style="width:100%; height:auto; border-radius:8px;" class="mt-2" />
-                    </MudCardHeader>
 
-                    <MudCardContent>
-                        <!-- Tạo Grid để chia icon bên trái và text bên phải -->
-                        <MudGrid>
-                            <MudItem xs="2">
-                                <!-- Hiển thị Icon bên trái -->
-                                <img src="@iconUrl" alt="Community Icon" style="width:40px; height:auto; border-radius:50%;" />
-                            </MudItem>
-                            <MudItem xs="10">
-                                <!-- Hiển thị Tên Cộng Đồng và Thông tin thành viên bên phải -->
-                                <MudText Typo="Typo.h6" Class="mt-2">@CommunityName</MudText>
-                                <MudText Typo="Typo.caption">1 member · 1 online</MudText>
-                            </MudItem>
-                        </MudGrid>
 
-                        <MudText Typo="Typo.body2">@Description</MudText>
-                    </MudCardContent>
-                </MudCard>
-            </MudItem>
-        </MudGrid>
+				<!-- Dòng cho Banner -->
+				<MudGrid Spacing="2" Style="transition: background-color 0.3s; margin-top: 6px;"
+						 onmouseover="this.style.backgroundColor='#f0f0f0'; this.style.padding='3px';"
+						 onmouseout="this.style.backgroundColor=''; this.style.padding='3px';">
+					<MudItem xs="8">
+							 
+						<MudText Typo="Typo.h6" Style="color: #5e5254;
+                padding-left: 8px;
+                font-size: 18px;
+                font-family: -webkit-body;">Banner</MudText>
+					</MudItem>
+					<MudItem xs="4" class="d-flex align-items-center justify-end" Style=" padding: 0;">
+						<MudFileUpload @ref="fileUploadBanner" T="IBrowserFile" FilesChanged="UploadBannerFile">
+							<ActivatorContent>
+								<MudFab StartIcon="@Icons.Material.Filled.Image"
+										Label="@bannerButtonLabel"
+										Style="height: 32px;" />
+							</ActivatorContent>
+						</MudFileUpload>
+					</MudItem>
+				</MudGrid>
 
-        <div class="d-flex justify-end mt-6">
-            <MudButton Variant="Variant.Text" OnClick="Cancel" StartIcon="@Icons.Material.Filled.Cancel">Cancel</MudButton>
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Next">Next</MudButton>
-        </div>
-    </MudPaper>
+
+					@if (isBannerUploaded == true)
+					{
+						<MudGrid Spacing="2" Style="margin-top: 12px; padding: 4px transition: background-color 0.3s; "
+								 onmouseover="this.style.backgroundColor='#f0f0f0';"
+								 onmouseout="this.style.backgroundColor='';">
+							<MudItem xs="12" Class="d-flex align-items-center justify-content-between" Style="border: 1px solid #ccc; border-radius: 4px; height: 46px ">
+								<MudText Typo="Typo.body2" >@BannerFileName</MudText>
+								<MudIconButton Icon="@Icons.Material.Filled.Delete" Style="margin-top: -7px;" OnClick="RemoveBanner" />
+							</MudItem>
+						</MudGrid>
+					}
+
+			</MudItem>
+
+			<MudItem xs="5" Style="margin-top:-12px; ">
+				<MudCard Style="border-radius: 12px; box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.25);">
+					<MudCardHeader Style=" padding: 0;">
+						<img src="@bannerUrl" alt="Community Banner"
+							 style="width: 279px; height: 50px; object-fit: cover; border-radius: 8px;"
+							 />
+					</MudCardHeader>
+
+
+					<MudCardContent >
+						<!-- Tạo Grid để chia icon bên trái và text bên phải -->
+						<MudGrid>
+							<MudItem xs="2">
+								<!-- Hiển thị Icon bên trái -->
+								<img src="@iconUrl" alt="Community Icon" style="width:50x; height:50px; border-radius:50%;" />
+							</MudItem>
+							<MudItem xs="10" Style=" padding-left: 38px">
+								<!-- Hiển thị Tên Cộng Đồng và Thông tin thành viên bên phải -->
+								<MudText Typo="Typo.h6">@CommunityName</MudText>
+								<MudText Typo="Typo.caption">1 member · 1 online</MudText>
+							</MudItem>
+						</MudGrid>
+
+						<MudText Typo="Typo.body2">@Description</MudText>
+					</MudCardContent>
+				</MudCard>
+			</MudItem>
+		</MudGrid>
+
+		<div class="d-flex justify-end mt-6">
+			<MudButton Variant="Variant.Text" OnClick="Cancel" StartIcon="@Icons.Material.Filled.Cancel">Cancel</MudButton>
+			<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Next">Next</MudButton>
+		</div>
+	</MudPaper>
 </MudContainer>
 
 @code {
-    private string CommunityName = "";
-    private string Description = "";
-    private string IconFileName = "";
-    private string BannerFileName = "";
-    private string iconUrl = "/img/icon.jpg"; 
-    private string bannerUrl = "/img/univer.png"; 
-    private string iconButtonLabel = "Add";  
-    private string bannerButtonLabel = "Add"; 
-    private bool isIconUploaded = false; 
-    private bool isBannerUploaded = false;
-    private MudFileUpload<IBrowserFile> fileUploadIcon;
-    private MudFileUpload<IBrowserFile> fileUploadBanner;
+	private string CommunityName = "";
+	private string Description = "";
+	private string IconFileName = "";
+	private string BannerFileName = "";
+	private string iconUrl = "/img/icon.jpg";
+	private string bannerUrl = "/img/univer.png";
+	private string iconButtonLabel = "Add";
+	private string bannerButtonLabel = "Add";
+	private bool isIconUploaded = false;
+	private bool isBannerUploaded = false;
+	private MudFileUpload<IBrowserFile> fileUploadIcon;
+	private MudFileUpload<IBrowserFile> fileUploadBanner;
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-        {
-            CommunityName = await JS.InvokeAsync<string>("localStorage.getItem", "CommunityName") ?? "";
-            Description = await JS.InvokeAsync<string>("localStorage.getItem", "Description") ?? "";
-            StateHasChanged();
-        }
-    }
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		if (firstRender)
+		{
+			CommunityName = await JS.InvokeAsync<string>("localStorage.getItem", "CommunityName") ?? "";
+			Description = await JS.InvokeAsync<string>("localStorage.getItem", "Description") ?? "";
+			StateHasChanged();
+		}
+	}
 
-    private async Task UploadIconFile(IBrowserFile file)
-    {
-        Console.WriteLine("Uploading Icon...");
-        if (file != null)
-        {
-            using (var stream = file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024))
-            {
-                using (var memoryStream = new MemoryStream())
-                {
-                    await stream.CopyToAsync(memoryStream);
-                    var buffer = memoryStream.ToArray();
+	private async Task UploadIconFile(IBrowserFile file)
+	{
+		Console.WriteLine("Uploading Icon...");
+		if (file != null)
+		{
+			 IconFileName = file.Name;
+			using (var stream = file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024))
+			{
+				using (var memoryStream = new MemoryStream())
+				{
+					await stream.CopyToAsync(memoryStream);
+					var buffer = memoryStream.ToArray();
 
-                    // Chuyển đổi buffer sang base64 string
-                    iconUrl = $"data:{file.ContentType};base64,{Convert.ToBase64String(buffer)}";
-                    isIconUploaded = true;
-                    StateHasChanged();
-                }
-            }
+					// Chuyển đổi buffer sang base64 string
+					iconUrl = $"data:{file.ContentType};base64,{Convert.ToBase64String(buffer)}";
+					isIconUploaded = true;
+					iconButtonLabel = "Change";
+					StateHasChanged();
+				}
+			}
 
-        }
-        else
-        {
-            Console.WriteLine("No file selected for Icon upload.");
-        }
-    }
+		}
+		else
+		{
+			Console.WriteLine("No file selected for Icon upload.");
+		}
+	}
 
-    private async Task UploadBannerFile(IBrowserFile file)
-    {
-        Console.WriteLine("Uploading Banner...");
-        if (file != null)
-        {
-            using (var stream = file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024))
-            {
-                using (var memoryStream = new MemoryStream())
-                {
-                    await stream.CopyToAsync(memoryStream);
-                    var buffer = memoryStream.ToArray();
+	private async Task UploadBannerFile(IBrowserFile file)
+	{
+		Console.WriteLine("Uploading Banner...");
+		if (file != null)
+		{
+			 BannerFileName = file.Name;
+			using (var stream = file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024))
+			{
+				using (var memoryStream = new MemoryStream())
+				{
+					await stream.CopyToAsync(memoryStream);
+					var buffer = memoryStream.ToArray();
 
-                    // Chuyển đổi buffer sang base64 string
-                    bannerUrl = $"data:{file.ContentType};base64,{Convert.ToBase64String(buffer)}";
-                    isBannerUploaded = true;
-                    StateHasChanged();
-                }
-            }
-        }
-        else
-        {
-            Console.WriteLine("No file selected for Banner upload.");
-        }
-    }
+					// Chuyển đổi buffer sang base64 string
+					bannerUrl = $"data:{file.ContentType};base64,{Convert.ToBase64String(buffer)}";
+					isBannerUploaded = true;
+					bannerButtonLabel = "Change";
+					StateHasChanged();
+				}
+			}
+		}
+		else
+		{
+			Console.WriteLine("No file selected for Banner upload.");
+		}
+	}
 
-    private async Task RemoveIcon()
-    {
-        try
-        {
-            iconUrl = "/img/icon.jpg";
-            IconFileName = "";
-            isIconUploaded = false;
-            iconButtonLabel = "Add";
-            await fileUploadIcon.ClearAsync();
-            StateHasChanged();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error removing icon: {ex.Message}");
-        }
-    }
+	private async Task RemoveIcon()
+	{
+		try
+		{
+			iconUrl = "/img/icon.jpg";
+			IconFileName = "";
+			isIconUploaded = false;
+			iconButtonLabel = "Add";
+			await fileUploadIcon.ClearAsync();
+			StateHasChanged();
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine($"Error removing icon: {ex.Message}");
+		}
+	}
 
-    private async Task RemoveBanner()
-    {
-        Console.WriteLine("Removing Banner...");
-        try
-        {
-            bannerUrl = "/img/univer.png";
-            BannerFileName = "";
-            isBannerUploaded = false; 
-            bannerButtonLabel = "Add"; 
-            await fileUploadBanner.ClearAsync();
-            StateHasChanged(); 
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error removing banner: {ex.Message}");
-        }
-    }
+	private async Task RemoveBanner()
+	{
+		Console.WriteLine("Removing Banner...");
+		try
+		{
+			bannerUrl = "/img/univer.png";
+			BannerFileName = "";
+			isBannerUploaded = false;
+			bannerButtonLabel = "Add";
+			await fileUploadBanner.ClearAsync();
+			StateHasChanged();
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine($"Error removing banner: {ex.Message}");
+		}
+	}
 
 
 
-    private async Task Cancel()
-    {
-        await SaveToLocalStorage("CommunityName", CommunityName);
-        await SaveToLocalStorage("Description", Description);
-        StateHasChanged();
-        Navigate.NavigateTo("create-community");
-    }
+	private async Task Cancel()
+	{
+		await SaveToLocalStorage("CommunityName", CommunityName);
+		await SaveToLocalStorage("Description", Description);
+		StateHasChanged();
+		Navigate.NavigateTo("create-community");
+	}
 
-    private void Next()
-    {
-    }
+	private void Next()
+	{
+	}
 
-    private async Task SaveToLocalStorage(string key, string value)
-    {
-        await JS.InvokeVoidAsync("localStorage.setItem", key, value);
-    }
+	private async Task SaveToLocalStorage(string key, string value)
+	{
+		await JS.InvokeVoidAsync("localStorage.setItem", key, value);
+	}
 }

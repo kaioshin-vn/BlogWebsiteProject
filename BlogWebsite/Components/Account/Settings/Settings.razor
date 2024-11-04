@@ -1,5 +1,6 @@
 ﻿@page "/Account/Settings"
 @using BlogWebsite.Data
+@using Client.Components.Settings
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.AspNetCore.Components.Forms
 @using System.Security.Claims
@@ -47,7 +48,7 @@
 
 @code {
     [SupplyParameterFromForm]
-    private UserSettingViewModel Input { get; set; } = new();
+    private UserSettingViewModel Input { get; set; }
     public string Username { get; set; }
     public string MessageSuccess { get; set; }
     public string MessageError { get; set; }
