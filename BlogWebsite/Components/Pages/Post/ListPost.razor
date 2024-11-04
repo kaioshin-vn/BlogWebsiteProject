@@ -1,0 +1,60 @@
+﻿@page "/listPost"
+@using ASM_PH35423.StaticClass
+@using Client.Components.ComponentCustom
+@using Data.DTO.EntitiDTO
+@using System.Net.Http.Headers
+@using Newtonsoft.Json
+@using Newtonsoft.Json.Linq
+@using Radzen
+@using Radzen.Blazor
+
+@inject IJSRuntime JSRunTime
+@inject IHttpClientFactory HttpClientFactory
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+@inject UserManager<ApplicationUser> UserManager
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject IWebHostEnvironment env
+
+@if (listIntroPost == null)
+{
+    <Loading></Loading>
+}
+else
+{
+    <div class="mt-3 ms-4" style="width:70%;">
+        @foreach (var item in listIntroPost)
+        {
+            <PostIntro Avatar="@item.Avatar" Content="@item.Content" 
+            CreateDate="@item.CreateDate" IdPost="@item.Id" 
+            CommentCount="@item.CommentCount" Like="@item.Like"
+            VideoFile="@item.VideoFile" ImgFile="@item.ImgFile" UserName="@item.UserName" Title="@item.Title">
+            </PostIntro>
+        }
+    </div>
+    
+}
+
+
+@code {
+    List<PostIntroDTO> listIntroPost;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var _httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        var idUserCurrent = UserManager.GetUserId(user);
+        var idUser = Guid.Parse(idUserCurrent);
+
+        var result = await _httpClient.GetStringAsync($"/GetListPostIntro/{idUser}");
+
+        var resultConverted = JsonConvert.DeserializeObject<List<PostIntroDTO>>(result);
+        if (resultConverted != null)
+        {
+            listIntroPost = resultConverted;
+        }
+    }
+}

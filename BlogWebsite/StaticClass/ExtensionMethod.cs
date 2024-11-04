@@ -21,7 +21,7 @@ namespace ASM_PH35423.StaticClass
         public static async Task<IFormFile> ToFormFile(this IBrowserFile browserFile)
         {
             var memoryStream = new MemoryStream();
-            await browserFile.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024).CopyToAsync(memoryStream);
+            await browserFile.OpenReadStream(maxAllowedSize: 100000000).CopyToAsync(memoryStream);
             memoryStream.Position = 0;
             return new FormFile(memoryStream, 0, browserFile.Size, browserFile.Name, browserFile.Name)
             {

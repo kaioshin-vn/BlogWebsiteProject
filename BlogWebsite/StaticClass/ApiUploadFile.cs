@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Hosting;
 using System;
 
 namespace Client.StaticClass
@@ -15,7 +16,7 @@ namespace Client.StaticClass
                 }
 
                 var form = await request.ReadFormAsync();
-                var files = form.Files; // "image" là tên field từ form
+                var files = form.Files; 
 
                 if (files == null || files.Count == 0)
                 {
@@ -41,6 +42,36 @@ namespace Client.StaticClass
                     return Results.Ok(new { Url = url });
                 }
             });
+
+            router.MapPost("/uploadVideo", async ([FromForm] IFormFile file, IWebHostEnvironment env) =>
+            {
+
+
+                // Đường dẫn file UpLoad
+                var uploadPath = Path.Combine(env.WebRootPath, "UploadVideo");
+
+
+                var fileName = $"upload-{DateTime.Today.ToString("yyyy-MM-dd")}-{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
+
+                using (var stream = new FileStream(Path.Combine(uploadPath, fileName), FileMode.Create))
+                {
+                    // Save the file
+                    file.CopyTo(stream);
+
+                    // Return the URL of the file
+                    var url = @"UploadVideo\" + fileName;
+
+                    return Results.Ok(new { Url = url });
+                }
+            });
+
+
+            return router;
+        }
+
+        public static RouteGroupBuilder ApiUploadVideo(this RouteGroupBuilder router)
+        {
+            
             return router;
         }
     }
