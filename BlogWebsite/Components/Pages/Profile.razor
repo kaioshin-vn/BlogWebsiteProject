@@ -1,0 +1,136 @@
+﻿@page "/profile"
+@inject ISnackbar Snackbar
+@inject IJSRuntime JSRuntime
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
+    <MudCard>
+        <MudCardMedia Image="/Img/univer.png" Height="300" />
+    </MudCard>
+    <div class="d-flex justify-space-between align-center" style="margin-top: -26px;">
+        <div class="d-flex align-center">
+            <MudAvatar Style="width: 160px; height: 160px; border: 4px solid white;" Class="mb-3 mb-md-0">
+                <MudImage Src="@(_avatarUrl ?? "/Img/avatar_default.jpg")"></MudImage>
+            </MudAvatar>
+            <MudFileUpload T="IBrowserFile" FilesChanged="UploadAvatar">
+                <ActivatorContent>
+                    <MudIconButton Icon="@Icons.Material.Filled.PhotoCamera"
+                                   Class="position-absolute mud-elevation-3"
+                                   Style="bottom: -70px; right: -5px; background-color: darkgrey; border-radius: 50%; padding: 8px;color:azure">
+                    </MudIconButton>
+                </ActivatorContent>
+            </MudFileUpload>
+            <div class="ms-2 text-start">
+                <MudText Typo="Typo.h4">@model.FullName</MudText>
+                <MudText Typo="Typo.body1" Class="mb-2">@model.Headline</MudText>
+            </div>
+        </div>
+        <div>
+            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="@(() => _editMode = true)" />
+        </div>
+    </div>
+    <MudGrid Class="mt-4">
+        <MudItem xs="12" md="4">
+            <MudCard>
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">Thông tin cá nhân</MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudList T="string">
+                        <MudListItem Icon="@Icons.Material.Filled.Cake" Text="@($"Sinh nhật: {model.DateOfBirth:dd/MM/yyyy}")" />
+                        <MudListItem Icon="@Icons.Material.Filled.LocationOn" Text="@($"Địa chỉ: {model.Address}")" />
+                        <MudListItem Icon="@Icons.Material.Filled.Phone" Text="@($"Điện thoại: {model.PhoneNumber}")" />
+                        <MudListItem Icon="@Icons.Material.Filled.Email" Text="@($"Email: {model.Email}")" />
+                    </MudList>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+        <MudItem xs="12" md="8">
+            @if (_editMode)
+            {
+                <MudCard>
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.h6">Chỉnh sửa thông tin</MudText>
+                        </CardHeaderContent>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        <MudForm Model="@model" @ref="@form" @bind-IsValid="@success" @bind-Errors="@errors">
+                            <MudTextField T="string" Label="Họ và tên" @bind-Value="model.FullName" For="@(() => model.FullName)" />
+                            <MudTextField T="string" Label="Tiêu đề" @bind-Value="model.Headline" For="@(() => model.Headline)" />
+                            <MudDatePicker Label="Ngày sinh" @bind-Date="model.DateOfBirth" For="@(() => model.DateOfBirth)" />
+                            <MudTextField T="string" Label="Địa chỉ" @bind-Value="model.Address" For="@(() => model.Address)" />
+                            <MudTextField T="string" Label="Số điện thoại" @bind-Value="model.PhoneNumber" For="@(() => model.PhoneNumber)" />
+                            <MudTextField T="string" Label="Email" @bind-Value="model.Email" For="@(() => model.Email)" />
+                        </MudForm>
+                    </MudCardContent>
+                    <MudCardActions>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@SaveChanges">Lưu thay đổi</MudButton>
+                        <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="@(() => _editMode = false)">Hủy</MudButton>
+                    </MudCardActions>
+                </MudCard>
+            }
+            else
+            {
+                <MudCard>
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.h6">Giới thiệu</MudText>
+                        </CardHeaderContent>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        <MudText Typo="Typo.body1">@model.Bio</MudText>
+                    </MudCardContent>
+                </MudCard>
+            }
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+
+@code {
+    private bool _editMode = false;
+    private bool success;
+    private string[] errors = { };
+    private MudForm form;
+    private string _avatarUrl;
+
+    private PersonalInfoModel model = new PersonalInfoModel
+        {
+            FullName = "Nguyễn Văn A",
+            Headline = "Nhà phát triển phần mềm",
+            DateOfBirth = new DateTime(1990, 1, 1),
+            Address = "Hà Nội, Việt Nam",
+            PhoneNumber = "0123456789",
+            Email = "nguyenvana@example.com",
+            Bio = "Tôi là một nhà phát triển phần mềm đam mê công nghệ và luôn tìm kiếm cơ hội để học hỏi và phát triển bản thân."
+        };
+
+    private async Task SaveChanges()
+    {
+        await form.Validate();
+
+        if (success)
+        {
+            // Xử lý lưu thông tin ở đây
+            Snackbar.Add("Thông tin đã được cập nhật thành công!", Severity.Success);
+            _editMode = false;
+        }
+    }
+
+    private async Task UploadAvatar(IBrowserFile file)
+    {
+    
+    }
+
+    public class PersonalInfoModel
+    {
+        public string FullName { get; set; }
+        public string Headline { get; set; }
+        public DateTime? DateOfBirth { get; set; }
+        public string Address { get; set; }
+        public string PhoneNumber { get; set; }
+        public string Email { get; set; }
+        public string Bio { get; set; }
+    }
+}

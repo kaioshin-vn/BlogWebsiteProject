@@ -138,6 +138,7 @@ app.MapGroup("minimalApi")
 
 
 
+
 app.UseHttpsRedirection();
 
 app.UseStaticFiles();

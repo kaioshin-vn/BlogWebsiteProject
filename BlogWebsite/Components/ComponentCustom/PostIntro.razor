@@ -1,0 +1,246 @@
+﻿@using ASM_PH35423.StaticClass
+@using Client.Components.ComponentCustom
+@using Data.DTO.EntitiDTO
+@using System.Net.Http.Headers
+@using Newtonsoft.Json.Linq
+
+@inject IJSRuntime JSRunTime
+@inject IHttpClientFactory HttpClientFactory
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+@inject UserManager<ApplicationUser> UserManager
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject IWebHostEnvironment env
+
+<style>
+    .limited-lines {
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        -webkit-line-clamp: 6;
+        line-height: 20px;
+        max-height: calc(20px * 6);
+        text-overflow: ellipsis;
+    }
+
+    .limited-lines img {
+        display:none;
+    }
+
+        .limited-lines * {
+            font-size: 16px !important;
+            
+        }
+
+        .limited-lines br {
+            display: none;
+        }
+
+    .codeContainer {
+        display: none;
+    }
+
+    .under-line:hover {
+        text-decoration: underline;
+        cursor: pointer;
+    }
+</style>
+
+@if (!Loaded)
+{
+    <LoadingLocal></LoadingLocal>
+}
+else
+{
+    <MudCard Style="margin-top:52px;" Elevation="3">
+        <MudCardHeader>
+            <CardHeaderAvatar>
+                <MudAvatar Color="Color.Secondary">
+                    <MudImage Src="@this.Avatar"></MudImage>
+                </MudAvatar>
+            </CardHeaderAvatar>
+            <CardHeaderContent>
+                <MudText Typo="Typo.body1"><b>@this.UserName</b></MudText>
+                <MudText Typo="Typo.body2">@this.Date</MudText>
+            </CardHeaderContent>
+            <CardHeaderActions>
+                <MudIconButton Icon="@Icons.Material.Filled.MoreHoriz" Color="Color.Default" />
+            </CardHeaderActions>
+        </MudCardHeader>
+
+        <MudCardContent Class="my-2 py-0">
+            <MudText Typo="Typo.h6">@this.Title</MudText>
+        </MudCardContent>
+
+        @if (Content != null && Content != "")
+        {
+            <MudCardContent Class="my-2 py-0">
+                <div class="limited-lines">
+                    @ContentHtml
+                </div>
+            </MudCardContent>
+        }
+
+        @if (VideoFile != null || ImgFile != null)
+        {
+            if (SrcVideo != null)
+            {
+                <div style="height:420px; background-color:black;overflow:hidden" class="d-flex mt-2 justify-content-center align-items-center">
+
+                    <Radzen.Blazor.RadzenHtml>
+                        <video controls style="height : 420px;">
+                            <source src="@SrcVideo">not supported.
+                        </video>
+                    </Radzen.Blazor.RadzenHtml>
+                </div>
+            }
+            else
+            {
+                <div class="d-flex mt-2 py-2 justify-content-center align-items-center">
+                    <MudImage Src="@this.ImgFile" Height="420" Alt="Swedish Farm House" Class="rounded-lg" />
+                </div>
+            }
+        }
+
+        <MudCardContent Class="d-flex justify-content-between align-items-end p-0 mx-3 my-3">
+            <div>
+                <MudIconButton Icon="@Icons.Material.Filled.Favorite" Color="Color.Secondary" />
+                <span class="under-line">
+                    @LikeText
+                </span>
+            </div>
+
+            <div>
+                <p class="under-line">
+                    @this.CommentCount bình luận
+                </p>
+            </div>
+
+        </MudCardContent>
+
+        <hr class="mx-3 my-0" />
+
+        <MudGrid class="mx-3 my-2">
+            <MudItem xs="6" Class="p-0" sm="3">
+                <MudButton Variant="Variant.Text" Style="width:100%;padding:0px;">
+                    <MudIconButton Disabled Icon="@Icons.Material.Filled.Favorite" Color="Color.Secondary" />
+                    <MudText>Yêu thích</MudText>
+                </MudButton>
+            </MudItem>
+            <MudItem xs="6" Class="p-0" sm="3">
+                <MudButton Variant="Variant.Text" Style="width:100%;padding:0px;">
+                    <MudIconButton Disabled Icon="@Icons.Material.Filled.ChatBubbleOutline" />
+                    <MudText>Bình luận</MudText>
+                </MudButton>
+            </MudItem>
+            <MudItem xs="6" Class="p-0" sm="3">
+                <MudButton Variant="Variant.Text" Style="width:100%;padding:0px;">
+                    <MudIconButton Disabled Icon="@Icons.Material.Filled.InsertLink" />
+                    <MudText>Sao chép</MudText>
+                </MudButton>
+            </MudItem>
+            <MudItem xs="6" Class="p-0" sm="2">
+                <MudButton Variant="Variant.Text" Style="width:100%;padding:0px;">
+                    <MudIconButton Disabled Icon="@Icons.Material.Filled.Save" />
+                    <MudText>Lưu</MudText>
+                </MudButton>
+            </MudItem>
+        </MudGrid>
+
+    </MudCard>
+}
+
+@code {
+    [Parameter]
+    public Guid IdPost { get; set; }
+    [Parameter]
+    public string UserName { get; set; }
+    [Parameter]
+    public string Avatar { get; set; }
+    [Parameter]
+    public string Title { get; set; }
+    [Parameter]
+    public string? Content { get; set; }
+    [Parameter]
+    public string? VideoFile { get; set; }
+    [Parameter]
+    public string? ImgFile { get; set; }
+    [Parameter]
+    public string Like { get; set; }
+    [Parameter]
+    public int CommentCount { get; set; }
+    [Parameter]
+    public DateTime? CreateDate { get; set; }
+
+    bool Loaded { get; set; }
+    string LikeText { get; set; }
+    string SrcVideo { get; set; }
+    string Date { get; set; }
+    private MarkupString ContentHtml { get; set; }
+
+    protected override Task OnInitializedAsync()
+    {
+        var timeCacul = DateTime.Now - CreateDate.Value;
+
+        int yearsDifference = DateTime.Now.Year - CreateDate.Value.Year;
+        if (DateTime.Now < CreateDate.Value.AddYears(yearsDifference))
+        {
+            yearsDifference--;
+        }
+
+        int monthsDifference = (DateTime.Now.Year - CreateDate.Value.Year) * 12 + DateTime.Now.Month - CreateDate.Value.Month;
+        if (DateTime.Now.Day < CreateDate.Value.Day)
+        {
+            monthsDifference--;
+        }
+
+        if (yearsDifference >= 1)
+        {
+            Date = $"{yearsDifference} năm";
+        }
+        else if (monthsDifference >= 1)
+        {
+            Date = $"{monthsDifference} tháng";
+        }
+        else if (timeCacul.TotalDays >= 1)
+        {
+            Date = $"{(int)timeCacul.TotalDays} ngày";
+        }
+        else if (timeCacul.TotalHours >= 1)
+        {
+            Date = $"{(int)timeCacul.TotalHours} giờ";
+        }
+        else if (timeCacul.TotalMinutes >= 1)
+        {
+            Date = $"{(int)timeCacul.TotalMinutes} phút";
+        }
+        else
+        {
+            Date = "Vừa xong";
+        }
+
+        if (VideoFile != null)
+        {
+            SrcVideo = VideoFile.Split("|")[0];
+        }
+
+        @if (Like == null || Like == "")
+        {
+            LikeText = "Hãy trở thành người đầu tiên thích bài viết này";
+        }
+        else
+        {
+            LikeText = @Like.Split("|").Count().ToString();
+        }
+
+        if (Content != null)
+        {
+            ContentHtml = (MarkupString)Content;
+        }
+
+        Loaded = true;
+        return base.OnInitializedAsync();
+    }
+
+}
