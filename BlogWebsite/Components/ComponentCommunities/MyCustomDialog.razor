@@ -1,0 +1,116 @@
+﻿@page "/community-settings"
+
+@using Data.Enums
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="mt-5">
+	<MudCard>
+		<MudText Typo="Typo.h4" Class="mb-6">What kind of community is this?</MudText>
+		<MudText Typo="Typo.body1" Class="mb-8">Decide who can view and contribute in your community. Only public communities show up in search. Important: Once set, you will need to submit a request to change your community type.</MudText>
+
+		<MudRadioGroup @bind-Value="selectedCommunityType" Name="communityType">
+			<MudGrid Spacing="1"
+					 @onclick="() => SetSelectedCommunity(KindGroup.Public)"
+					 @onmouseover="() => OnMouseOver(KindGroup.Public)"
+					 @onmouseout="OnMouseOut"
+					 Style="@GetGridStyle(KindGroup.Public)">
+				<MudItem Class="d-flex align-items-center justify-center" Style="padding-left: 32px;">
+					<MudIcon Icon="@Icons.Material.Filled.Public" Title="Public"
+							 Color="@(selectedCommunityType == KindGroup.Public ? Color.Dark : Color.Default)" />
+				</MudItem>
+
+				<MudItem xs="10">
+					<MudText Typo="Typo.h6" Style="color: #2e292a; padding-left: 8px; font-size: 17px; font-family: -webkit-body;">Public</MudText>
+					<MudText Typo="Typo.h6" Style="color: #817678; padding-left: 8px; font-size: 14px; font-family: -webkit-body;">Anyone can view, post, and comment to this community</MudText>
+				</MudItem>
+
+				<MudItem xs="1" Class="d-flex align-items-center justify-end" Style="padding:0;">
+					<MudRadio Value="KindGroup.Public"></MudRadio>
+				</MudItem>
+			</MudGrid>
+
+			<MudGrid Spacing="1"
+					 @onclick="() => SetSelectedCommunity(KindGroup.Restricted)"
+					 @onmouseover="() => OnMouseOver(KindGroup.Restricted)"
+					 @onmouseout="OnMouseOut"
+					 Style="@GetGridStyle(KindGroup.Restricted)">
+				<MudItem Class="d-flex align-items-center justify-center" Style="padding-left: 32px;">
+					<MudIcon Icon="@Icons.Material.Outlined.RemoveRedEye" Title="RemoveRedEye"
+							 Color="@(selectedCommunityType == KindGroup.Restricted ? Color.Dark : Color.Default)" />
+				</MudItem>
+
+				<MudItem xs="10">
+					<MudText Typo="Typo.h6" Style="color: #2e292a; padding-left: 8px; font-size: 17px; font-family: -webkit-body;">Restricted</MudText>
+					<MudText Typo="Typo.h6" Style="color: #817678; padding-left: 8px; font-size: 14px; font-family: -webkit-body;">Anyone can view, but only approved users can contribute</MudText>
+				</MudItem>
+
+				<MudItem xs="1" Class="d-flex align-items-center justify-end" Style="padding:0;">
+					<MudRadio Value="KindGroup.Restricted"></MudRadio>
+				</MudItem>
+			</MudGrid>
+
+			<MudGrid Spacing="1"
+					 @onclick="() => SetSelectedCommunity(KindGroup.Private)"
+					 @onmouseover="() => OnMouseOver(KindGroup.Private)"
+					 @onmouseout="OnMouseOut"
+					 Style="@GetGridStyle(KindGroup.Private)">
+				<MudItem Class="d-flex align-items-center justify-center" Style="padding-left: 32px;">
+					<MudIcon Icon="@Icons.Material.Outlined.Lock" Title="Lock"
+							 Color="@(selectedCommunityType == KindGroup.Private ? Color.Dark : Color.Default)" />
+				</MudItem>
+
+				<MudItem xs="10">
+					<MudText Typo="Typo.h6" Style="color: #2e292a; padding-left: 8px; font-size: 17px; font-family: -webkit-body;">Private</MudText>
+					<MudText Typo="Typo.h6" Style="color: #817678; padding-left: 8px; font-size: 14px; font-family: -webkit-body;">Only approved users can view and contribute</MudText>
+				</MudItem>
+
+				<MudItem xs="1" Class="d-flex align-items-center justify-end" Style="padding:0;">
+					<MudRadio Value="KindGroup.Private"></MudRadio>
+				</MudItem>
+			</MudGrid>
+		</MudRadioGroup>
+	</MudCard>
+</MudContainer>
+
+@code {
+	private KindGroup selectedCommunityType = KindGroup.Public;
+	private KindGroup? hoveredCommunityType = null; // Lưu trữ phần tử đang di chuột qua
+
+	// Hàm này cập nhật giá trị của loại cộng đồng được chọn
+	private void SetSelectedCommunity(KindGroup communityType)
+	{
+		selectedCommunityType = communityType;
+	}
+
+	// Xử lý khi chuột di qua (hover) ô
+	private void OnMouseOver(KindGroup communityType)
+	{
+		hoveredCommunityType = communityType;
+	}
+
+	// Xử lý khi chuột rời khỏi ô
+	private void OnMouseOut()
+	{
+		hoveredCommunityType = null;
+	}
+
+	// Hàm này trả về style cho từng MudGrid dựa vào loại cộng đồng hiện tại và trạng thái hover
+	private string GetGridStyle(KindGroup communityType)
+	{
+		// Nếu communityType là loại được chọn, ưu tiên trả về màu khi được chọn
+		if (selectedCommunityType == communityType)
+			return "background-color: rgb(206 229 225 / 94%); padding: 4px; margin: 1px -1px 1px 0;";
+
+		// Nếu communityType là loại đang được hover, trả về màu hover
+		if (hoveredCommunityType == communityType)
+			return "background-color: #f0e4e363; padding: 4px; margin: 1px -1px 1px 0;";
+
+		// Trả về màu mặc định
+		return "background-color: white; padding: 4px; margin: 1px -1px 1px 0;";
+	}
+
+	private void Submit()
+	{
+		// Xử lý khi nhấn nút "Continue"
+		Console.WriteLine($"Selected Community Type: {selectedCommunityType}");
+	}
+}
