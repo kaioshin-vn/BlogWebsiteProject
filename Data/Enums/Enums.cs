@@ -20,6 +20,13 @@
         Private //Chỉ có thể xem ( người tham gia mới xem được )
     }
 
+    public enum WaitState
+    {
+        Accept,//Đã chấp nhận
+        Pending,//Chờ
+        Decline//Từ chối
+    }
+
     public enum Position
     {
 		Chief,
