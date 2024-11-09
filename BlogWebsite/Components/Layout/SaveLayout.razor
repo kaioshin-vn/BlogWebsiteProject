@@ -1,0 +1,212 @@
+﻿@using BlogWebsite.Data
+@using Microsoft.AspNetCore.Identity
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Antiforgery
+@using Microsoft.AspNetCore.SignalR.Client
+
+@inherits LayoutComponentBase
+<MudThemeProvider />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+<Radzen.Blazor.RadzenComponents @rendermode="InteractiveServer" />
+
+@inject NavigationManager Navigation
+@inject IHttpClientFactory HttpClientFactory
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserManager<ApplicationUser> UserManager
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+@inject IJSRuntime JS
+
+<style>
+    a:hover {
+        color: unset;
+    }
+
+    .scrollbar {
+        overflow: hidden; /* Ẩn thanh cuộn khi không hover */
+        border: 1px solid #ccc;
+        transition: overflow 0.5s ease; /* Thêm hiệu ứng chuyển đổi */
+    }
+
+        .scrollbar:hover {
+            overflow-y: auto; /* Hiện thanh cuộn khi hover */
+        }
+
+    .avatar {
+        transition: border-width 0.2s ease;
+    }
+
+        .avatar:hover {
+            border-width: 2px; /* Độ dày border khi hover */
+            border-color: lightgray;
+        }
+</style>
+        <MudAppBar Elevation="2" Style="background-color:white">
+            <MudGrid Class="justify-content-between">
+                <MudItem xs="3">
+                    <NavLink href="/">
+                        <MudImage Src="logo.png" Height="64"></MudImage>
+                    </NavLink>
+                </MudItem>
+                <MudItem xs="6"  Class="mt-2 d-flex justify-content-center">
+                    <MudTextField  @bind-Value="Search" Placeholder="Tìm kiếm" Variant="Variant.Text"/>
+                    <MudIconButton Icon="@Icons.Material.Filled.Search" Color="Color.Info"></MudIconButton>
+                </MudItem>
+                <MudItem xs="3">
+                    <AuthorizeView>
+                        <Authorized>
+                            <div class="d-flex justify-content-end">
+                                <div class="d-flex justify-content-between align-items-center me-4">
+                                    <MudIconButton Class="mx-1" Icon="@Icons.Material.Filled.Chat"></MudIconButton>
+                                    <MudTooltip Class="mx-1" Text="Thêm mới bài viết">
+                                        <MudFab Class="mx-1" StartIcon="@Icons.Material.Filled.Add" Size="Size.Medium" Style="border:none;box-shadow:none;background-color:none;" Label="Tạo mới" />
+                                    </MudTooltip>
+                                    <MudIconButton Style="overflow:visible;">
+                                        <MudBadge Content="NoticeCount" Color="Color.Tertiary" Overlap="true" Class="">
+                                            <MudIcon Icon="@Icons.Material.Filled.Notifications"></MudIcon>
+                                        </MudBadge>
+                                    </MudIconButton>
+                                </div>
+                                <MudMenu Class="py-2" ActivationEvent="@MouseEvent.MouseOver" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.BottomRight">
+                                    <ActivatorContent>
+                                        <MudAvatar Class="avatar" Variant="Variant.Outlined">
+                                            <MudImage Src="@Avatar"></MudImage>
+                                        </MudAvatar>
+                                    </ActivatorContent>
+                                    <ChildContent>
+                                        <MudMenuItem>
+                                            <div class="d-flex justify-content-start align-items-center ">
+                                                <MudFab class="p-0 me-3" StartIcon="@Icons.Material.Filled.Person" Color="Color.Tertiary" Size="Size.Small" />
+                                                <b>Trang cá nhân</b>
+                                            </div>
+                                        </MudMenuItem>
+                                        <MudMenuItem>
+                                            <div class="d-flex justify-content-start align-items-center ">
+                                                <MudFab class="p-0 me-3" StartIcon="@Icons.Material.Filled.Settings" Color="Color.Tertiary" Size="Size.Small" />
+                                                <b>Cài đặt</b>
+                                            </div>
+                                        </MudMenuItem>
+                                        <MudMenuItem>
+                                            <div class="d-flex justify-content-start align-items-center ">
+                                                <MudFab class="p-0 me-3" StartIcon="@Icons.Material.Filled.Groups" Color="Color.Tertiary" Size="Size.Small" />
+                                                <b>Danh sách theo dõi</b>
+                                            </div>
+                                        </MudMenuItem>
+                                        <MudMenuItem>
+                                            <form action="Account/Logout" class="p-0" method="post">
+                                                <input type="hidden" name="__RequestVerificationToken" value="@AntiforgeryToken" />
+                                                <input type="hidden" name="ReturnUrl" value="Account/Login" />
+                                                <button type="submit" style="width:230px;" class="d-flex justify-content-start ">
+                                                    <MudFab class="p-0 me-3" StartIcon="@Icons.Material.Filled.Logout" Color="Color.Tertiary" Size="Size.Small" />
+                                                    <b>Đăng xuất</b>
+                                                </button>
+                                            </form>
+                                        </MudMenuItem>
+                                    </ChildContent>
+                                </MudMenu>
+                            </div>
+                        </Authorized>
+                        <NotAuthorized>
+                            <div class="d-flex justify-content-end">
+                                <div class="nav-item ">
+                                    <NavLink class="nav-link" href="Account/Register">
+                                        <center>
+                                            <button class="codepro-custom-btn codepro-btn-11" target="blank" title="Code Pro">
+                                                Đăng ký
+                                            </button>
+                                        </center>
+                                    </NavLink>
+                                </div>
+                                <div class="nav-item">
+                                    <NavLink class="nav-link" href="Account/Login">
+                                        <center>
+                                            <button class="codepro-custom-btn codepro-btn-12" target="blank" title="Code Pro">
+                                                <span>Go!</span>
+                                                <span>Đăng nhập</span>
+                                            </button>
+                                        </center>
+                                    </NavLink>
+                                </div>
+                            </div>
+                        </NotAuthorized>
+                    </AuthorizeView>
+                </MudItem>
+            </MudGrid>
+        </MudAppBar>
+        <MudMainContent>
+            @Body
+        </MudMainContent>
+
+
+<div id="blazor-error-ui">
+    An unhandled error has occurred.
+    <a href="" class="reload">Reload</a>
+    <a class="dismiss">🗙</a>
+</div>
+
+<script>
+    function playAudio() {
+        var audioPlayer = document.getElementById('audioPlayer');
+        if (audioPlayer) {
+            audioPlayer.play();
+        }
+    }
+</script>
+
+@code {
+
+    string Search;
+
+    private string AntiforgeryToken;
+
+    private HubConnection? hubNotice;
+
+    protected int NoticeCount = 13;
+    public string Avatar;
+    private ClaimsPrincipal user;
+    protected override async Task OnInitializedAsync()
+    {
+        var tokens = Antiforgery.GetAndStoreTokens(HttpContextAccessor.HttpContext);
+        AntiforgeryToken = tokens.RequestToken;
+
+        // Lấy trạng thái xác thực
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        user = authState.User;
+        // Lấy ID người dùng từ Claims
+        var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (userId != null)
+        {
+            var currentUser = await UserManager.FindByIdAsync(userId);
+
+            hubNotice = new HubConnectionBuilder()
+            .WithUrl(Navigation.ToAbsoluteUri("/hubNotice"))
+            .Build();
+
+            hubNotice.On<int>("ReceiveNotification", async (noticeCount) =>
+            {
+                this.NoticeCount = noticeCount;
+                await InvokeAsync(StateHasChanged);
+                await JS.InvokeVoidAsync("playAudio");
+            });
+
+            var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+            var response = await httpClient.GetStringAsync($"/getAmountNoticeUser/{userId}");
+            if (response != null)
+            {
+                NoticeCount = Convert.ToInt32(response);
+            }
+
+            await hubNotice.StartAsync();
+
+            await hubNotice.SendAsync("RegisterConnection", userId);
+
+            if (currentUser != null)
+            {
+                Avatar = currentUser.Img;
+            }
+        }
+    }
+}

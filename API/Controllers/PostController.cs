@@ -20,7 +20,7 @@ namespace API.Controllers
         public PostController(ApplicationDbContext context, IWebHostEnvironment environment) 
         {
             _context = context;
-            _environment = environment;
+            _environment = environment; 
         }
 
         [HttpGet("getPostPagination")]
@@ -68,7 +68,24 @@ namespace API.Controllers
             return Ok(getIdPost);
         }
 
-
+        [HttpGet("getPostInSave/{idSave}")]
+        public async Task<IActionResult> GetPostInSave(Guid idSave)
+        {
+            if (idSave == null)
+            {
+                return BadRequest();
+            }
+            var post = await _context.PostSaves
+                .Where(p => p.IdSave == idSave)
+                .Include(p => p.Post)
+                .Select(p => p.Post)
+                .ToListAsync();
+            if (post == null)
+            {
+                return NotFound("No post in this category");
+            }
+            return Ok(post);
+        }
 
         [HttpPost("createPost")]
         public async Task<IActionResult> CreatePostAsync([FromForm] PostDTO _post, IFormFile imgFile)
@@ -98,6 +115,24 @@ namespace API.Controllers
             return Ok(post);    
         }
 
+        [HttpPost("addPostSave/{idPost}/{idSave}")]
+        public async Task<IActionResult> AddPostSave(Guid idPost, Guid idSave)
+        {
+            var getIdPost = await _context.Posts.FindAsync(idPost);
+            if (getIdPost == null) return BadRequest();
+            var getIdSave = await _context.Saves.FindAsync(idSave);
+            if (getIdSave == null) return BadRequest();
+
+            var postSave = new PostSave()
+            {
+                IdPost = idPost,
+                IdSave = idSave
+            };
+            _context.PostSaves.Add(postSave);
+            await _context.SaveChangesAsync();
+
+            return Ok(postSave);
+        }
 
         [HttpPut("updatePost/{idPost}")]
         public async Task<IActionResult> EditPost(Guid idPost, PostDTO post)
