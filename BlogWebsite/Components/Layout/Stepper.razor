@@ -153,8 +153,8 @@
 							<MudGrid Spacing="2" Style="margin-top: 12px; padding: 4px transition: background-color 0.3s; "
 									 onmouseover="this.style.backgroundColor='#f0f0f0';"
 									 onmouseout="this.style.backgroundColor='';">
-								<MudItem xs="12" Class="d-flex align-items-center justify-content-between" Style="border: 1px solid #ccc; border-radius: 4px; height: 46px  ">
-									<MudText Typo="Typo.body2">@IconFileName</MudText>
+								<MudItem xs="12" Class="d-flex align-items-center justify-content-between" Style="border: 1px solid #ccc; border-radius: 4px; height: 46px; ">
+									<MudText Typo="Typo.body2" Style="overflow:hidden;text-overflow: ellipsis;">@IconFileName</MudText>
 									<MudIconButton Icon="@Icons.Material.Filled.Delete" Style="margin-top: -7px;" OnClick="RemoveIcon" />
 								</MudItem>
 							</MudGrid>
@@ -189,7 +189,7 @@
 									 onmouseover="this.style.backgroundColor='#f0f0f0';"
 									 onmouseout="this.style.backgroundColor='';">
 								<MudItem xs="12" Class="d-flex align-items-center justify-content-between" Style="border: 1px solid #ccc; border-radius: 4px; height: 46px ">
-									<MudText Typo="Typo.body2">@BannerFileName</MudText>
+									<MudText Typo="Typo.body2" Style="overflow:hidden;text-overflow: ellipsis;">@BannerFileName</MudText>
 									<MudIconButton Icon="@Icons.Material.Filled.Delete" Style="margin-top: -7px;" OnClick="RemoveBanner" />
 								</MudItem>
 							</MudGrid>
@@ -665,7 +665,7 @@
 			iconUrl = "/img/icon.jpg";
 			IconFileName = "";
 			isIconUploaded = false;
-			iconButtonLabel = "Add";
+			iconButtonLabel = "Thêm";
 			await fileUploadIcon.ClearAsync();
 			StateHasChanged();
 		}
@@ -683,7 +683,7 @@
 			bannerUrl = "/img/univer.png";
 			BannerFileName = "";
 			isBannerUploaded = false;
-			bannerButtonLabel = "Add";
+			bannerButtonLabel = "Thêm";
 			await fileUploadBanner.ClearAsync();
 			StateHasChanged();
 		}
