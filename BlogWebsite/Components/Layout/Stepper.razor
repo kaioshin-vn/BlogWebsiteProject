@@ -1,4 +1,5 @@
 ﻿@page "/step"
+@using System.Globalization;
 @using Data.Enums
 @using Data.DTO
 @using Data.Database.Table
@@ -11,6 +12,31 @@
 @inject ApplicationDbContext DbContext
 @inject IHttpClientFactory HttpClientFactory
 @inject NavigationManager Navigation
+
+<style>
+	.rounded-input {
+		border-radius: 20px;
+		border: 1px solid #ccc;
+		width: 100%;
+		padding: 8px;
+		box-sizing: border-box;
+	}
+
+		.rounded-input:focus {
+			outline: none;
+		}
+
+	#another_unique_identifier {
+		height: 300px;
+		overflow: hidden;
+		transition: overflow 0.3s ease-in-out;
+	}
+
+		#another_unique_identifier:hover {
+			overflow: auto;
+		}
+
+</style>
 
 <MudPaper Style="width: 800px">
 	<MudStepper @ref="stepper" @bind-ActiveIndex="_index" CompletedStepColor="Color.Success" CurrentStepColor="Color.Primary" NavClass="border-b mud-border-lines-default" StepClass="pt-4" ShowResetButton>
@@ -39,14 +65,14 @@
 		</LabelTemplate>
 		<ChildContent>
 			<MudStep Title="Verify passenger data">
-				<MudText Typo="Typo.h4" Class="mb-3">Tell us about your community</MudText>
-				<MudText Typo="Typo.body1" Class="mb-4">A name and description help people understand what your community is all about.</MudText>
+				<MudText Typo="Typo.h4" Class="mb-3">Hãy cho chúng tôi biết về cộng đồng của bạn</MudText>
+				<MudText Typo="Typo.body1" Class="mb-4">Tên và mô tả giúp mọi người hiểu cộng đồng của bạn là gì.</MudText>
 
 				<MudForm>
 					<MudGrid Spacing="3">
 						<MudItem xs="8">
 							<MudTextField @bind-Value="CommunityName"
-										  Label="Community name *"
+										  Label="Tên cộng đồng *"
 										  Variant="Variant.Filled"
 										  FullWidth="true"
 										  OnBlur="@((e) => CheckCommunityName())" />
@@ -56,7 +82,7 @@
 								<MudText Color="Color.Error">@errorName</MudText> <!-- Hiển thị thông báo lỗi -->
 							}
 							<MudTextField @bind-Value="Description"
-										  Label="Description *"
+										  Label="Mô tả *"
 										  Variant="Variant.Filled"
 										  Lines="7"
 										  OnBlur="@((e) => CheckCommunityName())" />
@@ -71,18 +97,18 @@
 								<MudText Typo="Typo.h6">
 									@if (string.IsNullOrEmpty(CommunityName))
 									{
-										<span>Community</span>
+										<span>Cộng đồng</span>
 									}
 									else
 									{
 										@CommunityName
 									}
 								</MudText>
-								<MudText Typo="Typo.caption">1 member · 1 online</MudText>
+								<MudText Typo="Typo.caption">1 thành viên · 1 hoạt dộng</MudText>
 								<MudText Typo="Typo.body2">
 									@if (string.IsNullOrEmpty(Description))
 									{
-										<span>Your community description</span>
+										<span>Mô tả cộng đồng của bạn</span>
 									}
 									else
 									{
@@ -96,8 +122,8 @@
 			</MudStep>
 			<MudStep Title="Upgrade to first class" Skippable="true">
 
-				<MudText Typo="Typo.h4" Class="mb-6">Style your community</MudText>
-				<MudText Typo="Typo.body1" Class="mb-8">Adding visual flair will catch new members attention and help establish your community's culture! You can update this at any time.</MudText>
+				<MudText Typo="Typo.h4" Class="mb-6">Tạo phong cách cho cộng đồng của bạn</MudText>
+				<MudText Typo="Typo.body1" Class="mb-8">Thêm nét hấp dẫn trực quan sẽ thu hút sự chú ý của các thành viên mới và giúp thiết lập văn hóa cộng đồng của bạn! Bạn có thể cập nhật bất kỳ lúc nào.</MudText>
 
 				<MudGrid Spacing="14">
 					<MudItem xs="7">
@@ -109,13 +135,13 @@
 								<MudText Typo="Typo.h6" Style="color: #5e5254;
 													padding-left: 8px;
 													font-size: 18px;
-													font-family: -webkit-body;">Icon</MudText>
+													font-family: -webkit-body;">Ảnh nhóm</MudText>
 							</MudItem>
 							<MudItem xs="4" class="d-flex align-items-center justify-end" Style="padding:0 ">
 								<MudFileUpload @ref="fileUploadIcon" T="IBrowserFile" FilesChanged="UploadIconFile" AcceptedFileTypes="new string[] { 'image/jpeg', 'image/png', 'image/jpg', 'image/webp'}">
 									<ActivatorContent>
 										<MudFab StartIcon="@Icons.Material.Filled.Image"
-												Label="@iconButtonLabel"
+												Label="@CapitalizeFirstLetter(iconButtonLabel)"
 												Style="height: 32px;" />
 									</ActivatorContent>
 								</MudFileUpload>
@@ -143,13 +169,13 @@
 								<MudText Typo="Typo.h6" Style="color: #5e5254;
 											padding-left: 8px;
 											font-size: 18px;
-											font-family: -webkit-body;">Banner</MudText>
+											font-family: -webkit-body;">Ảnh bìa</MudText>
 							</MudItem>
 							<MudItem xs="4" class="d-flex align-items-center justify-end" Style=" padding: 0;">
 								<MudFileUpload @ref="fileUploadBanner" T="IBrowserFile" FilesChanged="UploadBannerFile">
 									<ActivatorContent>
 										<MudFab StartIcon="@Icons.Material.Filled.Image"
-												Label="@bannerButtonLabel"
+												Label="@CapitalizeFirstLetter(bannerButtonLabel)"
 												Style="height: 32px;" />
 									</ActivatorContent>
 								</MudFileUpload>
@@ -185,7 +211,7 @@
 									</MudItem>
 									<MudItem xs="10" Style="padding-left: 38px;">
 										<MudText Typo="Typo.h6">@CommunityName</MudText>
-										<MudText Typo="Typo.caption">1 member · 1 online</MudText>
+										<MudText Typo="Typo.caption">1 thành viên · 1 hoạt động</MudText>
 									</MudItem>
 								</MudGrid>
 
@@ -198,41 +224,76 @@
 
 			</MudStep>
 			<MudStep Title="Select seat">
-				<MudText Typo="Typo.h4" Class="mb-6">Add topics</MudText>
+				<MudText Typo="Typo.h4" Class="mb-6">Thêm chủ đề</MudText>
 				<MudText Typo="Typo.body1" Class="mb-8">
-					Add up to 3 topics to help interested redditors find your community.
+					Thêm tối đa 3 chủ đề để giúp những người dùng Kaizen quan tâm tìm thấy cộng đồng của bạn.
 				</MudText>
 
 				<!-- Thanh tìm kiếm -->
-				<MudTextField @bind-Value="Search"
-							  Placeholder="Filter topics"
-							  Variant="Variant.Outlined"
-							  Adornment="Adornment.End"
-							  AdornmentIcon="@Icons.Material.Filled.Search"
-							  AdornmentColor="Color.Secondary"
-							  Class="rounded-input">
-				</MudTextField>
+				<div class="d-flex align-center relative">
+					<!-- Trường nhập liệu -->
+					<input type="text"
+						   placeholder="Tìm kiếm chủ đề"
+						   class="rounded-input"
+						   @oninput="OnSearchChanged"
+						   value="@Search" />
+					<MudIconButton Icon="@Icons.Material.Filled.Search" Color="Color.Primary" />
+
+				</div>
+
+				<!-- Hiển thị các chủ đề đã chọn  -->
+				<MudText Typo="Typo.h6" Class="mt-4">Chủ đề đã chọn: @selectedTopics.Count/3</MudText>
+				<MudChipSet T="Guid">
+					@foreach (var selectedTopic in selectedTopics)
+					{
+						var topic = topics.FirstOrDefault(t => t.IdTopic == selectedTopic);
+						if (topic != null)
+						{
+							<MudChip>
+								@topic.TopicName
+								<MudIconButton Icon="@Icons.Material.Filled.Close"
+											   OnClick="@(() => OnTopicRemoved(topic.IdTopic))"
+											   Color="Color.Error"
+											   Size="Size.Small"
+											   Class="ml-2" />
+							</MudChip>
+						}
+					}
+				</MudChipSet>
 
 				<!-- Tiêu đề -->
-				<MudText Typo="Typo.h6" Class="mt-4">Topics 0/3</MudText>
-
-				@if (topics == null)
-				{
-					<p><em>Loading...</em></p>
-				}
-				else if (topics.Count == 0)
-				{
-					<p>No topics found.</p>
-				}
-				else
-				{
-					<ul>
-						@foreach (var topic in topics)
+				<div id="another_unique_identifier" class="ma-0" style="height:230px; "
+			<MudList T="Topic">
+						@if (filteredTopics != null && filteredTopics.Any())
 						{
-							<li>@topic.TopicName</li> <!-- Hiển thị tên chủ đề -->
+							@foreach (var topic in filteredTopics)
+							{
+								<MudListItem>
+									<MudButton Color="@GetButtonColor(topic.IdTopic)"
+											   OnClick="@(() => OnTopicSelected(topic.IdTopic))"
+											   Disabled="@(!IsTopicSelectable() || selectedTopics.Count >= 3 && !selectedTopics.Contains(topic.IdTopic))">
+										@topic.TopicName
+									</MudButton>
+								</MudListItem>
+							}
 						}
-					</ul>
-				}
+						else if (topics != null && !topics.Any())
+						{
+						<MudText Typo="Typo.body1">
+							Không có đề tài nào.
+						</MudText>
+						}
+						else
+						{
+						<MudItem Class="d-flex align-items-center ">
+							<MudIcon Icon="@Icons.Material.Filled.PriorityHigh" Color="Color.Default" />
+							<MudText Typo="Typo.body1">
+								Không có chủ đề nào khớp với tìm kiếm của bạn.
+							</MudText>
+						</MudItem>
+						}
+			</MudList>
+		</div>
 			</MudStep>
 			<MudStep Title="Complete check-in" @bind-Completed="_completed">
 				<MudText Typo="Typo.h4" Class="mb-6">What kind of community is this?</MudText>
@@ -310,7 +371,7 @@
 			</MudStack>
 		</CompletedContent>
 		<ActionContent Context="stepper">
-			<MudButton OnClick="@(() => stepper.ResetAsync())">Reset</MudButton>
+			<MudButton OnClick="@(() => stepper.ResetAsync())">Trở về</MudButton>
 			@if (!_completed)
 			{
 				<MudIconButton OnClick="@(() => stepper.PreviousStepAsync())" Icon="@Icons.Material.Filled.ArrowBack" Color="Color.Primary" Disabled="@(_index <= 0)" />
@@ -342,14 +403,16 @@
 	private string BannerFileName = "";
 	private string iconUrl = "/img/icon.jpg";
 	private string bannerUrl = "/img/univer.png";
-	private string iconButtonLabel = "Add";
-	private string bannerButtonLabel = "Add";
+	private string iconButtonLabel = "Thêm";
+	private string bannerButtonLabel = "Thêm";
 	private bool isIconUploaded = false;
 	private bool isBannerUploaded = false;
 	private MudFileUpload<IBrowserFile> fileUploadIcon;
 	private MudFileUpload<IBrowserFile> fileUploadBanner;
-	public string Search { get; set; }
-	private List<Topic> topics;
+	private string Search { get; set; }
+	private List<Guid> selectedTopics = new List<Guid>(); // Danh sách các đề tài đã chọn
+	private List<Topic> topics = new List<Topic>(); // Danh sách đề tài tải từ DB
+	private List<Topic> filteredTopics = new List<Topic>(); // Danh sách đề tài được lọc
 
 	private GroupDTO groupDto = new GroupDTO();
 	private string errorMessage = "";
@@ -370,8 +433,72 @@
 
 	protected override async Task OnInitializedAsync()
 	{
-		topics = await DbContext.Topics.ToListAsync();
+		await LoadTopicsAsync();
 	}
+
+	private Color GetButtonColor(Guid topicId)
+	{
+		return selectedTopics.Contains(topicId) ? Color.Primary : Color.Default;
+	}
+
+	private async Task LoadTopicsAsync()
+	{
+		var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+		var response = await httpClient.GetAsync("api/topic/get-all-topics");
+
+		if (response.IsSuccessStatusCode)
+		{
+			topics = await response.Content.ReadFromJsonAsync<List<Topic>>();
+			filteredTopics = topics;
+		}
+	}
+	private void OnSearchChanged(ChangeEventArgs e)
+	{
+		Search = e.Value.ToString();  // Cập nhật giá trị Search khi người dùng nhập
+		UpdateFilteredTopics();  // Gọi hàm lọc chủ đề
+	}
+
+	private void UpdateFilteredTopics()
+	{
+		if (string.IsNullOrWhiteSpace(Search))
+		{
+			filteredTopics = topics;  // Nếu không có từ khóa tìm kiếm, hiển thị tất cả chủ đề
+		}
+		else
+		{
+			filteredTopics = topics
+				.Where(t => t.TopicName.Contains(Search, StringComparison.OrdinalIgnoreCase))
+				.ToList();  // Lọc chủ đề theo tên
+		}
+	}
+
+	private void OnTopicSelected(Guid topicId)
+	{
+		if (selectedTopics.Contains(topicId))
+		{
+			selectedTopics.Remove(topicId);
+			Console.WriteLine($"Bỏ chọn đề tài: {topicId}");
+		}
+		else if (selectedTopics.Count < 3)
+		{
+			selectedTopics.Add(topicId);
+			Console.WriteLine($"Chọn đề tài: {topicId}");
+		}
+
+	}
+
+	private bool IsTopicSelectable()
+	{
+		return selectedTopics.Count < 3; // Cho phép chọn nếu số lượng chưa đạt tối đa
+	}
+
+	private void OnTopicRemoved(Guid topicId)
+	{
+		selectedTopics.Remove(topicId);
+		Console.WriteLine($"Đã xóa đề tài: {topicId}");
+	}
+
+
 	private async Task CheckCommunityName()
 	{
 		groupDto.Name = CommunityName;
@@ -425,10 +552,7 @@
 
 		StateHasChanged();
 	}
-	public class UserIdResponse
-	{
-		public string UserId { get; set; }
-	}
+
 
 	private async Task HandleValidSubmit()
 	{
@@ -447,6 +571,7 @@
 		{
 			Console.WriteLine("Người dùng chưa đăng nhập.");
 		}
+		groupDto.Topics = new List<Guid>(selectedTopics);
 
 
 		var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
@@ -456,26 +581,30 @@
 		{
 			var createdGroup = await response.Content.ReadFromJsonAsync<Group>();
 			_completed = true;
+			await Task.Delay(100);
 			Navigation.NavigateTo("/download-excel");
 		}
 		else
 		{
 			var errorContent = await response.Content.ReadAsStringAsync();
+			Console.WriteLine($"Lỗi xảy ra: {response.StatusCode}. Chi tiết: {errorContent}");
 			errorMessage = $"Có lỗi xảy ra: {response.StatusCode}. Chi tiết: {errorContent}";
 		}
-
 		StateHasChanged();
+
 	}
-
-
-
-
 
 
 
 	private void CloseDialog()
 	{
 		MudDialog.Close();
+	}
+	private string CapitalizeFirstLetter(string text)
+	{
+		if (string.IsNullOrEmpty(text)) return text;
+		TextInfo textInfo = new CultureInfo("en-US", false).TextInfo;
+		return textInfo.ToTitleCase(text.ToLower());
 	}
 
 	private async Task UploadIconFile(IBrowserFile file)
@@ -492,7 +621,7 @@
 					iconUrl = $"data:{file.ContentType};base64,{Convert.ToBase64String(buffer)}";
 					groupDto.ImgCover = iconUrl;
 					isIconUploaded = true;
-					iconButtonLabel = "Change";
+					iconButtonLabel = "Thay đổi";
 					StateHasChanged();
 				}
 			}
@@ -518,7 +647,7 @@
 					bannerUrl = $"data:{file.ContentType};base64,{Convert.ToBase64String(buffer)}";
 					groupDto.ImgGroup = bannerUrl;
 					isBannerUploaded = true;
-					bannerButtonLabel = "Change";
+					bannerButtonLabel = "Thay đổi";
 					StateHasChanged();
 				}
 			}
@@ -563,6 +692,7 @@
 			Console.WriteLine($"Error removing banner: {ex.Message}");
 		}
 	}
+
 
 	private void SetSelectedCommunity(KindGroup communityType)
 	{

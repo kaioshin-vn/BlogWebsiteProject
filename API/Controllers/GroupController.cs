@@ -1,6 +1,7 @@
 ﻿using BlogWebsite.Data;
 using Data.Database.Table;
 using Data.DTO;
+using Data.Enums;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
@@ -15,6 +16,47 @@ namespace API.Controllers
 		public GroupController(ApplicationDbContext context)
 		{
 			_context = context;
+		}
+
+		[HttpGet("get-all-group")]
+		public async Task<List<Group>> GetAllGroup()
+		{
+			var listGroup =  _context.Groups.ToListAsync().Result.Take(8);
+			return listGroup.ToList();
+		}
+
+		[HttpPost("memberGroup")]
+		public async Task<IActionResult> CreateMemberGroup([FromBody] MemberGroupRequest request)
+		{
+			Guid groupId = Guid.Parse(request.GroupId);
+			Guid memberId = Guid.Parse(request.MemberId);
+
+			var memberCurrent = await _context.MemberGroups.FirstOrDefaultAsync(a => a.IdGroup == groupId && a.IdMember == memberId);
+			if (memberCurrent != null)
+			{
+				_context.MemberGroups.Remove(memberCurrent);
+				await _context.SaveChangesAsync();
+				return Ok();
+			}
+			else
+			{
+				var memberGroup = new MemberGroup()
+				{
+					IdGroup = groupId,
+					IdMember = memberId
+				};
+				_context.MemberGroups.Add(memberGroup);
+				await _context.SaveChangesAsync();
+				return CreatedAtAction(nameof(CreateMemberGroup), new { groupId, memberId }, memberGroup);
+			}
+		}
+
+
+		[HttpGet("get-all-memberGroup")]
+		public async Task<ActionResult<List<MemberGroup>>> GetAllMember()
+		{
+			var lstMember = await _context.MemberGroups.ToListAsync();
+			return Ok(lstMember);
 		}
 
 		[HttpPost("groupDto")]
@@ -32,6 +74,7 @@ namespace API.Controllers
 				Description = groupDto.Description,
 				ImgCover = groupDto.ImgCover,
 				ImgGroup = groupDto.ImgGroup,
+				DateTime = DateTime.Now,
 				StateGroup = groupDto.StateGroup,
 			};
 
@@ -49,18 +92,26 @@ namespace API.Controllers
 			{
 				IdGroup = group.IdGroup,
 				IdAdmin = groupDto.UserId,
+				Position = Position.Chief,
 			};
 
-			try
+			_context.AdminGroups.Add(adminGroup);
+			await _context.SaveChangesAsync();
+
+
+			// Thêm các chủ đề đã chọn vào bảng GroupTopic
+			foreach (var topicId in groupDto.Topics)
 			{
-				_context.AdminGroups.Add(adminGroup);
-				await _context.SaveChangesAsync();
+				var groupTopic = new GroupTopic
+				{
+					IdGroup = group.IdGroup,
+					IdTopic = topicId
+				};
+				_context.GroupTopics.Add(groupTopic);
 			}
-			catch (Exception ex)
-			{
-				Console.WriteLine(ex.Message);
-				return StatusCode(500, "Lỗi khi thêm admin group");
-			}
+
+			await _context.SaveChangesAsync();
+
 
 			return CreatedAtAction(nameof(GetGroupById), new { id = group.IdGroup }, group);
 		}
@@ -85,11 +136,8 @@ namespace API.Controllers
 			{
 				return BadRequest("Tên nhóm không được để trống.");
 			}
-
-
 			bool nameExists = await _context.Groups.AnyAsync(g => g.Name == name);
 			return Ok(nameExists);
 		}
-
 	}
 }

@@ -22,5 +22,6 @@ namespace Data.DTO
 		public string? ImgCover { get; set; }
 		public KindGroup StateGroup { get; set; } // Trạng thái của nhóm 
 		public Guid UserId { get; set; }
+		public List<Guid> Topics { get; set; } = new List<Guid>();
 	}
 }
