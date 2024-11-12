@@ -1,0 +1,171 @@
+﻿@page "/savepost"
+@using Client.Components.Layout
+@using Client.Components.Pages.Post.Dialog
+
+@inject IHttpClientFactory HttpClientFactory 
+@inject IDialogService DialogService
+@layout SaveLayout
+@inject ISnackbar Snackbar
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserManager<ApplicationUser> UserManager
+
+@if (lstPostSave == null || lstPost == null)
+{
+    <MudText>loadding...</MudText>
+}
+else
+{
+    <MudDrawerContainer Class="mud-height-full">
+        <MudDrawer Open="true" Width="300px" Fixed="true" Elevation="1" Class="pt-4">
+            <MudGrid Class="justify-content-between px-2">
+                <MudItem>
+                    <MudText Typo="Typo.h5">Đã lưu</MudText>
+                </MudItem>
+                <MudItem>
+                    <MudIconButton Class="justify-content-start" Icon="@Icons.Material.Filled.Settings" Color="Color.Primary" aria-label="github" />
+                </MudItem>
+            </MudGrid>
+            <MudItem>
+                <MudButton Class="w-100 justify-content-start">
+                    <MudAvatar>
+                        <MudImage Src="Screenshot2.png" ObjectFit="ObjectFit.Cover" Class="rounded-2" />
+                    </MudAvatar>
+                    <MudText Class="px-2" Typo="Typo.h6">Mục đã lưu</MudText>
+                </MudButton>
+                <MudDivider />
+            </MudItem>
+            <MudText Class="p-2">Bộ sưu tập của tôi</MudText>
+            <MudList T="string">
+                @foreach (var item in lstPostSave)
+                {
+                    <MudListItem OnClick="() => GetPostInSave(item.Id)">
+                        <AvatarContent>
+                           @*  @if (!string.IsNullOrWhiteSpace(item.SaveName))
+                            {
+                                <MudImage Src="@item.PostImageUrl" ObjectFit="ObjectFit.Cover" Height="40" Width="40" Class="rounded-2" />
+                            } *@
+                            <MudAvatar Color="Color.Primary" Class="rounded-2">
+                                @item.SaveName[0] <!-- Lấy chữ cái đầu tiên của tên bộ sưu tập -->
+                            </MudAvatar>
+                        </AvatarContent>
+                        <ChildContent>
+                            @item.SaveName
+                        </ChildContent>
+                    </MudListItem>
+                }
+            </MudList>
+            <MudItem>
+                <MudButton Class="w-100 justify-content-start">
+                    <MudAvatar>
+                        <MudIcon Icon="@Icons.Material.Filled.MoreHoriz" />
+                    </MudAvatar>
+                    <MudText Class="px-2">Xem thêm</MudText>
+                </MudButton>
+            </MudItem>
+            <MudItem Class="p-2">
+                <MudButton OnClick="OpenDialog" Variant="Variant.Outlined" Color="Color.Info" Class="w-100 rounded-3">
+                    <MudIcon Icon="@Icons.Material.Filled.Add" />
+                    <MudText>Tạo bộ sưu tập mới</MudText>
+                </MudButton>
+            </MudItem>
+        </MudDrawer>
+        <MudMainContent Class="p-4 d-flex">
+            <MudGrid>
+                <MudItem xs="12">
+                    <MudGrid Class="justify-content-between p-2">
+                        <MudItem>
+                            <MudIcon Icon="@Icons.Material.Filled.LockPerson"/> Chỉ mình tôi
+                        </MudItem>
+                        <MudItem>
+                            <MudMenu Icon="@Icons.Material.Filled.MoreHoriz" Color="Color.Default"
+                                     AriaLabel="Open user menu">
+                                <MudMenuItem OnClick="DeletePostSave">Delete</MudMenuItem>
+                            </MudMenu>
+                        </MudItem>
+                    </MudGrid>
+                </MudItem>
+                @foreach (var item in lstPost)  
+                {
+                    <MudItem xs="12">
+                       
+                        <MudCard Style="border-radius:10px" Class="mt-2">
+                            <MudGrid Class="p-3" Style="">
+                                <MudItem xs="2">
+                                    <MudImage Style="border-radius:10px;" ObjectFit="ObjectFit.Cover" Src="@($"https://localhost:7272/uploads/{item.ImgFile}")" Height="150" Width="150" />
+                                </MudItem>
+                                <MudItem xs="10">
+                                    <MudGrid Class="d-flex align-content-between flex-wrap flex-grow-1 gap-4 ">
+                                        <MudItem xs="12">
+                                            <MudText Typo="Typo.h5">@item.Title</MudText>
+                                            <MudText Typo="Typo.body2">video - đã lưu từ BanKai</MudText>
+                                        </MudItem>
+                                        <MudItem xs="12">
+                                            <MudButton Variant="Variant.Filled" OnClick="async () => await OpenAddPostSaveDialog(item.Id)">Thêm vào bộ sưu tập</MudButton>
+                                            <MudIconButton Class="mx-2" Icon="@Icons.Material.Filled.Share" Variant="Variant.Filled" />
+                                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Variant="Variant.Filled" />
+                                        </MudItem>
+                                    </MudGrid>
+                                </MudItem>
+                            </MudGrid>
+                        </MudCard>
+                    </MudItem>
+                }
+            </MudGrid>
+        </MudMainContent>
+    </MudDrawerContainer>
+}
+   
+@code {
+    List<SaveDTO> lstPostSave = new List<SaveDTO>();
+
+    List<PostDTO> lstPost = new List<PostDTO>();
+
+    private Guid idSave { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+        lstPostSave = await httpClient.GetFromJsonAsync<List<SaveDTO>>("/api/save/get_savepost");
+    }
+
+    private async Task GetPostInSave(Guid id)
+    {
+        idSave = id;
+        var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+        lstPost = await httpClient.GetFromJsonAsync<List<PostDTO>>($"/api/post/getPostInSave/{id}");
+    }
+
+    private async Task OpenAddPostSaveDialog(Guid id)
+    {
+        var parameters = new DialogParameters()
+        {
+            {"idPost", id}
+        };
+        var dialog = DialogService.Show<AddPostSaveDialog>(string.Empty, parameters);
+        var result = await dialog.Result;
+    }
+
+    private async Task DeletePostSave()
+    {
+    //     var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+    //     var user = authState.User;
+    //     var userCurrent = await UserManager.GetUserAsync(user);
+    //     var userId = userCurrent.Id;
+        var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+        var result = await httpClient.DeleteAsync($"/api/save/delete_savepost/{idSave}");
+        if (result.IsSuccessStatusCode)
+        {
+            Snackbar.Add("Xoá bộ sưu tập thành công!", Severity.Success);
+        }
+        else
+        {
+            Snackbar.Add("Xoá bộ sưu tập không thành công!", Severity.Error);
+        }
+    }
+
+    private async Task OpenDialog()
+    {
+        var dialog = DialogService.Show<CreateSaveDialog>();
+        var result = await dialog.Result;
+    }
+}

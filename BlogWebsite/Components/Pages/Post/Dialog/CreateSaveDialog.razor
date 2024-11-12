@@ -1,0 +1,76 @@
+﻿@page "/createSave/{IdPost}"
+@using Microsoft.EntityFrameworkCore.Metadata.Internal
+@using MudBlazor
+
+@inject IHttpClientFactory HttpClientFactory
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserManager<ApplicationUser> UserManager
+
+@if (savePost == null)
+{
+    <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+}
+else
+{
+    <MudDialog Class="w-50">
+        <DialogContent>
+            <MudGrid Class="justify-content-between p-0">
+                <MudItem />
+                <MudItem>
+                    <MudText Typo="Typo.h6">Tạo bộ sưu tập</MudText>
+                </MudItem>
+                <MudItem>
+                    <MudIconButton OnClick="Cancel" Class="p-0" Size="Size.Medium" Icon="@Icons.Material.Filled.Close"></MudIconButton>
+                </MudItem>
+            </MudGrid>
+            <MudDivider />
+        </DialogContent>
+        <DialogActions>
+            <MudGrid>
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="savePost.SaveName" Variant="Variant.Outlined" Label="Tên" Placeholder="Đặt tên cho bộ sưu tập của bạn..." />
+                </MudItem>
+                <MudItem xs="12" Class="m-2">
+                    <MudGrid Class="justify-content-end">
+                        <MudButton OnClick="Cancel" Color="Color.Secondary">Hủy</MudButton>
+                        <MudButton OnClick="Create" Color="Color.Primary">Tạo</MudButton>
+                    </MudGrid>
+                </MudItem>
+            </MudGrid>
+        </DialogActions>
+    </MudDialog>
+}
+
+@code {
+    [CascadingParameter] MudDialogInstance Dialog { get; set; }
+
+    [Parameter]
+    public Guid IdPost { get; set; }
+
+    private string collectionName;
+
+    SaveDTO savePost = new SaveDTO();
+
+
+    private async Task Create()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        var userCurrent = await UserManager.GetUserAsync(user);
+        var userId = userCurrent.Id;
+        savePost.IdUser = userId;
+
+        var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+        var result = await httpClient.PostAsJsonAsync("/api/save/create_savepost", savePost);
+        if (result.IsSuccessStatusCode)
+        {
+            Navigation.NavigateTo(Navigation.Uri, true);
+        }
+    }
+
+    private void Cancel()
+    {
+        Dialog.Close(DialogResult.Cancel());
+    }
+}
