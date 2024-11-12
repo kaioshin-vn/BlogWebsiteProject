@@ -5,7 +5,7 @@
 @using Microsoft.AspNetCore.SignalR.Client
 
 @inherits LayoutComponentBase
-<MudThemeProvider />
+<MudThemeProvider Theme="@_theme" IsDarkMode="_isDarkMode" />
 <MudPopoverProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
@@ -44,104 +44,107 @@
         }
 </style>
 <div class="page">
-    <main>
-        <div style="background-color:#fff;z-index:100; position :fixed;border-bottom:grey 0.5px solid;width:100%" class="d-flex justify-content-between align-items-center row">
-            <div class="col-3">
-                <NavLink href="/">
-                    <MudImage Src="logo.png" Height="64"></MudImage>
-                </NavLink>
-            </div>
-            <div class="d-flex col-6">
-                <MudTextField @bind-Value="Search" Placeholder="Tìm kiếm" Variant="Variant.Text" />
-                <MudIconButton Icon="@Icons.Material.Filled.Search" Color="Color.Info" aria-label="github"></MudIconButton>
-            </div>
-            <div class="col-3">
-                <AuthorizeView>
-                    <Authorized>
-                        <div class="d-flex justify-content-end">
-                            <div class="d-flex justify-content-between align-items-center me-4">
+    <MudLayout>
+        <MudAppBar Elevation="1">
+            <div style="z-index:100; position :fixed;border-bottom:grey 0.5px solid;width:100%;" class="d-flex justify-content-between align-items-center row">
+                <div class="col-3">
+                    <NavLink href="/">
+                        <MudImage Src="logo.png" Height="64"></MudImage>
+                    </NavLink>
+                </div>
+                <div class="d-flex col-6">
+                    <MudTextField @bind-Value="Search" Placeholder="Tìm kiếm" Variant="Variant.Text" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Search" Color="Color.Info" aria-label="github"></MudIconButton>
+                    <MudIconButton Class="mx-2" Icon="@(DarkLightModeButtonIcon)" Color="Color.Inherit" OnClick="@DarkModeToggle" />
+                </div>
+                <div class="col-3">
+                    <AuthorizeView>
+                        <Authorized>
+                            <div class="d-flex justify-content-end">
+                                <div class="d-flex justify-content-between align-items-center me-4">
 
-                                <MudIconButton Class="mx-1" Icon="@Icons.Material.Filled.Chat"></MudIconButton>
+                                    <MudIconButton Class="mx-1" Icon="@Icons.Material.Filled.Chat"></MudIconButton>
 
-                                <MudTooltip Class="mx-1" Text="Thêm mới bài viết">
-                                    <MudFab Class="mx-1" StartIcon="@Icons.Material.Filled.Add" Size="Size.Medium" Style="border:none;box-shadow:none;background-color:none;" Label="Tạo mới" />
-                                </MudTooltip>
+                                    <MudTooltip Class="mx-1" Text="Thêm mới bài viết">
+                                        <MudFab Class="mx-1" StartIcon="@Icons.Material.Filled.Add" Size="Size.Medium" Style="border:none;box-shadow:none;background-color:none;" Label="Tạo mới" />
+                                    </MudTooltip>
 
-                                <MudIconButton Style="overflow:visible;">
-                                    <MudBadge Content="NoticeCount" Color="Color.Tertiary" Overlap="true" Class="">
-                                        <MudIcon Icon="@Icons.Material.Filled.Notifications">
-                                        </MudIcon>
-                                    </MudBadge>
-                                </MudIconButton>
+                                    <MudIconButton Style="overflow:visible;">
+                                        <MudBadge Content="NoticeCount" Color="Color.Tertiary" Overlap="true" Class="">
+                                            <MudIcon Icon="@Icons.Material.Filled.Notifications">
+                                            </MudIcon>
+                                        </MudBadge>
+                                    </MudIconButton>
 
+                                </div>
+
+                                <MudMenu Class="py-2" ActivationEvent="@MouseEvent.MouseOver" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.BottomRight">
+                                    <ActivatorContent>
+                                        <MudAvatar Class="avatar" Variant="Variant.Outlined">
+                                            <MudImage Src="@Avatar"></MudImage>
+                                        </MudAvatar>
+                                    </ActivatorContent>
+                                    <ChildContent>
+                                        <MudMenuItem>
+                                            <div class="d-flex justify-content-start align-items-center ">
+                                                <MudFab class="p-0 me-3" StartIcon="@Icons.Material.Filled.Person" Color="Color.Tertiary" Size="Size.Small" />
+                                                <b>Trang cá nhân</b>
+                                            </div>
+                                        </MudMenuItem>
+                                        <MudMenuItem>
+                                            <div class="d-flex justify-content-start align-items-center ">
+                                                <MudFab class="p-0 me-3" StartIcon="@Icons.Material.Filled.Settings" Color="Color.Tertiary" Size="Size.Small" />
+                                                <b>Cài đặt</b>
+                                            </div>
+                                        </MudMenuItem>
+                                        <MudMenuItem>
+                                            <div class="d-flex justify-content-start align-items-center ">
+                                                <MudFab class="p-0 me-3" StartIcon="@Icons.Material.Filled.Groups" Color="Color.Tertiary" Size="Size.Small" />
+                                                <b>Danh sách theo dõi</b>
+                                            </div>
+                                        </MudMenuItem>
+                                        <MudMenuItem>
+                                            <form action="Account/Logout" class="p-0" method="post">
+                                                <input type="hidden" name="__RequestVerificationToken" value="@AntiforgeryToken" />
+                                                <input type="hidden" name="ReturnUrl" value="Account/Login" />
+                                                <button type="submit" style="width:230px;" class="d-flex justify-content-start ">
+                                                    <MudFab class="p-0 me-3" StartIcon="@Icons.Material.Filled.Logout" Color="Color.Tertiary" Size="Size.Small" />
+                                                    <b>Đăng xuất</b>
+                                                </button>
+                                            </form>
+                                        </MudMenuItem>
+                                    </ChildContent>
+                                </MudMenu>
                             </div>
+                        </Authorized>
 
-                            <MudMenu Class="py-2" ActivationEvent="@MouseEvent.MouseOver" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.BottomRight">
-                                <ActivatorContent>
-                                    <MudAvatar Class="avatar" Variant="Variant.Outlined">
-                                        <MudImage Src="@Avatar"></MudImage>
-                                    </MudAvatar>
-                                </ActivatorContent>
-                                <ChildContent>
-                                    <MudMenuItem>
-                                        <div class="d-flex justify-content-start align-items-center ">
-                                            <MudFab class="p-0 me-3" StartIcon="@Icons.Material.Filled.Person" Color="Color.Tertiary" Size="Size.Small" />
-                                            <b>Trang cá nhân</b>
-                                        </div>
-                                    </MudMenuItem>
-                                    <MudMenuItem>
-                                        <div class="d-flex justify-content-start align-items-center ">
-                                            <MudFab class="p-0 me-3" StartIcon="@Icons.Material.Filled.Settings" Color="Color.Tertiary" Size="Size.Small" />
-                                            <b>Cài đặt</b>
-                                        </div>
-                                    </MudMenuItem>
-                                    <MudMenuItem>
-                                        <div class="d-flex justify-content-start align-items-center ">
-                                            <MudFab class="p-0 me-3" StartIcon="@Icons.Material.Filled.Groups" Color="Color.Tertiary" Size="Size.Small" />
-                                            <b>Danh sách theo dõi</b>
-                                        </div>
-                                    </MudMenuItem>
-                                    <MudMenuItem>
-                                        <form action="Account/Logout" class="p-0" method="post">
-                                            <input type="hidden" name="__RequestVerificationToken" value="@AntiforgeryToken" />
-                                            <input type="hidden" name="ReturnUrl" value="Account/Login" />
-                                            <button type="submit" style="width:230px;" class="d-flex justify-content-start ">
-                                                <MudFab class="p-0 me-3" StartIcon="@Icons.Material.Filled.Logout" Color="Color.Tertiary" Size="Size.Small" />
-                                                <b>Đăng xuất</b>
+                        <NotAuthorized>
+                            <div class="d-flex justify-content-end">
+                                <div class="nav-item ">
+                                    <NavLink class="nav-link" href="Account/Register">
+                                        <center>
+                                            <button class="codepro-custom-btn codepro-btn-11" target="blank" title="Code Pro">
+                                                Đăng ký
                                             </button>
-                                        </form>
-                                    </MudMenuItem>
-                                </ChildContent>
-                            </MudMenu>
-                        </div>
-                    </Authorized>
-
-                    <NotAuthorized>
-                        <div class="d-flex justify-content-end">
-                            <div class="nav-item ">
-                                <NavLink class="nav-link" href="Account/Register">
-                                    <center>
-                                        <button class="codepro-custom-btn codepro-btn-11" target="blank" title="Code Pro">
-                                            Đăng ký
-                                        </button>
-                                    </center>
-                                </NavLink>
+                                        </center>
+                                    </NavLink>
+                                </div>
+                                <div class="nav-item">
+                                    <NavLink class="nav-link" href="Account/Login">
+                                        <center>
+                                            <button class="codepro-custom-btn codepro-btn-12" target="blank" title="Code Pro">
+                                                <span>Go!</span>
+                                                <span>Đăng nhập</span>
+                                            </button>
+                                        </center>
+                                    </NavLink>
+                                </div>
                             </div>
-                            <div class="nav-item">
-                                <NavLink class="nav-link" href="Account/Login">
-                                    <center>
-                                        <button class="codepro-custom-btn codepro-btn-12" target="blank" title="Code Pro">
-                                            <span>Go!</span>
-                                            <span>Đăng nhập</span>
-                                        </button>
-                                    </center>
-                                </NavLink>
-                            </div>
-                        </div>
-                    </NotAuthorized>
-                </AuthorizeView>
+                        </NotAuthorized>
+                    </AuthorizeView>
+                </div>
             </div>
-        </div>
+        </MudAppBar>
         <div class="d-flex " style="margin-top:64px">
             <div class="pe-3  scrollbar" style="height : 91vh;width : 290px; position: sticky;top: 64px;overflow-x : hidden;">
                 <div class="me-3 " style="width:auto;">
@@ -153,7 +156,7 @@
                 </article>
         </div>
         <audio id="audioPlayer" src="audio/newNoticeSound.mp3"></audio>
-    </main>
+    </MudLayout>
 </div>
 
 <div id="blazor-error-ui">
@@ -177,6 +180,9 @@
 
     private string AntiforgeryToken;
 
+    private bool _isDarkMode = false;
+    private MudTheme? _theme = null;
+
     private HubConnection? hubNotice;
 
     protected int NoticeCount = 13;
@@ -184,6 +190,13 @@
     private ClaimsPrincipal user;
     protected override async Task OnInitializedAsync()
     {
+        _theme = new()
+            {
+                PaletteLight = _lightPalette,
+                PaletteDark = _darkPalette,
+                LayoutProperties = new LayoutProperties()
+            };
+
         var tokens = Antiforgery.GetAndStoreTokens(HttpContextAccessor.HttpContext);
         AntiforgeryToken = tokens.RequestToken;
 
@@ -225,4 +238,56 @@
             }
         }
     }
+
+    private void DarkModeToggle()
+    {
+        _isDarkMode = !_isDarkMode;
+    }
+
+
+    private readonly PaletteLight _lightPalette = new()
+        {
+            Black = "#110e2d",
+            AppbarText = "#424242",
+            AppbarBackground = "rgba(255,255,255,1)",
+            DrawerBackground = "#ffffff",
+            GrayLight = "#e8e8e8",
+            GrayLighter = "#f9f9f9",
+        };
+
+    private readonly PaletteDark _darkPalette = new()
+        {
+            Primary = "#7e6fff",
+            Surface = "#1e1e2d",
+            Background = "#1a1a27",
+            BackgroundGray = "#151521",
+            AppbarText = "#92929f",
+            AppbarBackground = "rgba(26,26,39,1)",
+            DrawerBackground = "#1a1a27",
+            ActionDefault = "#74718e",
+            ActionDisabled = "#9999994d",
+            ActionDisabledBackground = "#605f6d4d",
+            TextPrimary = "#b2b0bf",
+            TextSecondary = "#92929f",
+            TextDisabled = "#ffffff33",
+            DrawerIcon = "#92929f",
+            DrawerText = "#92929f",
+            GrayLight = "#2a2833",
+            GrayLighter = "#1e1e2d",
+            Info = "#4a86ff",
+            Success = "#3dcb6c",
+            Warning = "#ffb545",
+            Error = "#ff3f5f",
+            LinesDefault = "#33323e",
+            TableLines = "#33323e",
+            Divider = "#292838",
+            OverlayLight = "#1e1e2d80",
+        };
+
+    public string DarkLightModeButtonIcon => _isDarkMode switch
+    {
+        true => Icons.Material.Rounded.AutoMode,
+        false => Icons.Material.Outlined.DarkMode,
+    };
+
 }

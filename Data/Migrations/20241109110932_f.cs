@@ -18,8 +18,9 @@ namespace Data.Migrations
                     IdGroup = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    ImgGroup = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    ImgCover = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ImgGroup = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ImgCover = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    DateTime = table.Column<DateTime>(type: "datetime2", nullable: false),
                     StateGroup = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
@@ -127,7 +128,8 @@ namespace Data.Migrations
                 columns: table => new
                 {
                     IdGroup = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    IdAdmin = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                    IdAdmin = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Position = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -513,7 +515,8 @@ namespace Data.Migrations
                 columns: table => new
                 {
                     IdGroup = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    IdPost = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                    IdPost = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    WaitState = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {

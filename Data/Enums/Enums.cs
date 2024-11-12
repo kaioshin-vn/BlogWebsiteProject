@@ -19,4 +19,18 @@
         Restricted,//Cần có admin duyệt bài giống như fb, không vào cũng xem được bài đăng
         Private //Chỉ có thể xem ( người tham gia mới xem được )
     }
+
+    public enum WaitState
+    {
+        Accept,//Đã chấp nhận
+        Pending,//Chờ
+        Decline//Từ chối
+    }
+
+    public enum Position
+    {
+		Chief,
+		Deputy
+	}
+
 }

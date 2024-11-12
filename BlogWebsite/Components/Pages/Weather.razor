@@ -1,65 +1,10 @@
 ﻿@page "/weather"
 
-<PageTitle>Weather</PageTitle>
 
-<h1>Weather</h1>
+<div style="text-align: left;"><span style="background-color: var(--rz-editor-content-background-color); color: var(--mud-palette-text-primary); font-size: var(--mud-typography-default-size); font-weight: var(--mud-typography-default-weight); letter-spacing: var(--mud-typography-default-letterspacing); text-align: var(--bs-body-text-align); text-transform: var(--mud-typography-default-text-transform); font-style: italic; text-decoration-line: underline;">&nbsp;34r3v</span></div>
+<div style="text-align: left;"><span style="font-style: italic; text-decoration-line: underline;">e</span></div>
+<div style="text-align: left;"><span style="font-style: italic; text-decoration-line: underline;">Boy đẹp trai&nbsp;</span></div><div style="text-align: left;"><span style="font-style: italic; text-decoration-line: underline;"><br></span></div>
+<div style="text-align: center;"><img src="UploadImage\upload-2024-11-04-e20bd0f0-b7fc-4cee-b33f-9a3e2b24aea4.jpg" height="120" class="">'<span style="font-style: italic; text-decoration-line: underline;"></span></div>
+<div style="text-align: left;">Tiến sĩ</div>
 
-<p>This component demonstrates showing data.</p>
-
-@if (forecasts == null)
-{
-    <p><em>Loading...</em></p>
-}
-else
-{
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Date</th>
-                <th>Temp. (C)</th>
-                <th>Temp. (F)</th>
-                <th>Summary</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var forecast in forecasts)
-            {
-                <tr>
-                    <td>@forecast.Date.ToShortDateString()</td>
-                    <td>@forecast.TemperatureC</td>
-                    <td>@forecast.TemperatureF</td>
-                    <td>@forecast.Summary</td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
-<div style="height : 800px; background-color : red;">
-</div>
-
-@code {
-    private WeatherForecast[]? forecasts;
-
-    protected override async Task OnInitializedAsync()
-    {
-        // Simulate asynchronous loading to demonstrate a loading indicator
-        await Task.Delay(500);
-
-        var startDate = DateOnly.FromDateTime(DateTime.Now);
-        var summaries = new[] { "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching" };
-        forecasts = Enumerable.Range(1, 5).Select(index => new WeatherForecast
-        {
-            Date = startDate.AddDays(index),
-            TemperatureC = Random.Shared.Next(-20, 55),
-            Summary = summaries[Random.Shared.Next(summaries.Length)]
-        }).ToArray();
-    }
-
-    private class WeatherForecast
-    {
-        public DateOnly Date { get; set; }
-        public int TemperatureC { get; set; }
-        public string? Summary { get; set; }
-        public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-    }
-}
+<script src="./Js/video.js"></script>

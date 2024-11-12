@@ -1,41 +1,21 @@
 ﻿@using System.ComponentModel.DataAnnotations
 
-<MudDialog>
-    <DialogContent>
-        <MudText>@ContentText</MudText>
+<MudDialog Style="max-width:700px;width:700px;min-width:700px;">
+    <DialogContent >
+        <MudTextField Style="width:660px;" T="string" Variant="Variant.Text" @bind-Value=@Code AutoGrow Lines="20" />
     </DialogContent>
     <DialogActions>
-        <MudTextField Class="mt-3" @bind-Value="FullName" Label="Tên đăng nhập" Variant="Variant.Outlined" InputType="@InputType.Text" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Person" AdornmentAriaLabel="Tên đăng nhập" name="Input.FullName" />
-        @if (errorMessage != "")
-        {
-            <div style="text-align:left" class="alert alert-danger my-3">
-                <p class="py-1 px-2" style="color:red;">@errorMessage</p>
-            </div>
-        }
         <MudButton OnClick="Cancel">Hủy</MudButton>
-        <MudButton Color="@Color" Variant="Variant.Filled" OnClick="Submit">@ButtonText</MudButton>
+        <MudButton Color="Color.Tertiary" Variant="Variant.Filled" OnClick="Submit">OK</MudButton>
     </DialogActions>
 </MudDialog>
 @code {
-    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    [CascadingParameter]
+    private MudDialogInstance MudDialog { get; set; }
 
-    [Parameter] public string ContentText { get; set; }
+    public string Code { get; set; }
 
-    [Parameter] public string ButtonText { get; set; }
+    private void Submit() => MudDialog.Close(DialogResult.Ok(Code));
 
-    [Parameter] public Color Color { get; set; }
-
-    string FullName { get; set; } = "";
-    string errorMessage { get; set; } = "";
-
-    void Submit()  {
-        if (FullName == "")
-        {
-            errorMessage = "Không được bỏ trống tên đăng nhập";
-            return;
-        }
-        MudDialog.Close(DialogResult.Ok(FullName));
-    }
-
-    void Cancel() => MudDialog.Close(DialogResult.Ok(false));
+    private void Cancel() => MudDialog.Cancel();
 }

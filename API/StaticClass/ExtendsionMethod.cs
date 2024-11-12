@@ -1,6 +1,7 @@
 ﻿using BlogWebsite.Data;
 using Data.Database.Table;
 using Data.DTO;
+using Data.DTO.EntitiDTO;
 using Microsoft.AspNetCore.Mvc;
 
 namespace API.StaticClass
@@ -28,6 +29,21 @@ namespace API.StaticClass
                 .Take(pagesize)
                 .ToList()
             };
+        }
+
+        public static PostIntroDTO GetIntroPost(this Post post)
+        {
+            var introPost = new PostIntroDTO() 
+            {
+                Id = post.Id,  
+                Title = post.Title,
+                ImgFile = post.ImgFile,
+                VideoFile = post.VideoFile,
+                Like = post.Like,
+                Content = post.Content,
+                CreateDate = post.CreateDate,
+            };
+            return introPost;
         }
     }
 }

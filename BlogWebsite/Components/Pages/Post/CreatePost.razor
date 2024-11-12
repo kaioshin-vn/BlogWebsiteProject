@@ -1,0 +1,391 @@
+﻿@page "/createQuestion"
+@using ASM_PH35423.StaticClass
+@using Client.Components.ComponentCustom
+@using Data.DTO.EntitiDTO
+@using System.Net.Http.Headers
+@using Newtonsoft.Json.Linq
+@using Radzen
+@using Radzen.Blazor
+
+@inject IJSRuntime JSRunTime
+@inject IHttpClientFactory HttpClientFactory
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+@inject UserManager<ApplicationUser> UserManager
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject IWebHostEnvironment env
+
+@if (Post == null || isUpPost)
+{
+    <LoadingLocal></LoadingLocal>
+}
+
+<link rel="stylesheet" href="./Css/video.css" />
+
+<div class="p-5">
+    <MudDivider />
+    <MudTabs Rounded="true" ApplyEffectsToContainer="true" ScrollIconColor="Color.Info" Color="Color.Default" SliderColor="Color.Tertiary" PanelClass="pa-6">
+        <MudTabPanel Text="Soạn thảo" Icon="@Icons.Material.Filled.DriveFileRenameOutline">
+            <MudGrid>
+                <MudItem xs="11">
+                    <MudTextField Style="" @bind-Value="Post.Title" AutoGrow Label="Tiêu đề" Variant="MudBlazor.Variant.Outlined"></MudTextField>
+                </MudItem>
+            </MudGrid>
+            @if (ListTag.Count > 0)
+            {
+                <MudItem Class="d-flex flex-wrap">
+                    @foreach (var item in ListTag)
+                    {
+                        <MudButtonGroup Color="Color.Info" Variant="MudBlazor.Variant.Filled" Class="mx-3 mt-3" Style="border-radius:8px;">
+                            <MudButton Style="overflow:hidden">@item.Name</MudButton>
+                            <MudIconButton Icon="@Icons.Material.Filled.Cancel" OnClick="() => { DeleteTag(item.Id) ;}"></MudIconButton>
+                        </MudButtonGroup>
+                    }
+                </MudItem>
+            }
+            <MudGrid Class="p-2" Justify="Justify.FlexStart">
+                <MudItem Class="my-4 d-flex">
+                    <MudTextField @bind-Value="TagName" Placeholder="Tên thẻ" Style="width:300px;" Variant="MudBlazor.Variant.Text" />
+                    <MudTooltip Class="mx-1" Text="Thêm thẻ bài viết">
+                        <MudFab Class="ms-5" StartIcon="@Icons.Material.Filled.Add" @onclick="AddTag" Color="Color.Tertiary" Size="Size.Small" Style="border:none;background-color:none;" />
+                    </MudTooltip>
+                </MudItem>
+            </MudGrid>
+            <MudGrid>
+                <MudItem xs="12">
+                    <RadzenHtmlEditor @bind-Value="@Post.Content" Execute="@OnExecute" UploadComplete="@OnUploadComplete" style="min-height:300px; height: auto;max-width:990px;border-radius:12px;overflow:hidden;" UploadUrl="minimalApi/uploadImage">
+                        <RadzenHtmlEditorUndo Title="Trước" />
+                        <RadzenHtmlEditorRedo Title="Sau" />
+                        <RadzenHtmlEditorSeparator />
+                        <RadzenHtmlEditorBold Title="In đậm" />
+                        <RadzenHtmlEditorItalic Title="In nghiêng" />
+                        <RadzenHtmlEditorUnderline Title="Gạch chân" />
+                        <RadzenHtmlEditorStrikeThrough Title="Xuyên qua" />
+                        <RadzenHtmlEditorSeparator />
+                        <RadzenHtmlEditorAlignLeft Title="Căn trái" />
+                        <RadzenHtmlEditorAlignCenter Title="Căn giữa" />
+                        <RadzenHtmlEditorAlignRight Title="Căn phải" />
+                        @* <RadzenHtmlEditorJustify Title="Căn đều" /> *@
+                        <RadzenHtmlEditorSeparator />
+                        <RadzenHtmlEditorIndent Title="Thụt lề" />
+                        <RadzenHtmlEditorOutdent Title="Nhô lề" />
+                        @* <RadzenHtmlEditorUnorderedList Title="Danh sách" /> *@
+                        <RadzenHtmlEditorOrderedList Title="Danh sách sắp xếp" />
+                        <RadzenHtmlEditorSeparator />
+                        <RadzenHtmlEditorColor Title="Màu chữ" />
+                        <RadzenHtmlEditorBackground Title="Màu nền" />
+                        <RadzenHtmlEditorRemoveFormat Title="Bỏ định dạng" />
+                        <RadzenHtmlEditorSeparator />
+                        @* <RadzenHtmlEditorSubscript Title="Chữ phía dưới" />
+                        <RadzenHtmlEditorSuperscript Title="Chữ phía trên" /> *@
+                        @* <RadzenHtmlEditorSeparator /> *@
+                        <RadzenHtmlEditorLink Title="Thêm link" CancelText="Hủy" LinkText="Hiển thị" OpenInNewWindowText="Mở trong cửa số mới" UrlText="Đường dẫn" />
+                        <RadzenHtmlEditorUnlink Title="Bỏ đường dẫn" />
+                        <RadzenHtmlEditorImage Title="Thêm ảnh" UploadChooseText="Tải ảnh lên" AltText="Tên ảnh" CancelText="Hủy" SelectText="Chọn ảnh tải lên" UrlText="Nếu không có sẵn ảnh trên máy, hãy nhập đường dẫn ảnh trên web" HeightText="Chiều cao" WidthText="Chiều rộng" />
+                        <RadzenHtmlEditorSeparator />
+                        <RadzenHtmlEditorFontName Title="Phông chữ" Placeholder="Phông chữ" />
+                        <RadzenHtmlEditorFontSize Title="Kích thước" Placeholder="Cỡ chữ" />
+                        @* <RadzenHtmlEditorFormatBlock Title="Cỡ chữ" Placeholder="Cỡ chữ" NormalText="Thông thường" Heading1Text="Loại 1" Heading2Text="Loại 2" Heading3Text="Loại 3" Heading4Text="Loại 4" Heading5Text="Loại 5" Heading6Text="Loại 6" /> *@
+                        <RadzenHtmlEditorSeparator />
+                        <RadzenHtmlEditorCustomTool CommandName="AddCode" Icon="code" Title="Code" />
+                    </RadzenHtmlEditor>
+
+                    <MudItem xs="11" class="d-flex justify-content-end mt-3">
+                        <MudButton Class="mt-3 rounded-3" OnClick="(async ()=> await CreatePostSubmit())" Variant="MudBlazor.Variant.Filled" Color="Color.Tertiary">Tạo bài viết</MudButton>
+                    </MudItem>
+                </MudItem>
+            </MudGrid>
+        </MudTabPanel>
+        <MudTabPanel Text="Video" Icon="@Icons.Material.Filled.VideoCall">
+            <MudTooltip Text="Tải video lên">
+                <MudFileUpload T="IBrowserFile" Accept=".mp4,.MKV,.MOV" FilesChanged="UploadFiles">
+                    <ActivatorContent>
+                        <MudFab Color="Color.Success"
+                                StartIcon="@Icons.Material.Filled.AttachFile" />
+                    </ActivatorContent>
+                </MudFileUpload>
+            </MudTooltip>
+            @if (ListVideo.Count > 0)
+            {
+                <MudItem Class=" flex-wrap">
+                    @foreach (var item in ListVideo)
+                    {
+                        <MudFab Class="mt-5" StartIcon="@Icons.Material.Filled.Delete" @onclick="(() => DeleteVideo(item.Id))" Color="Color.Error" Size="Size.Small" Style="border:none;background-color:none;" />
+                        <div style="height:500px; border-radius:6px; background-color:aliceblue;overflow:hidden" class="d-flex mt-2 justify-content-center align-items-center">
+                            <div class="video_player d-flex justify-content-center align-items-center ">
+                                <video class="main-video " style="height : 500px;" controls src="@item.Data">
+                                </video>
+                            </div>
+                        </div>
+
+                    }
+                </MudItem>
+            }
+            @if (isLoading)
+            {
+                <LoadingLocal></LoadingLocal>
+            }
+        </MudTabPanel>
+    </MudTabs>
+</div>
+
+
+<style>
+    a {
+        color: dodgerblue;
+    }
+</style>
+
+
+<script>
+    // Tạo URL tạm cho file video
+    async function createObjectURL(streamRef) {
+        console.log(streamRef)
+        const arrayBuffer = await streamRef.arrayBuffer();
+        const blob = new Blob([arrayBuffer], { type: "video/mp4" }); // Đảm bảo thay đổi type nếu video không phải mp4
+
+        // Tạo URL tạm cho Blob và gán vào video
+        const url = URL.createObjectURL(blob);
+
+        return url;
+    }
+
+</script>
+
+@code {
+    private MudForm form;
+
+    private string TagName;
+
+    private List<Tag> ListTag = new List<Tag>();
+    private List<Video> ListVideo = new List<Video>();
+
+    private List<string> listImg = new List<string> ();
+
+    IBrowserFile imgFile;
+
+    private string fileName { get; set; }
+
+    bool isLoading = false;
+
+    bool isUpPost = false;
+
+    PostDTO Post = new PostDTO();
+
+    void DeleteTag(int id)
+    {
+        ListTag.Remove(ListTag.FirstOrDefault(a => a.Id == id));
+    }
+
+    void AddTag()
+    {
+        if (!string.IsNullOrEmpty(TagName))
+        {
+            if (!ListTag.Any(a => a.Name == TagName.Trim()))
+            {
+                var tag = new Tag();
+                tag.Id = ListTag.Count + 1;
+                tag.Name = TagName;
+                ListTag.Add(tag);
+                TagName = "";
+                //StateHasChanged();
+            }
+        }
+    }
+
+    void DeleteVideo(int id)
+    {
+        ListVideo.Remove(ListVideo.FirstOrDefault(a => a.Id == id));
+    }
+
+    async Task OnExecute(HtmlEditorExecuteEventArgs args)
+    {
+        if (args.CommandName == "AddCode")
+        {
+            await AddCode(args.Editor);
+        }
+    }
+
+
+    private void UploadFile()
+    {
+        if (imgFile != null)
+            fileName = imgFile.Name;
+    }
+
+    async Task AddCode(RadzenHtmlEditor editor)
+    {
+        await editor.ExecuteCommandAsync(HtmlEditorCommands.InsertHtml, "<br></br>");
+        await editor.ExecuteCommandAsync(HtmlEditorCommands.InsertHtml, $@"<div style=""background-color:beige;border-radius:5px;"" class=""m-3 pt-3 ps-3 codeContainer""><pre><code>&nbsp;</code></pre></div> <br/>");
+    }
+
+    void OnUploadComplete(UploadCompleteEventArgs args)
+    {
+        JObject jsonObject = JObject.Parse(args.RawResponse);
+
+        // Lấy giá trị của thuộc tính "url"
+        if (jsonObject != null && jsonObject["url"] != null)
+        {
+            string url = jsonObject["url"].ToString();
+            if (url != "")
+            {
+                listImg.Add(url);
+            }
+        }
+
+    }
+
+    public async Task CreatePostSubmit()
+    {
+        if (Post.Title == null || Post.Title.Trim() == "")
+        {
+            Snackbar.Add("Hãy nhập tiêu đề bài viết", Severity.Info);
+            return;
+        }
+
+        isUpPost = true;
+        StateHasChanged();
+
+        var idPost = Guid.NewGuid();
+
+        var _httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+
+        var listIdTag = new List<Guid>();
+        foreach (var item in ListTag)
+        {
+            var tag = new Data.Database.Table.Tag();
+            tag.Id = Guid.NewGuid();
+            tag.TagName = item.Name;
+            var response = await _httpClient.PostAsJsonAsync($"/addNewTag", tag);
+            if (response.IsSuccessStatusCode)
+            {
+                var idTag = await response.Content.ReadAsStringAsync();
+                listIdTag.Add(Guid.Parse(idTag));
+            }
+        }
+
+        if (ListVideo.Count > 0)
+        {
+            Post.VideoFile = "";
+
+        }
+        var httpClient = new HttpClient();
+        foreach (var video in ListVideo)
+        {
+            httpClient.BaseAddress = new Uri(Navigation.BaseUri);
+
+            var linkVideo = UpLoadVideo(video.File);
+            if (ListVideo.IndexOf(video) != 0)
+            {
+                Post.VideoFile += ("|" + linkVideo); 
+            }
+            else
+            {
+                Post.VideoFile += linkVideo;
+            }
+        }
+
+        Post.Id = idPost;
+
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        var idUserCurrent = UserManager.GetUserId(user);
+        var idUser = Guid.Parse(idUserCurrent);
+        Post.IdUser = idUser;
+
+        foreach (var item in listImg)
+        {
+            if (Post.Content.Contains(item))
+            {
+                Post.ImgFile = item;
+                break;
+            }
+        }
+
+        var responseAddPost = await _httpClient.PostAsJsonAsync($"/createPost", Post);
+        if (responseAddPost.IsSuccessStatusCode)
+        {
+            foreach (var idTag in listIdTag)
+            {
+                var PostTag = new Data.Database.Table.PostTag();
+                PostTag.IdPost = idPost;
+                PostTag.IdTag = idTag;
+                await _httpClient.PostAsJsonAsync($"/addNewPostTag", PostTag);
+            }
+
+            isUpPost = false;
+
+            Snackbar.Add("Thêm bài viết thành công", Severity.Success);
+        }
+    }
+
+    async Task UploadFiles(IBrowserFile file)
+    {
+        if (file == null)
+        {
+            return;
+        }
+        if (file.Size > 98000000)
+        {
+            Snackbar.Add("Chỉ có thể up file dưới 100MB", Severity.Info);
+            return;
+        }
+        if (!ListVideo.Any(a => a.File.Name == file.Name))
+        {
+            using (var stream = file.OpenReadStream(maxAllowedSize: 100000000))
+            {
+
+                var streamRef = new DotNetStreamReference(stream: stream);
+
+                var video = new Video();
+                video.Id = ListVideo.Count + 1;
+                // Gọi JavaScript tạo URL từ Stream
+                isLoading = true;
+                var videoUrl = await JSRunTime.InvokeAsync<string>("createObjectURL", streamRef);
+                video.File = await file.ToFormFile();
+                video.Data = videoUrl;
+
+                ListVideo.Add(video);
+
+                isLoading = false;
+                StateHasChanged();
+            }
+
+
+        }
+    }
+
+    string UpLoadVideo(IFormFile file )
+    {
+        var uploadPath = Path.Combine(env.WebRootPath, "UploadVideo");
+
+
+        var fileName = $"upload-{DateTime.Today.ToString("yyyy-MM-dd")}-{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
+
+        using (var stream = new FileStream(Path.Combine(uploadPath, fileName), FileMode.Create))
+        {
+            // Save the file
+            file.CopyTo(stream);
+
+            // Return the URL of the file
+            var url = @"UploadVideo\" + fileName;
+
+            return url;
+        }
+    }
+
+
+    class Video
+    {
+        public int Id;
+        public IFormFile File;
+        public string Data;
+    }
+
+    class Tag
+    {
+        public int Id;
+        public string Name;
+    }
+}

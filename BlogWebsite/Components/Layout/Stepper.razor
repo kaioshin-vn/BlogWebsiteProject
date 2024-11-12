@@ -1,0 +1,755 @@
+﻿@page "/step"
+@using System.Globalization;
+@using Data.Enums
+@using Data.DTO
+@using Data.Database.Table
+@using Microsoft.EntityFrameworkCore
+@using System.Net.Http.Json
+@using Newtonsoft.Json
+@inject UserManager<ApplicationUser> UserManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject ISnackbar Snackbar
+@inject ApplicationDbContext DbContext
+@inject IHttpClientFactory HttpClientFactory
+@inject NavigationManager Navigation
+
+<style>
+	.rounded-input {
+		border-radius: 20px;
+		border: 1px solid #ccc;
+		width: 100%;
+		padding: 8px;
+		box-sizing: border-box;
+	}
+
+		.rounded-input:focus {
+			outline: none;
+		}
+
+	#another_unique_identifier {
+		height: 300px;
+		overflow: hidden;
+		transition: overflow 0.3s ease-in-out;
+	}
+
+		#another_unique_identifier:hover {
+			overflow: auto;
+		}
+
+</style>
+
+<MudPaper Style="width: 800px">
+	<MudStepper @ref="stepper" @bind-ActiveIndex="_index" CompletedStepColor="Color.Success" CurrentStepColor="Color.Primary" NavClass="border-b mud-border-lines-default" StepClass="pt-4" ShowResetButton>
+		<TitleTemplate>@*This empty template prevents rendering the title*@</TitleTemplate>
+		<ConnectorTemplate Context="step">
+			<div class="mud-stepper-nav-connector">
+				@{
+					int value = step.Completed ? 100 : 0;
+					<MudProgressLinear Indeterminate="@(step.IsActive)" Striped Value="value" Min="0" Max="100" Color="Color.Success" Style="height: 2px; background-color: #d4ddeb; border-radius: 2px;" />
+				}
+			</div>
+		</ConnectorTemplate>
+		<LabelTemplate>
+			@if (context.IsActive)
+			{
+				<MudIcon Icon="@Icons.Material.Filled.AirplanemodeActive" Style="rotate: 90deg;" Color="context.Completed ? Color.Success : Color.Primary"></MudIcon>
+			}
+			else if (context.Completed)
+			{
+				<div style="height: 10px; width:10px; background-color: var(--mud-palette-success); border-radius: 50%;"></div>
+			}
+			else
+			{
+				<div style="height: 10px; width:10px; background-color: #d4ddeb; border-radius: 50%;"></div>
+			}
+		</LabelTemplate>
+		<ChildContent>
+			<MudStep Title="Verify passenger data">
+				<MudText Typo="Typo.h4" Class="mb-3">Hãy cho chúng tôi biết về cộng đồng của bạn</MudText>
+				<MudText Typo="Typo.body1" Class="mb-4">Tên và mô tả giúp mọi người hiểu cộng đồng của bạn là gì.</MudText>
+
+				<MudForm>
+					<MudGrid Spacing="3">
+						<MudItem xs="8">
+							<MudTextField @bind-Value="CommunityName"
+										  Label="Tên cộng đồng *"
+										  Variant="Variant.Filled"
+										  FullWidth="true"
+										  OnBlur="@((e) => CheckCommunityName())" />
+							<MudText Typo="Typo.caption">@CommunityName.Length/21</MudText>
+							@if (!string.IsNullOrEmpty(errorName))
+							{
+								<MudText Color="Color.Error">@errorName</MudText> <!-- Hiển thị thông báo lỗi -->
+							}
+							<MudTextField @bind-Value="Description"
+										  Label="Mô tả *"
+										  Variant="Variant.Filled"
+										  Lines="7"
+										  OnBlur="@((e) => CheckCommunityName())" />
+							<MudText Typo="Typo.caption">@Description.Length/500</MudText>
+							@if (!string.IsNullOrEmpty(errorDes))
+							{
+								<MudText Color="Color.Error">@errorDes</MudText> <!-- Hiển thị thông báo lỗi -->
+							}
+						</MudItem>
+						<MudItem xs="4">
+							<MudCard Class="p-2">
+								<MudText Typo="Typo.h6">
+									@if (string.IsNullOrEmpty(CommunityName))
+									{
+										<span>Cộng đồng</span>
+									}
+									else
+									{
+										@CommunityName
+									}
+								</MudText>
+								<MudText Typo="Typo.caption">1 thành viên · 1 hoạt dộng</MudText>
+								<MudText Typo="Typo.body2">
+									@if (string.IsNullOrEmpty(Description))
+									{
+										<span>Mô tả cộng đồng của bạn</span>
+									}
+									else
+									{
+										@Description
+									}
+								</MudText>
+							</MudCard>
+						</MudItem>
+					</MudGrid>
+				</MudForm>
+			</MudStep>
+			<MudStep Title="Upgrade to first class" Skippable="true">
+
+				<MudText Typo="Typo.h4" Class="mb-6">Tạo phong cách cho cộng đồng của bạn</MudText>
+				<MudText Typo="Typo.body1" Class="mb-8">Thêm nét hấp dẫn trực quan sẽ thu hút sự chú ý của các thành viên mới và giúp thiết lập văn hóa cộng đồng của bạn! Bạn có thể cập nhật bất kỳ lúc nào.</MudText>
+
+				<MudGrid Spacing="14">
+					<MudItem xs="7">
+						<!-- Dòng cho Icon -->
+						<MudGrid Spacing="2" Style="transition: background-color 0.3s;"
+								 onmouseover="this.style.backgroundColor='#f0f0f0'; this.style.padding='3px';"
+								 onmouseout="this.style.backgroundColor=''; this.style.padding='3px';">
+							<MudItem xs="8">
+								<MudText Typo="Typo.h6" Style="color: #5e5254;
+													padding-left: 8px;
+													font-size: 18px;
+													font-family: -webkit-body;">Ảnh nhóm</MudText>
+							</MudItem>
+							<MudItem xs="4" class="d-flex align-items-center justify-end" Style="padding:0 ">
+								<MudFileUpload @ref="fileUploadIcon" T="IBrowserFile" FilesChanged="UploadIconFile" AcceptedFileTypes="new string[] { 'image/jpeg', 'image/png', 'image/jpg', 'image/webp'}">
+									<ActivatorContent>
+										<MudFab StartIcon="@Icons.Material.Filled.Image"
+												Label="@CapitalizeFirstLetter(iconButtonLabel)"
+												Style="height: 32px;" />
+									</ActivatorContent>
+								</MudFileUpload>
+							</MudItem>
+						</MudGrid>
+
+						@if (isIconUploaded == true)
+						{
+							<MudGrid Spacing="2" Style="margin-top: 12px; padding: 4px transition: background-color 0.3s; "
+									 onmouseover="this.style.backgroundColor='#f0f0f0';"
+									 onmouseout="this.style.backgroundColor='';">
+								<MudItem xs="12" Class="d-flex align-items-center justify-content-between" Style="border: 1px solid #ccc; border-radius: 4px; height: 46px; ">
+									<MudText Typo="Typo.body2" Style="overflow:hidden;text-overflow: ellipsis;">@IconFileName</MudText>
+									<MudIconButton Icon="@Icons.Material.Filled.Delete" Style="margin-top: -7px;" OnClick="RemoveIcon" />
+								</MudItem>
+							</MudGrid>
+						}
+
+						<!-- Dòng cho Banner -->
+						<MudGrid Spacing="2" Style="transition: background-color 0.3s; margin-top: 6px;"
+								 onmouseover="this.style.backgroundColor='#f0f0f0'; this.style.padding='3px';"
+								 onmouseout="this.style.backgroundColor=''; this.style.padding='3px';">
+							<MudItem xs="8">
+
+								<MudText Typo="Typo.h6" Style="color: #5e5254;
+											padding-left: 8px;
+											font-size: 18px;
+											font-family: -webkit-body;">Ảnh bìa</MudText>
+							</MudItem>
+							<MudItem xs="4" class="d-flex align-items-center justify-end" Style=" padding: 0;">
+								<MudFileUpload @ref="fileUploadBanner" T="IBrowserFile" FilesChanged="UploadBannerFile">
+									<ActivatorContent>
+										<MudFab StartIcon="@Icons.Material.Filled.Image"
+												Label="@CapitalizeFirstLetter(bannerButtonLabel)"
+												Style="height: 32px;" />
+									</ActivatorContent>
+								</MudFileUpload>
+							</MudItem>
+						</MudGrid>
+
+
+						@if (isBannerUploaded == true)
+						{
+							<MudGrid Spacing="2" Style="margin-top: 12px; padding: 4px transition: background-color 0.3s; "
+									 onmouseover="this.style.backgroundColor='#f0f0f0';"
+									 onmouseout="this.style.backgroundColor='';">
+								<MudItem xs="12" Class="d-flex align-items-center justify-content-between" Style="border: 1px solid #ccc; border-radius: 4px; height: 46px ">
+									<MudText Typo="Typo.body2" Style="overflow:hidden;text-overflow: ellipsis;">@BannerFileName</MudText>
+									<MudIconButton Icon="@Icons.Material.Filled.Delete" Style="margin-top: -7px;" OnClick="RemoveBanner" />
+								</MudItem>
+							</MudGrid>
+						}
+
+					</MudItem>
+
+					<MudItem xs="5" Style="margin-top:-12px; ">
+						<MudCard Style="border-radius: 12px; box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.25); border: 2px solid rgba(0, 0, 0, 0.1);">
+							<MudCardHeader Style="padding: 0;">
+								<img src="@bannerUrl" alt="Community Banner"
+									 style="width: 279px; height: 50px; object-fit: cover; border-radius: 12px 12px 0 0;" />
+							</MudCardHeader>
+
+							<MudCardContent>
+								<MudGrid>
+									<MudItem xs="2">
+										<img src="@iconUrl" alt="Community Icon" style="width:50px; height:50px; border-radius:50%;" />
+									</MudItem>
+									<MudItem xs="10" Style="padding-left: 38px;">
+										<MudText Typo="Typo.h6">@CommunityName</MudText>
+										<MudText Typo="Typo.caption">1 thành viên · 1 hoạt động</MudText>
+									</MudItem>
+								</MudGrid>
+
+								<MudText Typo="Typo.body2">@Description</MudText>
+							</MudCardContent>
+						</MudCard>
+
+					</MudItem>
+				</MudGrid>
+
+			</MudStep>
+			<MudStep Title="Select seat">
+				<MudText Typo="Typo.h4" Class="mb-6">Thêm chủ đề</MudText>
+				<MudText Typo="Typo.body1" Class="mb-8">
+					Thêm tối đa 3 chủ đề để giúp những người dùng Kaizen quan tâm tìm thấy cộng đồng của bạn.
+				</MudText>
+
+				<!-- Thanh tìm kiếm -->
+				<div class="d-flex align-center relative">
+					<!-- Trường nhập liệu -->
+					<input type="text"
+						   placeholder="Tìm kiếm chủ đề"
+						   class="rounded-input"
+						   @oninput="OnSearchChanged"
+						   value="@Search" />
+					<MudIconButton Icon="@Icons.Material.Filled.Search" Color="Color.Primary" />
+
+				</div>
+
+				<!-- Hiển thị các chủ đề đã chọn  -->
+				<MudText Typo="Typo.h6" Class="mt-4">Chủ đề đã chọn: @selectedTopics.Count/3</MudText>
+				<MudChipSet T="Guid">
+					@foreach (var selectedTopic in selectedTopics)
+					{
+						var topic = topics.FirstOrDefault(t => t.IdTopic == selectedTopic);
+						if (topic != null)
+						{
+							<MudChip>
+								@topic.TopicName
+								<MudIconButton Icon="@Icons.Material.Filled.Close"
+											   OnClick="@(() => OnTopicRemoved(topic.IdTopic))"
+											   Color="Color.Error"
+											   Size="Size.Small"
+											   Class="ml-2" />
+							</MudChip>
+						}
+					}
+				</MudChipSet>
+
+				<!-- Tiêu đề -->
+				<div id="another_unique_identifier" class="ma-0" style="height:230px; "
+			<MudList T="Topic">
+						@if (filteredTopics != null && filteredTopics.Any())
+						{
+							@foreach (var topic in filteredTopics)
+							{
+								<MudListItem>
+									<MudButton Color="@GetButtonColor(topic.IdTopic)"
+											   OnClick="@(() => OnTopicSelected(topic.IdTopic))"
+											   Disabled="@(!IsTopicSelectable() || selectedTopics.Count >= 3 && !selectedTopics.Contains(topic.IdTopic))">
+										@topic.TopicName
+									</MudButton>
+								</MudListItem>
+							}
+						}
+						else if (topics != null && !topics.Any())
+						{
+						<MudText Typo="Typo.body1">
+							Không có đề tài nào.
+						</MudText>
+						}
+						else
+						{
+						<MudItem Class="d-flex align-items-center ">
+							<MudIcon Icon="@Icons.Material.Filled.PriorityHigh" Color="Color.Default" />
+							<MudText Typo="Typo.body1">
+								Không có chủ đề nào khớp với tìm kiếm của bạn.
+							</MudText>
+						</MudItem>
+						}
+			</MudList>
+		</div>
+			</MudStep>
+			<MudStep Title="Complete check-in" @bind-Completed="_completed">
+				<MudText Typo="Typo.h4" Class="mb-6">What kind of community is this?</MudText>
+				<MudText Typo="Typo.body1" Class="mb-8">Decide who can view and contribute in your community. Only public communities show up in search. Important: Once set, you will need to submit a request to change your community type.</MudText>
+
+				<MudRadioGroup @bind-Value="selectedCommunityType" Name="communityType">
+					<MudGrid Spacing="1"
+							 @onclick="() => SetSelectedCommunity(KindGroup.Public)"
+							 @onmouseover="() => OnMouseOver(KindGroup.Public)"
+							 @onmouseout="OnMouseOut"
+							 Style="@GetGridStyle(KindGroup.Public)">
+						<MudItem Class="d-flex align-items-center justify-center" Style="padding-left: 32px;">
+							<MudIcon Icon="@Icons.Material.Filled.Public" Title="Public"
+									 Color="@(selectedCommunityType == KindGroup.Public ? Color.Dark : Color.Default)" />
+						</MudItem>
+
+						<MudItem xs="10">
+							<MudText Typo="Typo.h6" Style="color: #2e292a; padding-left: 8px; font-size: 17px; font-family: -webkit-body;">Public</MudText>
+							<MudText Typo="Typo.h6" Style="color: #817678; padding-left: 8px; font-size: 14px; font-family: -webkit-body;">Anyone can view, post, and comment to this community</MudText>
+						</MudItem>
+
+						<MudItem xs="1" Class="d-flex align-items-center justify-end" Style="padding:0;">
+							<MudRadio Value="KindGroup.Public"></MudRadio>
+						</MudItem>
+					</MudGrid>
+
+					<MudGrid Spacing="1"
+							 @onclick="() => SetSelectedCommunity(KindGroup.Restricted)"
+							 @onmouseover="() => OnMouseOver(KindGroup.Restricted)"
+							 @onmouseout="OnMouseOut"
+							 Style="@GetGridStyle(KindGroup.Restricted)">
+						<MudItem Class="d-flex align-items-center justify-center" Style="padding-left: 32px;">
+							<MudIcon Icon="@Icons.Material.Outlined.RemoveRedEye" Title="RemoveRedEye"
+									 Color="@(selectedCommunityType == KindGroup.Restricted ? Color.Dark : Color.Default)" />
+						</MudItem>
+
+						<MudItem xs="10">
+							<MudText Typo="Typo.h6" Style="color: #2e292a; padding-left: 8px; font-size: 17px; font-family: -webkit-body;">Restricted</MudText>
+							<MudText Typo="Typo.h6" Style="color: #817678; padding-left: 8px; font-size: 14px; font-family: -webkit-body;">Anyone can view, but only approved users can contribute</MudText>
+						</MudItem>
+
+						<MudItem xs="1" Class="d-flex align-items-center justify-end" Style="padding:0;">
+							<MudRadio Value="KindGroup.Restricted"></MudRadio>
+						</MudItem>
+					</MudGrid>
+
+					<MudGrid Spacing="1"
+							 @onclick="() => SetSelectedCommunity(KindGroup.Private)"
+							 @onmouseover="() => OnMouseOver(KindGroup.Private)"
+							 @onmouseout="OnMouseOut"
+							 Style="@GetGridStyle(KindGroup.Private)">
+						<MudItem Class="d-flex align-items-center justify-center" Style="padding-left: 32px;">
+							<MudIcon Icon="@Icons.Material.Outlined.Lock" Title="Lock"
+									 Color="@(selectedCommunityType == KindGroup.Private ? Color.Dark : Color.Default)" />
+						</MudItem>
+
+						<MudItem xs="10">
+							<MudText Typo="Typo.h6" Style="color: #2e292a; padding-left: 8px; font-size: 17px; font-family: -webkit-body;">Private</MudText>
+							<MudText Typo="Typo.h6" Style="color: #817678; padding-left: 8px; font-size: 14px; font-family: -webkit-body;">Only approved users can view and contribute</MudText>
+						</MudItem>
+
+						<MudItem xs="1" Class="d-flex align-items-center justify-end" Style="padding:0;">
+							<MudRadio Value="KindGroup.Private"></MudRadio>
+						</MudItem>
+					</MudGrid>
+				</MudRadioGroup>
+			</MudStep>
+
+		</ChildContent>
+		<CompletedContent>
+			<MudStack Row Class="ma-3">
+				<MudText>
+					You are checked-in, your ticket will be sent by email.
+				</MudText>
+			</MudStack>
+		</CompletedContent>
+		<ActionContent Context="stepper">
+			<MudButton OnClick="@(() => stepper.ResetAsync())">Trở về</MudButton>
+			@if (!_completed)
+			{
+				<MudIconButton OnClick="@(() => stepper.PreviousStepAsync())" Icon="@Icons.Material.Filled.ArrowBack" Color="Color.Primary" Disabled="@(_index <= 0)" />
+				<MudSpacer />
+				@if (stepper.Steps[_index].Skippable == true)
+				{
+					<MudIconButton OnClick="@(() => stepper.SkipCurrentStepAsync())" Icon="@stepper.SkipButtonIcon" Color="Color.Primary" />
+				}
+				// Kiểm tra nếu đây là bước cuối cùng
+				@if (_index == stepper.Steps.Count - 1)
+				{
+					<MudIconButton OnClick="@HandleValidSubmit" Icon="@Icons.Material.Filled.Done" Color="Color.Success" />
+				}
+
+				else
+				{
+					<MudIconButton OnClick="@Next" Icon="@Icons.Material.Filled.ArrowForward" Color="@(isValid ? Color.Primary : Color.Default)" Disabled="!isValid" />
+				}
+			}
+		</ActionContent>
+	</MudStepper>
+</MudPaper>
+@code {
+	private int _index;
+	private bool _completed = false;
+	private string CommunityName { get; set; } = "";
+	private string Description { get; set; } = "";
+	private string IconFileName = "";
+	private string BannerFileName = "";
+	private string iconUrl = "/img/icon.jpg";
+	private string bannerUrl = "/img/univer.png";
+	private string iconButtonLabel = "Thêm";
+	private string bannerButtonLabel = "Thêm";
+	private bool isIconUploaded = false;
+	private bool isBannerUploaded = false;
+	private MudFileUpload<IBrowserFile> fileUploadIcon;
+	private MudFileUpload<IBrowserFile> fileUploadBanner;
+	private string Search { get; set; }
+	private List<Guid> selectedTopics = new List<Guid>(); // Danh sách các đề tài đã chọn
+	private List<Topic> topics = new List<Topic>(); // Danh sách đề tài tải từ DB
+	private List<Topic> filteredTopics = new List<Topic>(); // Danh sách đề tài được lọc
+
+	private GroupDTO groupDto = new GroupDTO();
+	private string errorMessage = "";
+	private string errorName = "";
+	private string errorDes = "";
+
+
+	private KindGroup selectedCommunityType = KindGroup.Public;
+	private KindGroup? hoveredCommunityType = null; // Lưu trữ phần tử đang di chuột qua
+
+	private MudStepper stepper;
+	private bool isValid = false;
+
+	[CascadingParameter]
+	public MudDialogInstance MudDialog { get; set; }
+
+
+
+	protected override async Task OnInitializedAsync()
+	{
+		await LoadTopicsAsync();
+	}
+
+	private Color GetButtonColor(Guid topicId)
+	{
+		return selectedTopics.Contains(topicId) ? Color.Primary : Color.Default;
+	}
+
+	private async Task LoadTopicsAsync()
+	{
+		var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+		var response = await httpClient.GetAsync("api/topic/get-all-topics");
+
+		if (response.IsSuccessStatusCode)
+		{
+			topics = await response.Content.ReadFromJsonAsync<List<Topic>>();
+			filteredTopics = topics;
+		}
+	}
+	private void OnSearchChanged(ChangeEventArgs e)
+	{
+		Search = e.Value.ToString();  // Cập nhật giá trị Search khi người dùng nhập
+		UpdateFilteredTopics();  // Gọi hàm lọc chủ đề
+	}
+
+	private void UpdateFilteredTopics()
+	{
+		if (string.IsNullOrWhiteSpace(Search))
+		{
+			filteredTopics = topics;  // Nếu không có từ khóa tìm kiếm, hiển thị tất cả chủ đề
+		}
+		else
+		{
+			filteredTopics = topics
+				.Where(t => t.TopicName.Contains(Search, StringComparison.OrdinalIgnoreCase))
+				.ToList();  // Lọc chủ đề theo tên
+		}
+	}
+
+	private void OnTopicSelected(Guid topicId)
+	{
+		if (selectedTopics.Contains(topicId))
+		{
+			selectedTopics.Remove(topicId);
+			Console.WriteLine($"Bỏ chọn đề tài: {topicId}");
+		}
+		else if (selectedTopics.Count < 3)
+		{
+			selectedTopics.Add(topicId);
+			Console.WriteLine($"Chọn đề tài: {topicId}");
+		}
+
+	}
+
+	private bool IsTopicSelectable()
+	{
+		return selectedTopics.Count < 3; // Cho phép chọn nếu số lượng chưa đạt tối đa
+	}
+
+	private void OnTopicRemoved(Guid topicId)
+	{
+		selectedTopics.Remove(topicId);
+		Console.WriteLine($"Đã xóa đề tài: {topicId}");
+	}
+
+
+	private async Task CheckCommunityName()
+	{
+		groupDto.Name = CommunityName;
+		groupDto.Description = Description;
+
+		isValid = true;
+		errorName = null;
+
+		if (string.IsNullOrEmpty(CommunityName))
+		{
+			isValid = false;
+			errorName = "Tên nhóm không được để trống.";
+		}
+		else if (CommunityName.Length < 3 || CommunityName.Length > 21)
+		{
+			isValid = false;
+			errorName = "Tên nhóm phải tối thiểu từ 3 đến 21 ký tự.";
+		}
+		else
+		{
+			var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+			var response = await httpClient.GetAsync($"api/group/check?name={CommunityName}");
+
+			if (response.IsSuccessStatusCode)
+			{
+				//nameExists = tantt
+				var nameExists = await response.Content.ReadFromJsonAsync<bool>();
+				isValid = !nameExists;
+				errorName = nameExists ? "Tên nhóm đã có người đăng ký." : null;
+			}
+			else
+			{
+				errorName = "Lỗi khi kiểm tra tên nhóm. Vui lòng thử lại.";
+			}
+		}
+
+		if (string.IsNullOrEmpty(Description))
+		{
+			isValid = false;
+			errorDes = "Mô tả không được để trống.";
+		}
+		else if (Description.Length > 500)
+		{
+			isValid = false;
+			errorDes = "Mô tả không được vượt quá 500 ký tự.";
+		}
+		else
+		{
+			errorDes = null;
+		}
+
+		StateHasChanged();
+	}
+
+
+	private async Task HandleValidSubmit()
+	{
+
+		var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+		var user = authState.User;
+		if (user.Identity.IsAuthenticated)
+		{
+			var userCurrent = UserManager.GetUserId(user);
+			var idUser = Guid.Parse(userCurrent);
+			Console.WriteLine($"UserId từ UserManager: {idUser}");
+			groupDto.UserId = idUser;
+
+		}
+		else
+		{
+			Console.WriteLine("Người dùng chưa đăng nhập.");
+		}
+		groupDto.Topics = new List<Guid>(selectedTopics);
+
+
+		var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+		var response = await httpClient.PostAsJsonAsync("api/group/groupDto", groupDto);
+
+		if (response.IsSuccessStatusCode)
+		{
+			var createdGroup = await response.Content.ReadFromJsonAsync<Group>();
+			_completed = true;
+			await Task.Delay(100);
+			Navigation.NavigateTo("/download-excel");
+		}
+		else
+		{
+			var errorContent = await response.Content.ReadAsStringAsync();
+			Console.WriteLine($"Lỗi xảy ra: {response.StatusCode}. Chi tiết: {errorContent}");
+			errorMessage = $"Có lỗi xảy ra: {response.StatusCode}. Chi tiết: {errorContent}";
+		}
+		StateHasChanged();
+
+	}
+
+
+
+	private void CloseDialog()
+	{
+		MudDialog.Close();
+	}
+	private string CapitalizeFirstLetter(string text)
+	{
+		if (string.IsNullOrEmpty(text)) return text;
+		TextInfo textInfo = new CultureInfo("en-US", false).TextInfo;
+		return textInfo.ToTitleCase(text.ToLower());
+	}
+
+	private async Task UploadIconFile(IBrowserFile file)
+	{
+		if (file != null)
+		{
+			IconFileName = file.Name;
+			using (var stream = file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024))
+			{
+				using (var memoryStream = new MemoryStream())
+				{
+					await stream.CopyToAsync(memoryStream);
+					var buffer = memoryStream.ToArray();
+					iconUrl = $"data:{file.ContentType};base64,{Convert.ToBase64String(buffer)}";
+					groupDto.ImgCover = iconUrl;
+					isIconUploaded = true;
+					iconButtonLabel = "Thay đổi";
+					StateHasChanged();
+				}
+			}
+		}
+		else
+		{
+			Console.WriteLine("No file selected for Icon upload.");
+		}
+	}
+
+
+	private async Task UploadBannerFile(IBrowserFile file)
+	{
+		if (file != null)
+		{
+			BannerFileName = file.Name;
+			using (var stream = file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024))
+			{
+				using (var memoryStream = new MemoryStream())
+				{
+					await stream.CopyToAsync(memoryStream);
+					var buffer = memoryStream.ToArray();
+					bannerUrl = $"data:{file.ContentType};base64,{Convert.ToBase64String(buffer)}";
+					groupDto.ImgGroup = bannerUrl;
+					isBannerUploaded = true;
+					bannerButtonLabel = "Thay đổi";
+					StateHasChanged();
+				}
+			}
+		}
+		else
+		{
+			Console.WriteLine("No file selected for Banner upload.");
+		}
+	}
+
+	private async Task RemoveIcon()
+	{
+		try
+		{
+			iconUrl = "/img/icon.jpg";
+			IconFileName = "";
+			isIconUploaded = false;
+			iconButtonLabel = "Thêm";
+			await fileUploadIcon.ClearAsync();
+			StateHasChanged();
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine($"Error removing icon: {ex.Message}");
+		}
+	}
+
+	private async Task RemoveBanner()
+	{
+		Console.WriteLine("Removing Banner...");
+		try
+		{
+			bannerUrl = "/img/univer.png";
+			BannerFileName = "";
+			isBannerUploaded = false;
+			bannerButtonLabel = "Thêm";
+			await fileUploadBanner.ClearAsync();
+			StateHasChanged();
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine($"Error removing banner: {ex.Message}");
+		}
+	}
+
+
+	private void SetSelectedCommunity(KindGroup communityType)
+	{
+		selectedCommunityType = communityType;
+		groupDto.StateGroup = communityType;
+		StateHasChanged();
+	}
+
+	// Xử lý khi chuột di qua (hover) ô
+	private void OnMouseOver(KindGroup communityType)
+	{
+		hoveredCommunityType = communityType;
+	}
+
+	// Xử lý khi chuột rời khỏi ô
+	private void OnMouseOut()
+	{
+		hoveredCommunityType = null;
+	}
+
+	// Hàm này trả về style cho từng MudGrid dựa vào loại cộng đồng hiện tại và trạng thái hover
+	private string GetGridStyle(KindGroup communityType)
+	{
+		// Nếu communityType là loại được chọn, ưu tiên trả về màu khi được chọn
+		if (selectedCommunityType == communityType)
+			return "background-color: rgb(206 229 225 / 94%); padding: 4px; margin: 1px -1px 1px 0;";
+
+		// Nếu communityType là loại đang được hover, trả về màu hover
+		if (hoveredCommunityType == communityType)
+			return "background-color: #f0e4e363; padding: 4px; margin: 1px -1px 1px 0;";
+
+		// Trả về màu mặc định
+		return "background-color: white; padding: 4px; margin: 1px -1px 1px 0;";
+	}
+
+	// private void Submit()
+	// {
+	// 	// Xử lý khi nhấn nút "Continue"
+	// 	Console.WriteLine($"Selected Community Type: {selectedCommunityType}");
+	// }
+
+	private async void Next()
+	{
+		// Kiểm tra tên cộng đồng
+		if (string.IsNullOrWhiteSpace(CommunityName) || CommunityName.Length > 21)
+		{
+			Snackbar.Add("Tên cộng đồng không được bỏ trống và không quá 21 ký tự.", Severity.Warning);
+			return;
+		}
+
+		// Kiểm tra mô tả
+		if (string.IsNullOrWhiteSpace(Description) || Description.Length > 500)
+		{
+			Snackbar.Add("Mô tả không được bỏ trống và không quá 500 ký tự.", Severity.Warning);
+			return;
+		}
+		await stepper.NextStepAsync();
+	}
+
+}

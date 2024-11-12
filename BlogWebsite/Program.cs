@@ -117,6 +117,7 @@ builder.Services.AddIdentityCore<ApplicationUser>(options => { })
 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
 builder.Services.AddScoped<VnPayService>();
 builder.Services.AddRadzenComponents();
+builder.Services.AddControllers();
 
 var app = builder.Build();
 // Configure the HTTP request pipeline.
@@ -134,6 +135,7 @@ else
 app.MapGroup("minimalApi")
     .WithTags("UploadFile Apis v1")
     .ApiUploadFile();
+
 
 
 
