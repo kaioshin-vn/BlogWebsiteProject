@@ -12,17 +12,17 @@
 @if (lstPostSave == null || lstPost == null)
 {
     <MudText>loadding...</MudText>
-}
+}       
 else
 {
     <MudDrawerContainer Class="mud-height-full">
         <MudDrawer Open="true" Width="300px" Fixed="true" Elevation="1" Class="pt-4">
-            <MudGrid Class="justify-content-between px-2">
+            <MudGrid Class="px-2" Justify="Justify.SpaceBetween">
                 <MudItem>
                     <MudText Typo="Typo.h5">Đã lưu</MudText>
                 </MudItem>
-                <MudItem>
-                    <MudIconButton Class="justify-content-start" Icon="@Icons.Material.Filled.Settings" Color="Color.Primary" aria-label="github" />
+                <MudItem> 
+                    <MudIconButton Icon="@Icons.Material.Filled.Settings" Color="Color.Primary" aria-label="github" />
                 </MudItem>
             </MudGrid>
             <MudItem>
@@ -72,7 +72,7 @@ else
         <MudMainContent Class="p-4 d-flex">
             <MudGrid>
                 <MudItem xs="12">
-                    <MudGrid Class="justify-content-between p-2">
+                    <MudGrid Class="p-2" Justify="Justify.SpaceBetween">
                         <MudItem>
                             <MudIcon Icon="@Icons.Material.Filled.LockPerson"/> Chỉ mình tôi
                         </MudItem>

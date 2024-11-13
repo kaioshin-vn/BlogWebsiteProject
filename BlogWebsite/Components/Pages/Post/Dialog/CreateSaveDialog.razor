@@ -15,7 +15,7 @@ else
 {
     <MudDialog Class="w-50">
         <DialogContent>
-            <MudGrid Class="justify-content-between p-0">
+            <MudGrid Class="p-0" Justify="Justify.SpaceBetween">
                 <MudItem />
                 <MudItem>
                     <MudText Typo="Typo.h6">Tạo bộ sưu tập</MudText>
@@ -32,7 +32,7 @@ else
                     <MudTextField @bind-Value="savePost.SaveName" Variant="Variant.Outlined" Label="Tên" Placeholder="Đặt tên cho bộ sưu tập của bạn..." />
                 </MudItem>
                 <MudItem xs="12" Class="m-2">
-                    <MudGrid Class="justify-content-end">
+                    <MudGrid Class="" Justify="Justify.FlexEnd">
                         <MudButton OnClick="Cancel" Color="Color.Secondary">Hủy</MudButton>
                         <MudButton OnClick="Create" Color="Color.Primary">Tạo</MudButton>
                     </MudGrid>
