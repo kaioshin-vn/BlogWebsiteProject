@@ -65,7 +65,10 @@ else
                 <MudText Typo="Typo.body2">@this.Date</MudText>
             </CardHeaderContent>
             <CardHeaderActions>
-                <MudIconButton Icon="@Icons.Material.Filled.MoreHoriz" Color="Color.Default" />
+                <MudMenu Icon="@Icons.Material.Filled.MoreHoriz" Color="Color.Default" AriaLabel="Open user menu">
+                    <MudMenuItem>Edit</MudMenuItem>
+                    <MudMenuItem>Delete</MudMenuItem>
+                </MudMenu>
             </CardHeaderActions>
         </MudCardHeader>
 
@@ -141,9 +144,9 @@ else
                 </MudButton>
             </MudItem>
             <MudItem xs="6" Class="p-0" sm="2">
-                <MudButton Variant="Variant.Text" Style="width:100%;padding:0px;">
+                <MudButton @onclick="async ()=> await OpenDialogSave(IdPost)" Variant="Variant.Text" Style="width:100%;padding:0px;">
                     <MudIconButton Disabled Icon="@Icons.Material.Filled.Save" />
-                    <MudText>Lưu</MudText>
+                    <MudText >Lưu</MudText>
                 </MudButton>
             </MudItem>
         </MudGrid>
@@ -243,4 +246,13 @@ else
         return base.OnInitializedAsync();
     }
 
+    public async Task OpenDialogSave(Guid id)
+    {
+        var parameters = new DialogParameters
+        {
+            { "idPost", id }
+        };
+        var dialog = DialogService.Show<AddPostSaveDialog>(string.Empty, parameters);
+        var result = await dialog.Result;
+    }
 }

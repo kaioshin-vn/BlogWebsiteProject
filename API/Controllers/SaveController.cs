@@ -51,10 +51,10 @@ namespace API.Controllers
             return Ok();
         }
 
-        [HttpDelete("delete_savepost/{id}")]
-        public async Task<IActionResult> DeleteCategoryPost(Guid id)
+        [HttpDelete("deleteSave/{idSave}/{idUser}")]
+        public async Task<IActionResult> DeleteCategoryPost(Guid idSave, Guid idUser)
         {
-            var getId = await _context.Saves.FindAsync(id);
+            var getId = await _context.Saves.FirstOrDefaultAsync(x => x.Id == idSave && x.IdUser == idUser);
             if (getId == null)
             {
                 return BadRequest();

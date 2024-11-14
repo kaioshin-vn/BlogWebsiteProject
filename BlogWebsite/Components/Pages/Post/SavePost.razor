@@ -1,6 +1,6 @@
 ﻿@page "/savepost"
+@using Client.Components.ComponentCustom
 @using Client.Components.Layout
-@using Client.Components.Pages.Post.Dialog
 
 @inject IHttpClientFactory HttpClientFactory 
 @inject IDialogService DialogService
@@ -8,6 +8,7 @@
 @inject ISnackbar Snackbar
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject UserManager<ApplicationUser> UserManager
+@inject NavigationManager Navigation
 
 @if (lstPostSave == null || lstPost == null)
 {
@@ -42,7 +43,7 @@ else
                         <AvatarContent>
                            @*  @if (!string.IsNullOrWhiteSpace(item.SaveName))
                             {
-                                <MudImage Src="@item.PostImageUrl" ObjectFit="ObjectFit.Cover" Height="40" Width="40" Class="rounded-2" />
+                                <MudImage Src="" ObjectFit="ObjectFit.Cover" Height="40" Width="40" Class="rounded-2" />
                             } *@
                             <MudAvatar Color="Color.Primary" Class="rounded-2">
                                 @item.SaveName[0] <!-- Lấy chữ cái đầu tiên của tên bộ sưu tập -->
@@ -87,7 +88,6 @@ else
                 @foreach (var item in lstPost)  
                 {
                     <MudItem xs="12">
-                       
                         <MudCard Style="border-radius:10px" Class="mt-2">
                             <MudGrid Class="p-3" Style="">
                                 <MudItem xs="2">
@@ -97,12 +97,12 @@ else
                                     <MudGrid Class="d-flex align-content-between flex-wrap flex-grow-1 gap-4 ">
                                         <MudItem xs="12">
                                             <MudText Typo="Typo.h5">@item.Title</MudText>
-                                            <MudText Typo="Typo.body2">video - đã lưu từ BanKai</MudText>
+                                            <MudText Typo="Typo.body2">Bài viết - đã lưu từ</MudText>
                                         </MudItem>
                                         <MudItem xs="12">
                                             <MudButton Variant="Variant.Filled" OnClick="async () => await OpenAddPostSaveDialog(item.Id)">Thêm vào bộ sưu tập</MudButton>
                                             <MudIconButton Class="mx-2" Icon="@Icons.Material.Filled.Share" Variant="Variant.Filled" />
-                                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Variant="Variant.Filled" />
+                                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Variant="Variant.Filled" OnClick="async () => await DeletePostInSave(item.Id)" />
                                         </MudItem>
                                     </MudGrid>
                                 </MudItem>
@@ -132,7 +132,7 @@ else
     {
         idSave = id;
         var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
-        lstPost = await httpClient.GetFromJsonAsync<List<PostDTO>>($"/api/post/getPostInSave/{id}");
+        lstPost = await httpClient.GetFromJsonAsync<List<PostDTO>>($"/api/postsave/getPostInSave/{id}");
     }
 
     private async Task OpenAddPostSaveDialog(Guid id)
@@ -147,19 +147,37 @@ else
 
     private async Task DeletePostSave()
     {
-    //     var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-    //     var user = authState.User;
-    //     var userCurrent = await UserManager.GetUserAsync(user);
-    //     var userId = userCurrent.Id;
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        var userCurrent = await UserManager.GetUserAsync(user);
+        var userId = userCurrent.Id;
+
         var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
-        var result = await httpClient.DeleteAsync($"/api/save/delete_savepost/{idSave}");
+        var result = await httpClient.DeleteAsync($"/api/save/deleteSave/{idSave}/{userId}");
         if (result.IsSuccessStatusCode)
         {
+            Navigation.NavigateTo(Navigation.Uri, true);
             Snackbar.Add("Xoá bộ sưu tập thành công!", Severity.Success);
         }
         else
         {
             Snackbar.Add("Xoá bộ sưu tập không thành công!", Severity.Error);
+        }
+    }
+
+    private async Task DeletePostInSave(Guid idPost)
+    {
+        var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+        var result = await httpClient.DeleteAsync($"/api/PostSave/deletePostInSave/{idSave}/{idPost}");
+        if (result.IsSuccessStatusCode)
+        {
+            Navigation.NavigateTo(Navigation.Uri, true);
+
+            Snackbar.Add("Xoá bài viết trong bộ sưu tập thành công!", Severity.Success);
+        }
+        else
+        {
+            Snackbar.Add("Xoá bài viết trong bộ sưu tập không thành công!", Severity.Error);
         }
     }
 

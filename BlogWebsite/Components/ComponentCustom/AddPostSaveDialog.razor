@@ -1,0 +1,121 @@
+﻿@page "/addPostSave/{idPost:guid}"
+@using MudBlazor
+
+@inject IHttpClientFactory HttpClientFactory
+@inject IDialogService DialogService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserManager<ApplicationUser> UserManager
+@inject ISnackbar Snackbar
+
+@if (lstPostSave == null)
+{
+<MudText>loading</MudText>    
+}
+<MudDialog Class="w-50">
+    <DialogContent >
+        <MudGrid Class="p-0" Justify="Justify.SpaceBetween">
+            <MudItem/>
+            <MudItem>
+                <MudText Typo="Typo.h6">Lưu vào</MudText>
+            </MudItem>
+            <MudItem>
+                <MudIconButton OnClick="Cancel" Class="p-0" Size="Size.Medium" Icon="@Icons.Material.Filled.Close"></MudIconButton>
+            </MudItem>
+        </MudGrid>
+        <MudDivider Light/>
+    </DialogContent>
+    <DialogActions>
+        <MudGrid >
+            <MudItem xs="12">
+                <MudList T="string" CheckBoxColor="Color.Tertiary">
+                    @foreach (var item in lstPostSave)
+                    {
+                        <MudListItem Class="d-flex" OnClick="() => SaveId(item.Id)">
+                            <AvatarContent>
+                                @*  @if (!string.IsNullOrWhiteSpace(item.SaveName))
+                                {
+                                <MudImage Src="@item.PostImageUrl" ObjectFit="ObjectFit.Cover" Height="40" Width="40" Class="rounded-2" />
+                                } *@
+                                <MudAvatar Color="Color.Primary" Class="rounded-2">
+                                    @item.SaveName[0] <!-- Lấy chữ cái đầu tiên của tên bộ sưu tập -->
+                                </MudAvatar>
+                            </AvatarContent>
+                            <ChildContent>
+                                @item.SaveName
+                            </ChildContent>
+                        </MudListItem>
+                    }
+                </MudList>
+            </MudItem>
+            <MudItem xs="12">
+                <MudDivider/>
+                <MudButton OnClick="OpenDialogCreateSave" Variant="Variant.Filled" Class="m-3">
+                    <MudIcon Icon="@Icons.Material.Filled.Add" />
+                    <MudText>Bộ sưu tập mới</MudText>
+                </MudButton>
+                <MudDivider Light/>
+            </MudItem>
+            <MudItem xs="12" Class="d-flex justify-content-end">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddPostSave">Xong</MudButton>
+            </MudItem>
+       </MudGrid>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] MudDialogInstance Dialog { get; set; }
+
+    [Parameter]
+    public Guid idPost { get; set; }
+
+    private Guid IdSave {get; set;}
+
+    List<SaveDTO> lstPostSave = new List<SaveDTO>();
+
+    PostDTO lstPost = new PostDTO();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+        lstPostSave = await httpClient.GetFromJsonAsync<List<SaveDTO>>("/api/save/get_savepost");
+    }
+
+    private void SaveId(Guid id)
+    {
+        IdSave = id;
+    }
+
+    private async Task AddPostSave()
+    {
+        // var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        // var user = authState.User;
+        // var userCurrent = await UserManager.GetUserAsync(user);
+        // var userId = userCurrent.Id;
+        // lstPost.IdUser = userId;
+        var payload = new { idPost = idPost, IdSave = IdSave };
+
+        var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+        var result = await httpClient.PostAsJsonAsync($"/api/postsave/addPostSave/{idPost}/{IdSave}", payload);
+        if (result.IsSuccessStatusCode)
+        {
+            Dialog.Close(DialogResult.Cancel());
+            Snackbar.Add("Thêm bài viết vào bộ sưu tập thành công!", Severity.Success);
+        }
+        else
+        {
+            Dialog.Close(DialogResult.Cancel());
+            Snackbar.Add("Thêm bài viết vào bộ sưu tập thất bại!", Severity.Error);
+        }
+    }
+
+    private async Task OpenDialogCreateSave()
+    {
+        var diaLog = DialogService.Show<CreateSaveDialog>();
+        var result = await diaLog.Result;
+    }
+
+    private void Cancel()
+    {
+        Dialog.Close(DialogResult.Cancel());
+    }
+}
