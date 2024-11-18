@@ -71,5 +71,16 @@ namespace API.Controllers
             await _context.SaveChangesAsync();
             return Ok(getId);
         }
+
+        [HttpDelete("deleteSaveColection/{idSave}")]
+        public async Task<IActionResult> DeletePost(Guid idSave)
+        {
+            var listDelete =  _context.PostSaves.Where(x => x.IdSave == idSave);
+            _context.PostSaves.RemoveRange(listDelete);
+            var postSaveColection = _context.Saves.FirstOrDefault(x => x.Id == idSave);
+            _context.Saves.Remove(postSaveColection); 
+            await _context.SaveChangesAsync();
+            return Ok();
+        }
     }
 }
