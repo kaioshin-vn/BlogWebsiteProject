@@ -1,0 +1,162 @@
+﻿@page "/other-profile/{Id}"
+@using System.Security.Claims
+@inject ISnackbar Snackbar
+@inject IJSRuntime JSRuntime
+@inject IHttpClientFactory ClientFactory
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
+    <MudCard>
+        <MudCardMedia Image="/Img/univer.png" Height="300" />
+    </MudCard>
+    <div class="d-flex justify-space-between align-center" style="margin-top: -26px;">
+        <div class="d-flex align-center">
+            <MudAvatar Style="width: 160px; height: 160px; border: 4px solid white;" Class="mb-3 mb-md-0">
+                <MudImage Src="@(_avatarUrl ?? "/Img/avatar_default.jpg")"></MudImage>
+            </MudAvatar>
+            <div class="ms-2 text-start">
+                <MudText Typo="Typo.h4">@model.FullName</MudText>
+                <MudText Typo="Typo.body1" Class="mb-2">Người theo dõi: @model.CountFollow.ToString("N0", System.Globalization.CultureInfo.InvariantCulture)</MudText>
+            </div>
+        </div>
+        <div>
+            @if (IsCurrentUser)
+            {
+                <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="@(() => _editMode = true)" />
+            }
+            else
+            {
+                if (model.IsFollowing)
+                {
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ToggleFollowUser">Bỏ theo dõi</MudButton>
+                }
+                else
+                {
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ToggleFollowUser">Theo dõi</MudButton>
+                }
+            }
+        </div>
+    </div>
+    <MudGrid Class="mt-4">
+        <MudItem xs="12" md="4">
+            <MudCard>
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">Thông tin cá nhân</MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudList T="string">
+                        <MudListItem Icon="@Icons.Material.Filled.LocationOn" Text="@($"Địa chỉ: {model.Address}")" />
+                        <MudListItem Icon="@Icons.Material.Filled.Phone" Text="@($"Điện thoại: {model.PhoneNumber}")" />
+                        <MudListItem Icon="@Icons.Material.Filled.Email" Text="@($"Email: {model.Email}")" />
+                    </MudList>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+        <MudItem xs="12" md="8">
+            <MudCard>
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">Giới thiệu</MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudText Typo="Typo.body1">@model.Descript</MudText>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+
+@code {
+    [Parameter]
+    public string Id { get; set; }
+
+    private bool _editMode = false;
+    private bool success;
+    private string[] errors = { };
+    private MudForm form;
+    private string _avatarUrl;
+    private bool IsCurrentUser = false;
+
+    private PersonalInfoModel model = new PersonalInfoModel();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUserData();
+    }
+
+    private async Task LoadUserData()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        var currentUserId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        await GetInfoViewer(currentUserId, Id);
+    }
+    private async Task GetInfoViewer(string id, string idViewer)
+    {
+        var client = ClientFactory.CreateClient("MyHttpClient");
+        var response = await client.GetAsync($"api/users/{id}/{idViewer}");
+        if (response.IsSuccessStatusCode)
+        {
+            model = await response.Content.ReadFromJsonAsync<PersonalInfoModel>();
+            _avatarUrl = model.Img;
+        }
+        else
+        {
+            Snackbar.Add("Không thể tải thông tin người dùng.", Severity.Error);
+        }
+    }
+    private bool _isFollowing = false;
+
+    private async Task ToggleFollowUser()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        var client = ClientFactory.CreateClient("MyHttpClient");
+        var currentUserId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var response = await client.PostAsync($"api/users/{Id}/{currentUserId}/{model.IsFollowing}/toggle-follow", null);
+        if (response.IsSuccessStatusCode)
+        {
+            if (!model.IsFollowing)
+            {
+                Snackbar.Add("Theo dõi thành công.", Severity.Info);
+                model.CountFollow++;
+            }
+            else
+            {
+                Snackbar.Add("Bỏ theo dõi thành công.", Severity.Info);
+                model.CountFollow--;
+            }
+            model.IsFollowing = !model.IsFollowing;
+        }
+        else if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
+        {
+            Snackbar.Add("Không thể thực hiện hành động này.", Severity.Warning);
+        }
+        else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            Snackbar.Add("Không tìm thấy người dùng.", Severity.Error);
+        }
+        else
+        {
+            Snackbar.Add("Có lỗi xảy ra. Vui lòng thử lại.", Severity.Error);
+        }
+    }
+
+    public class PersonalInfoModel
+    {
+        public string? Descript { get; set; }
+        public string? Img { get; set; }
+        public string? FullName { get; set; }
+        public string? ImgCover { get; set; }
+        public string? Address { get; set; }
+        public string PhoneNumber { get; set; }
+        public string Email { get; set; }
+        public string Id { get; set; }
+        public int CountFollow { get; set; }
+        public bool IsFollowing { get; set; }
+        public string IdViewer { get; set; }
+    }
+}

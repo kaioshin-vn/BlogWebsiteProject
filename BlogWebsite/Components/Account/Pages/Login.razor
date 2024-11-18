@@ -24,8 +24,8 @@
                 }
                 <EditForm Model="Input" method="post" OnValidSubmit="LoginUser" FormName="login">
                     <DataAnnotationsValidator />
-                    <MudTextField @bind-Value="Input.PhoneNumber" Label="Số điện thoại" Variant="Variant.Outlined" InputType="@InputType.Telephone" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Smartphone" name="Input.PhoneNumber" />
-                    <ValidationMessage For="() => Input.PhoneNumber" style="text-align:left" class="alert alert-info my-2 " />
+                    <MudTextField @bind-Value="Input.Username" Label="Tên đăng nhập" Variant="Variant.Outlined" InputType="@InputType.Telephone" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Smartphone" name="Input.PhoneNumber" />
+                    <ValidationMessage For="() => Input.Username" style="text-align:left" class="alert alert-info my-2 " />
                     <MudTextField @bind-Value="Input.Password" Label="Mật khẩu" Variant="Variant.Outlined" InputType="@PasswordInput" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon" OnAdornmentClick="ShowPassword" AdornmentAriaLabel="Hiện mật khẩu" name="Input.Password" />
                     <ValidationMessage For="() => Input.Password" style="text-align:left" class="alert alert-info my-2 " />
                     <div class=" d-flex align-items-end justify-content-between">
@@ -143,7 +143,7 @@
     {
         // This doesn't count login failures towards account lockout
         // To enable password failures to trigger account lockout, set lockoutOnFailure: true
-        var result = await SignInManager.PasswordSignInAsync(Input.PhoneNumber, Input.Password, Input.RememberMe, lockoutOnFailure: false);
+        var result = await SignInManager.PasswordSignInAsync(Input.Username, Input.Password, Input.RememberMe, lockoutOnFailure: false);
         if (result.Succeeded)
         {
             Logger.LogInformation("User logged in.");
@@ -169,7 +169,7 @@
     private sealed class InputModel
     {
         [Required(ErrorMessage = "Không được bỏ trống")]
-        public string PhoneNumber { get; set; } = "";
+        public string Username { get; set; } = "";
 
         [Required(ErrorMessage = "Mật khẩu không được bỏ trống!")]
         [DataType(DataType.Password)]

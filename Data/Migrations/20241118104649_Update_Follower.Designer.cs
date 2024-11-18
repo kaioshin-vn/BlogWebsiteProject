@@ -4,6 +4,7 @@ using BlogWebsite.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241118104649_Update_Follower")]
+    partial class Update_Follower
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -101,6 +104,24 @@ namespace Data.Migrations
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
 
                     b.ToTable("Users", (string)null);
+                });
+
+            modelBuilder.Entity("Data.Database.Table.AdminGroup", b =>
+                {
+                    b.Property<Guid>("IdGroup")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdAdmin")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("int");
+
+                    b.HasKey("IdGroup", "IdAdmin");
+
+                    b.HasIndex("IdAdmin");
+
+                    b.ToTable("AdminGroups");
                 });
 
             modelBuilder.Entity("Data.Database.Table.Flower", b =>
@@ -192,9 +213,6 @@ namespace Data.Migrations
 
                     b.Property<Guid>("IdMember")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("Position")
-                        .HasColumnType("int");
 
                     b.HasKey("IdGroup", "IdMember");
 
@@ -877,6 +895,25 @@ namespace Data.Migrations
                     b.ToTable("UserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("Data.Database.Table.AdminGroup", b =>
+                {
+                    b.HasOne("BlogWebsite.Data.ApplicationUser", "User")
+                        .WithMany("AdminGroups")
+                        .HasForeignKey("IdAdmin")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Data.Database.Table.Group", "Group")
+                        .WithMany("AdminGroups")
+                        .HasForeignKey("IdGroup")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Group");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Data.Database.Table.Flower", b =>
                 {
                     b.HasOne("BlogWebsite.Data.ApplicationUser", "UserFlower")
@@ -1238,6 +1275,8 @@ namespace Data.Migrations
 
             modelBuilder.Entity("BlogWebsite.Data.ApplicationUser", b =>
                 {
+                    b.Navigation("AdminGroups");
+
                     b.Navigation("ExamHistories");
 
                     b.Navigation("Exams");
@@ -1269,6 +1308,8 @@ namespace Data.Migrations
 
             modelBuilder.Entity("Data.Database.Table.Group", b =>
                 {
+                    b.Navigation("AdminGroups");
+
                     b.Navigation("MemberGroups");
 
                     b.Navigation("Topics");

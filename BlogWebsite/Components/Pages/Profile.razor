@@ -1,6 +1,9 @@
 ﻿@page "/profile"
+@using System.Security.Claims
 @inject ISnackbar Snackbar
 @inject IJSRuntime JSRuntime
+@inject IHttpClientFactory ClientFactory
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
     <MudCard>
@@ -11,17 +14,17 @@
             <MudAvatar Style="width: 160px; height: 160px; border: 4px solid white;" Class="mb-3 mb-md-0">
                 <MudImage Src="@(_avatarUrl ?? "/Img/avatar_default.jpg")"></MudImage>
             </MudAvatar>
-            <MudFileUpload T="IBrowserFile" FilesChanged="UploadAvatar">
-                <ActivatorContent>
-                    <MudIconButton Icon="@Icons.Material.Filled.PhotoCamera"
-                                   Class="position-absolute mud-elevation-3"
-                                   Style="bottom: -70px; right: -5px; background-color: darkgrey; border-radius: 50%; padding: 8px;color:azure">
-                    </MudIconButton>
-                </ActivatorContent>
-            </MudFileUpload>
+                <MudFileUpload T="IBrowserFile" FilesChanged="UploadAvatar" Accept="image/*">
+                    <ActivatorContent>
+                        <MudIconButton Icon="@Icons.Material.Filled.PhotoCamera"
+                                       Class="position-absolute mud-elevation-3"
+                                       Style="bottom: -70px; right: -5px; background-color: darkgrey; border-radius: 50%; padding: 8px;color:azure">
+                        </MudIconButton>
+                    </ActivatorContent>
+                </MudFileUpload>
             <div class="ms-2 text-start">
                 <MudText Typo="Typo.h4">@model.FullName</MudText>
-                <MudText Typo="Typo.body1" Class="mb-2">@model.Headline</MudText>
+                <MudText Typo="Typo.body1" Class="mb-2">Người theo dõi: @model.CountFollow.ToString("N0", System.Globalization.CultureInfo.InvariantCulture)</MudText>
             </div>
         </div>
         <div>
@@ -38,7 +41,6 @@
                 </MudCardHeader>
                 <MudCardContent>
                     <MudList T="string">
-                        <MudListItem Icon="@Icons.Material.Filled.Cake" Text="@($"Sinh nhật: {model.DateOfBirth:dd/MM/yyyy}")" />
                         <MudListItem Icon="@Icons.Material.Filled.LocationOn" Text="@($"Địa chỉ: {model.Address}")" />
                         <MudListItem Icon="@Icons.Material.Filled.Phone" Text="@($"Điện thoại: {model.PhoneNumber}")" />
                         <MudListItem Icon="@Icons.Material.Filled.Email" Text="@($"Email: {model.Email}")" />
@@ -58,11 +60,10 @@
                     <MudCardContent>
                         <MudForm Model="@model" @ref="@form" @bind-IsValid="@success" @bind-Errors="@errors">
                             <MudTextField T="string" Label="Họ và tên" @bind-Value="model.FullName" For="@(() => model.FullName)" />
-                            <MudTextField T="string" Label="Tiêu đề" @bind-Value="model.Headline" For="@(() => model.Headline)" />
-                            <MudDatePicker Label="Ngày sinh" @bind-Date="model.DateOfBirth" For="@(() => model.DateOfBirth)" />
                             <MudTextField T="string" Label="Địa chỉ" @bind-Value="model.Address" For="@(() => model.Address)" />
                             <MudTextField T="string" Label="Số điện thoại" @bind-Value="model.PhoneNumber" For="@(() => model.PhoneNumber)" />
                             <MudTextField T="string" Label="Email" @bind-Value="model.Email" For="@(() => model.Email)" />
+                            <MudTextField T="string" Label="Giới thiệu" @bind-Value="model.Descript" For="@(() => model.Descript)" Lines="3" />
                         </MudForm>
                     </MudCardContent>
                     <MudCardActions>
@@ -80,7 +81,7 @@
                         </CardHeaderContent>
                     </MudCardHeader>
                     <MudCardContent>
-                        <MudText Typo="Typo.body1">@model.Bio</MudText>
+                        <MudText Typo="Typo.body1">@model.Descript</MudText>
                     </MudCardContent>
                 </MudCard>
             }
@@ -89,48 +90,118 @@
 </MudContainer>
 
 @code {
+    public string Id { get; set; }
     private bool _editMode = false;
     private bool success;
     private string[] errors = { };
     private MudForm form;
     private string _avatarUrl;
+    private bool IsCurrentUser = false;
 
-    private PersonalInfoModel model = new PersonalInfoModel
+    private PersonalInfoModel model = new PersonalInfoModel();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUserData();
+    }
+
+    private async Task LoadUserData()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        var currentUserId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        await GetInfo(currentUserId);
+        Id = currentUserId;
+    }
+    private async Task GetInfo(string id)
+    {
+        var client = ClientFactory.CreateClient("MyHttpClient");
+        var response = await client.GetAsync($"api/users/{id}");
+        if (response.IsSuccessStatusCode)
         {
-            FullName = "Nguyễn Văn A",
-            Headline = "Nhà phát triển phần mềm",
-            DateOfBirth = new DateTime(1990, 1, 1),
-            Address = "Hà Nội, Việt Nam",
-            PhoneNumber = "0123456789",
-            Email = "nguyenvana@example.com",
-            Bio = "Tôi là một nhà phát triển phần mềm đam mê công nghệ và luôn tìm kiếm cơ hội để học hỏi và phát triển bản thân."
-        };
-
+            model = await response.Content.ReadFromJsonAsync<PersonalInfoModel>();
+            _avatarUrl = model.Img;
+            model.ImgCover = "";
+            model.IdViewer = "";
+        }
+        else
+        {
+            Snackbar.Add("Không thể tải thông tin người dùng.", Severity.Error);
+        }
+    }
     private async Task SaveChanges()
     {
         await form.Validate();
 
         if (success)
         {
-            // Xử lý lưu thông tin ở đây
-            Snackbar.Add("Thông tin đã được cập nhật thành công!", Severity.Success);
-            _editMode = false;
+            var client = ClientFactory.CreateClient("MyHttpClient");
+            var response = await client.PutAsJsonAsync($"api/users/{Id}", model);
+
+            if (response.IsSuccessStatusCode)
+            {
+                Snackbar.Add("Thông tin đã được cập nhật thành công!", Severity.Success);
+                _editMode = false;
+            }
+            else
+            {
+                Snackbar.Add("Không thể cập nhật thông tin. Vui lòng thử lại.", Severity.Error);
+            }
         }
     }
-
     private async Task UploadAvatar(IBrowserFile file)
     {
-    
+        var client = ClientFactory.CreateClient("MyHttpClient");
+        if (file != null && file.Size > 0)
+        {
+            // Kiểm tra định dạng file
+            var fileExtension = Path.GetExtension(file.Name).ToLower();
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
+            if (!allowedExtensions.Contains(fileExtension))
+            {
+                // Hiển thị thông báo lỗi hoặc xử lý khi định dạng không hợp lệ
+                Snackbar.Add("Định dạng file không hợp lệ!",Severity.Error);
+                return;
+            }
+            var fileName = Path.GetFileName(file.Name);
+            var newFileName = Guid.NewGuid() + fileName;
+            var filePath = Path.Combine(Directory.GetCurrentDirectory(), @"wwwroot\images", newFileName);
+            var directoryPath = Path.GetDirectoryName(filePath);
+            if (!Directory.Exists(directoryPath))
+            {
+                Directory.CreateDirectory(directoryPath);
+            }
+            // Lưu file xuống disk
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.OpenReadStream().CopyToAsync(stream);
+            }
+            var url = $"/images/{newFileName}";
+            model.Img = url;
+        }
+        var response = await client.PutAsJsonAsync($"api/users/{Id}", model);
+        if (response.IsSuccessStatusCode)
+        {
+            _avatarUrl = model.Img;
+            Snackbar.Add("Ảnh đại diện đã được cập nhật thành công!", Severity.Success);
+        }
+        else
+        {
+            Snackbar.Add("Không thể cập nhật ảnh đại diện. Vui lòng thử lại.", Severity.Error);
+        }
     }
-
     public class PersonalInfoModel
     {
-        public string FullName { get; set; }
-        public string Headline { get; set; }
-        public DateTime? DateOfBirth { get; set; }
-        public string Address { get; set; }
+        public string? Descript { get; set; }
+        public string? Img { get; set; }
+        public string? FullName { get; set; }
+        public string? ImgCover { get; set; } 
+        public string? Address { get; set; }
         public string PhoneNumber { get; set; }
         public string Email { get; set; }
-        public string Bio { get; set; }
+        public string Id { get; set; }
+        public string IdViewer { get; set; }
+        public int CountFollow { get; set; }
+        public bool IsFollowing { get; set; }
     }
 }
