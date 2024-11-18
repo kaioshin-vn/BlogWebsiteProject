@@ -21,5 +21,6 @@ namespace Data.DTO.EntitiDTO
         public string Like { get; set; }
         public int CommentCount { get; set; }
         public DateTime? CreateDate { get; set; }
+        public List<string>? ListTag { get; set; }
     }
 }

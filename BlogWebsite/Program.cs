@@ -1,4 +1,6 @@
 ﻿using Blazored.SessionStorage;
+using Blazorise;
+using Blazorise.Bootstrap;
 using BlogWebsite.Components.Account;
 using BlogWebsite.Data;
 using Client.Components;
@@ -23,6 +25,14 @@ builder.Services.AddBlazoredSessionStorage();
 //    options.Cookie.IsEssential = true;
 //});
 builder.Services.AddDistributedMemoryCache();
+
+builder.Services
+    .AddBlazorise(options =>
+    {
+        options.Immediate = true;
+    })
+    .AddBootstrapProviders();
+
 var services = builder.Services;
 var configuration = builder.Configuration;
 
