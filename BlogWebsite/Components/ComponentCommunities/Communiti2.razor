@@ -1,4 +1,5 @@
-﻿@page "/{name}"
+﻿@page "/groups/{Name}"
+
 @using Client.Components.Pages.Post
 @using Data.Database.Table
 @using Microsoft.EntityFrameworkCore
@@ -11,54 +12,92 @@
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager Navigation
 @inject IHttpClientFactory HttpClientFactory
-
+@inject IJSRuntime JSRunTime
 
 <style>
-	.cover-image {
-		width: 100%;
-		height: auto; /* Chiều cao nhỏ hơn */
-		object-fit: cover; /* Đảm bảo ảnh không bị méo */
-	}
+
 
 	.spt {
 		font-weight: 700; /* Hoặc bất kỳ thuộc tính nào để thẻ span hiển thị rõ ràng */
 	}
 
-	
-	
+	.contain {
+		max-width: 100%;
+	}
+
+
+	#another_unique_identifier {
+		min-height: 600px;
+		overflow: hidden;
+		overflow-x: hidden;
+		padding-top: 10px;
+		padding-left: 20px; /* Giữ khoảng cách bên trái cho thanh cuộn */
+		box-sizing: border-box; /* Đảm bảo padding không thay đổi kích thước */
+	}
+
+		#another_unique_identifier:hover {
+			overflow: auto;
+			overflow-x: hidden;
+			padding-left: 20px; /* Đảm bảo khoảng cách bên trái không thay đổi khi hover */
+		}
+
 </style>
-@if (group == null)
+
+@if (listIntroPost == null || group == null)
 {
-	<Loading></Loading>
+	<LoadingLocal></LoadingLocal>
 }
 else
 {
-	<div style="width: 90%; margin: 0 auto;">
+	<div class="contain" style="width: 90%; margin: 0 auto;">
 		<MudItem>
 			@{
 				var imgSrc = string.IsNullOrEmpty(group.ImgCover) ? "/img/icon.jpg" : group.ImgCover;
 				var bannerSrc = string.IsNullOrEmpty(group.ImgGroup) ? "/img/univer.png" : group.ImgGroup;
 			}
 			<!-- Banner Group -->
-			<div style="position: relative;">
-				<img src="@bannerSrc" alt="Community Banner"
-					 style="width: 100%; height: 150px; object-fit: cover; border-radius: 12px 12px 0 0;" />
+			<div>
+				<div>
+					<img src="@bannerSrc" alt="Community Banner"
+						 style="width: 100%; height: 150px; object-fit: cover; border-radius: 12px;" />
+				</div>
 
 				<!-- Thẻ chứa ảnh đại diện nhóm và tên nhóm chồng lên ảnh banner -->
-				<div class="d-flex justify-content-between align-items-center"
-					 style="position: absolute; top: 124px; left: 20px; right: 18px; z-index: 1;">
+				<div class="d-flex justify-content-between align-items-center px-3" style=" position: relative; left: 5px; z-index: 1; top: -26px;">
 					<div class="d-flex align-items-center">
 						<!-- Ảnh đại diện nhóm -->
-						<MudImage Src="@imgSrc" Alt="Group Avatar" Class="avatar" Style="width:80px; height:80px; border-radius:50%;" />
+						<MudImage Src="@imgSrc" Alt="Group Avatar" Class="avatar" Style="width:80px; height:80px; border-radius:50%;border: 2px solid #fff" />
 						<MudText Variant="Variant.h6" Class="group-name mt-12" Style="margin-left: 10px; font-weight:600; font-size: 26px">@group.Name</MudText>
 					</div>
 					<div class="actions mt-8">
-						<!-- Nút tạo bài đăng -->
-						<MudTooltip Class="mx-1" Text="Thêm mới bài viết">
-							<MudFab Class="mx-1" StartIcon="@Icons.Material.Filled.Add" Size="Size.Medium"
-									Style="border:none;box-shadow:none;background-color:none;" Label="Tạo mới"
-									@onclick="NavigateToCreatePostPage" />
-						</MudTooltip>
+
+						@{
+							@if (group.StateGroup == KindGroup.Public)
+							{
+								<!-- Nút tạo bài đăng -->
+								<MudTooltip Class="mx-1" Text="Thêm mới bài viết">
+									<MudFab Class="mx-1" StartIcon="@Icons.Material.Filled.Add" Size="Size.Medium"
+											Style="border:none;box-shadow:none;background-color:none;" Label="Tạo mới"
+											@onclick="NavigateToCreatePostPage" />
+								</MudTooltip>
+							}
+							else if (group.StateGroup == KindGroup.Restricted && isJoined == true)
+							{
+								<MudTooltip Class="mx-1" Text="Thêm mới bài viết">
+									<MudFab Class="mx-1" StartIcon="@Icons.Material.Filled.Add" Size="Size.Medium"
+											Style="border:none;box-shadow:none;background-color:none;" Label="Tạo mới"
+											@onclick="NavigateToCreatePostPage" />
+								</MudTooltip>
+							}
+							else if (group.StateGroup == KindGroup.Private && isJoined == true)
+							{
+								<MudTooltip Class="mx-1" Text="Thêm mới bài viết">
+									<MudFab Class="mx-1" StartIcon="@Icons.Material.Filled.Add" Size="Size.Medium"
+											Style="border:none;box-shadow:none;background-color:none;" Label="Tạo mới"
+											@onclick="NavigateToCreatePostPage" />
+								</MudTooltip>
+							}
+						}
 
 						<!-- Icon thông báo (chỉ hiển thị khi đã tham gia) -->
 						@if (isJoined)
@@ -70,18 +109,27 @@ else
 								</MudBadge>
 							</MudIconButton>
 						}
-						<!-- Nút trạng thái tham gia -->
-						<MudButton Variant="Variant.Outlined" Color="Color.Secondary" Style="border-radius: 24px;"
-								   @onclick="() => ToggleJoinStatus(group.IdGroup)">
-							@buttonText
-						</MudButton>
+						@{
+							if (IsAdmin == true)
+							{
+								<MudButton Variant="Variant.Filled" Color="Color.Secondary" @onclick="ClickMod">Công cụ mod</MudButton>
+							}
+							else
+							{
+								<!-- Nút trạng thái tham gia -->
+								<MudButton Variant="Variant.Outlined" Color="Color.Secondary" Style="border-radius: 24px;"
+										   @onclick="() => ToggleJoinStatus(group.IdGroup)">
+									@buttonText
+								</MudButton>
+							}
+						}
 					</div>
 				</div>
 			</div>
 		</MudItem>
 
 		<div class="d-flex justify-content-between">
-			<div class="mt-3 ms-4" style="width:68%">
+			<div class="ms-4" style="width:68% ; margin-top:-52px;">
 				@foreach (var item in listIntroPost)
 				{
 					<PostIntro Avatar="@item.Avatar" Content="@item.Content"
@@ -91,130 +139,203 @@ else
 					</PostIntro>
 				}
 			</div>
-			<div style="width:28%; background: #f4f8f5;">
-				<div id="another_unique_identifier" class="ma-0" style="height:720px ;overflow: auto;">
-					@{
-						var day = group.DateTime.ToString("dd");
-						var month = group.DateTime.ToString("MM");
-						var year = group.DateTime.ToString("yyyy");
+			<div style="width:27%; height : 200px; position: sticky;top: 120px; border:none;" id="replaceHidden">
+				<div id="another_unique_identifier" style="height:614px;">
+					<div style="width:270px; background: #f4f8f5;border-radius:5px; margin-top: -16px">
+						@{
+							var day = group.DateTime.ToString("dd");
+							var month = group.DateTime.ToString("MM");
+							var year = group.DateTime.ToString("yyyy");
 
-					}
-					<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; font-weight:600;">@group.Name</MudText>
-					<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
+						}
+						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; font-weight:600;">@group.Name</MudText>
+						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
 
-					<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
-					<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
-					<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
-					<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
-					<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
-					<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
-					<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
-					<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
-					<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
-					<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
-					<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
-					<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
-					<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 2px; font-size:13px; color: #605d5d	">
-						Được tạo vào ngày @day tháng @month năm @year
-					</MudText>
-					@if (group.StateGroup == KindGroup.Public)
-					{
-						<MudItem Class="d-flex align-items-center " Style="margin-left: 9px; margin-bottom: 6px;">
-							<MudIcon Icon="@Icons.Material.Filled.Public" Title="Public" Color="Color.Default" Style="font-size: 20px" />
-							<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 7px; font-size:13px; color: #605d5d	">@group.StateGroup</MudText>
-						</MudItem>
-					}
-					else if (group.StateGroup == KindGroup.Restricted)
-					{
-						<MudItem Class="d-flex align-items-center " Style="margin-left: 9px; margin-bottom: 6px;">
-							<MudIcon Icon="@Icons.Material.Outlined.RemoveRedEye" Title="RemoveRedEye" Color="Color.Default" Style="font-size: 20px" />
-							<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 7px; font-size:13px; color: #605d5d	">@group.StateGroup</MudText>
-						</MudItem>
-					}
-					else
-					{
-						<MudItem Class="d-flex align-items-center" Style="margin-left: 9px; margin-bottom: 6px;">
-							<MudIcon Icon="@Icons.Material.Outlined.Lock" Title="Lock" Color="Color.Default" Style="font-size: 20px" />
-							<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 7px; font-size:13px; color: #605d5d	">@group.StateGroup</MudText>
-						</MudItem>
-					}
-
-					<MudItem>
-						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; font-size:13px; color: #605d5d">
-							<span class="spt">@memberCount</span> Thành viên
+						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
+						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
+						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
+						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
+						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
+						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
+						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
+						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
+						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
+						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
+						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
+						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
+						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 2px; font-size:13px; color: #605d5d	">
+							Được tạo vào ngày @day tháng @month năm @year
 						</MudText>
-						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; font-size:13px; color: #605d5d">
-							tên nhóm <span style="color: red;">@Name</span>
-						</MudText>
-					</MudItem>
-				</div>
+						@if (group.StateGroup == KindGroup.Public)
+						{
+							<MudItem Class="d-flex align-items-center " Style="margin-left: 9px; margin-bottom: 6px;">
+								<MudIcon Icon="@Icons.Material.Filled.Public" Title="Public" Color="Color.Default" Style="font-size: 20px" />
+								<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 7px; font-size:13px; color: #605d5d	">@group.StateGroup</MudText>
+							</MudItem>
+						}
+						else if (group.StateGroup == KindGroup.Restricted)
+						{
+							<MudItem Class="d-flex align-items-center " Style="margin-left: 9px; margin-bottom: 6px;">
+								<MudIcon Icon="@Icons.Material.Outlined.RemoveRedEye" Title="RemoveRedEye" Color="Color.Default" Style="font-size: 20px" />
+								<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 7px; font-size:13px; color: #605d5d	">@group.StateGroup</MudText>
+							</MudItem>
+						}
+						else
+						{
+							<MudItem Class="d-flex align-items-center" Style="margin-left: 9px; margin-bottom: 6px;">
+								<MudIcon Icon="@Icons.Material.Outlined.Lock" Title="Lock" Color="Color.Default" Style="font-size: 20px" />
+								<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 7px; font-size:13px; color: #605d5d	">@group.StateGroup</MudText>
+							</MudItem>
+						}
+
+						<MudItem>
+							<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; font-size:13px; color: #605d5d">
+								<span class="spt">@memberCount</span> Thành viên
+							</MudText>
+							<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; font-size:13px; color: #605d5d">
+								tên nhóm <span style="color: red;">@Name</span>
+							</MudText>
+						</MudItem>
+					</div>
 				</div>
 			</div>
 		</div>
+	</div>
+	<script>
+		function removeHiddenOverflow() {
+			const element = document.querySelector('#replaceHidden');
+
+			let currentElement = element.parentElement;
+
+			// Lặp qua tất cả các thẻ cha của thẻ được chọn
+			while (currentElement) {
+				const overflowStyle = window.getComputedStyle(currentElement).overflow;
 
 
+				// Kiểm tra nếu overflow là hidden
+				console.log(overflowStyle)
+				if (overflowStyle === 'hidden' || overflowStyle === 'auto' || overflowStyle === 'scroll' || overflowStyle === 'hidden auto') {
+					currentElement.style.overflow = 'visible'; // Hoặc một giá trị phù hợp khác
+				}
 
-
+				// Chuyển sang thẻ cha tiếp theo
+				currentElement = currentElement.parentElement;
+			}
+		}
+		removeHiddenOverflow();
+	</script>
 }
 
 @code {
-	[Parameter]
-	public string? Name { get; set; }
+    [Parameter]
+    public string Name { get; set; }
 
-	private Group? group;
-	private bool isJoined;  // Biến lưu trạng thái tham gia
-	private string buttonText = "Tham gia"; // Thay đổi nội dung của nút dựa trên trạng thái
-	List<PostIntroDTO> listIntroPost;
-	int memberCount;
-	// List<Group> groups = new List<Group>();
-	protected override async Task OnInitializedAsync()
-	{
-		var _httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+    private Group? group;
+    private bool isJoined;  // Biến lưu trạng thái tham gia
+    private string buttonText = "Tham gia"; // Thay đổi nội dung của nút dựa trên trạng thái
+    List<PostIntroDTO> listIntroPost;
+    int memberCount;
+    bool IsAdmin { get; set; }
+    // List<Group> groups = new List<Group>();
+    protected override async Task OnInitializedAsync()
+    {
+        IsAdmin = await GetAdmin();
+        var _httpClient = HttpClientFactory.CreateClient("MyHttpClient");
 
-		var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-		var user = authState.User;
-		var idUserCurrent = UserManager.GetUserId(user);
-		var idUser = Guid.Parse(idUserCurrent);
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        var idUserCurrent = UserManager.GetUserId(user);
+        var idUser = Guid.Parse(idUserCurrent);
 
-		var result = await _httpClient.GetStringAsync($"/GetListPostIntro/{idUser}");
+        var result = await _httpClient.GetStringAsync($"/GetListPostIntro/{idUser}");
 
-		var resultConverted = JsonConvert.DeserializeObject<List<PostIntroDTO>>(result);
-		if (resultConverted != null)
+        var resultConverted = JsonConvert.DeserializeObject<List<PostIntroDTO>>(result);
+        if (resultConverted != null)
+        {
+            listIntroPost = resultConverted;
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!string.IsNullOrEmpty(Name))
+        {
+            // Tìm nhóm trong cơ sở dữ liệu dựa trên tên nhóm từ URL
+            group = await DbContext.Groups.FirstOrDefaultAsync(g => g.Name == Name);
+
+            if (group != null)
+            {
+                // Kiểm tra nếu người dùng hiện tại đã tham gia nhóm hay chưa
+                var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+                var user = authState.User;
+                var userCurrent = UserManager.GetUserId(user);
+                var memberId = Guid.Parse(userCurrent);
+
+                isJoined = await DbContext.MemberGroups.AnyAsync(mg => mg.IdGroup == group.IdGroup && mg.IdMember == memberId);
+                buttonText = isJoined ? "Đã tham gia" : "Tham gia";
+                memberCount = await GetMemberCount(Name);
+                IsAdmin = await GetAdmin();
+                StateHasChanged();
+            }
+        }
+    }
+    private async Task<int> GetMemberCount(string groupName)
+    {
+        var memberCount = await DbContext.MemberGroups
+            .Where(mg => mg.Group.Name == groupName)
+            .CountAsync();
+        return memberCount ;
+    }
+
+
+
+    private async Task<bool> GetAdmin()
+    {
+        if (string.IsNullOrEmpty(Name))
+        {
+            // Xử lý nếu Name không hợp lệ
+            Console.WriteLine("Group name is empty.");
+            return false;
+        }
+
+        // Tìm nhóm trong bảng Groups dựa trên tên nhóm (Name)
+        var group = await DbContext.Groups.FirstOrDefaultAsync(g => g.Name == Name);
+
+        if (group == null)
+        {
+            // Xử lý khi không tìm thấy nhóm
+            Console.WriteLine("Group not found.");
+            return false;
+        }
+
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        var userCurrent = UserManager.GetUserId(user);
+        var userId = Guid.Parse(userCurrent);  // Chuyển UserId thành Guid
+
+        // Lấy IdGroup từ bảng Groups
+        var idGroup = group.IdGroup;
+
+        // Kiểm tra xem người dùng có phải là admin của nhóm hay không
+		var getAdmin = await DbContext.MemberGroups
+			.Where(a => a.IdGroup == idGroup && a.IdMember == userId
+						&& (a.Position == Data.Enums.Position.Chief || a.Position == Data.Enums.Position.Deputy))
+			.FirstOrDefaultAsync();
+
+		if (getAdmin != null)
 		{
-			listIntroPost = resultConverted;
+			// Xử lý nếu tìm thấy Admin
+			Console.WriteLine("Admin found.");
+		}
+		else
+		{
+			// Xử lý nếu không tìm thấy Admin
+			Console.WriteLine("Admin not found.");
 		}
 
+		return getAdmin != null;
 	}
 
-	protected override async Task OnParametersSetAsync()
-	{
-		if (!string.IsNullOrEmpty(Name))
-		{
-			// Tìm nhóm trong cơ sở dữ liệu dựa trên tên nhóm từ URL
-			group = await DbContext.Groups.FirstOrDefaultAsync(g => g.Name == Name);
-
-			if (group != null)
-			{
-				// Kiểm tra nếu người dùng hiện tại đã tham gia nhóm hay chưa
-				var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-				var user = authState.User;
-				var userCurrent = UserManager.GetUserId(user);
-				var memberId = Guid.Parse(userCurrent);
-
-				isJoined = await DbContext.MemberGroups.AnyAsync(mg => mg.IdGroup == group.IdGroup && mg.IdMember == memberId);
-				buttonText = isJoined ? "Đã tham gia" : "Tham gia";
-				memberCount = await GetMemberCount(Name);
-				StateHasChanged();
-			}
-		}
-	}
-	private async Task<int> GetMemberCount(string groupName)
-	{
-		var count = await DbContext.MemberGroups
-			.Where(mg => mg.Group.Name == groupName)
-			.CountAsync();
-		return count;
-	}
 
 	// Hàm xử lý sự kiện khi nhấn vào nút
 	private async Task ToggleJoinStatus(Guid groupId)
@@ -230,13 +351,13 @@ else
 		var response = await httpClient.PostAsJsonAsync("api/group/memberGroup", new
 		{
 			GroupId = groupId.ToString(),   // Chuyển GroupId thành chuỗi
-			MemberId = memberId.ToString()  // Chuyển MemberId thành chuỗi
+			MemberId = memberId.ToString(), // Chuyển MemberId thành chuỗi
+			Position = Data.Enums.Position.Member
 		});
 
 		if (response.IsSuccessStatusCode)
 		{
-			// var content = await response.Content.ReadAsStringAsync();
-			isJoined = await DbContext.MemberGroups.AnyAsync(mg => mg.IdGroup == group.IdGroup && mg.IdMember == memberId);
+			isJoined = await DbContext.MemberGroups.AnyAsync(mg => mg.IdGroup == group.IdGroup && mg.IdMember == memberId && mg.Position == Data.Enums.Position.Member );
 			buttonText = isJoined ? "Đã tham gia" : "Tham gia";
 			memberCount = await GetMemberCount(Name);
 			StateHasChanged();
@@ -254,5 +375,10 @@ else
 	{
 		// Điều hướng đến trang tạo bài viết
 		Navigation.NavigateTo("/createQuestion");
+	}
+	private void ClickMod()
+	{
+		var href = $"/groups/{Uri.EscapeDataString(Name)}/mod";
+		Navigation.NavigateTo(href);
 	}
 }

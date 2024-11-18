@@ -30,7 +30,6 @@ namespace BlogWebsite.Data
         public DbSet<Group> Groups { get; set; }
         public DbSet<GroupPost> GroupPosts { get; set; }
         public DbSet<GroupTopic> GroupTopics { get; set; }
-        public DbSet<AdminGroup> AdminGroups { get; set; }
         public DbSet<MemberGroup> MemberGroups { get; set; }
         public DbSet<Topic> Topics { get; set; }
 
@@ -62,17 +61,11 @@ namespace BlogWebsite.Data
                 u.IdTopic
             });
 
-            modelBuilder.Entity<AdminGroup>().HasKey(u => new
-            {
-                u.IdGroup,
-                u.IdAdmin
-            });
-
             modelBuilder.Entity<MemberGroup>().HasKey(u => new
             {
                 u.IdGroup,
                 u.IdMember
-            });
+			});
 
             modelBuilder.Entity<PostTag>().HasKey(u => new
             {

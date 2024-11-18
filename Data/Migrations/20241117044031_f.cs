@@ -124,31 +124,6 @@ namespace Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "AdminGroups",
-                columns: table => new
-                {
-                    IdGroup = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    IdAdmin = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Position = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_AdminGroups", x => new { x.IdGroup, x.IdAdmin });
-                    table.ForeignKey(
-                        name: "FK_AdminGroups_Groups_IdGroup",
-                        column: x => x.IdGroup,
-                        principalTable: "Groups",
-                        principalColumn: "IdGroup",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_AdminGroups_Users_IdAdmin",
-                        column: x => x.IdAdmin,
-                        principalTable: "Users",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Exams",
                 columns: table => new
                 {
@@ -204,7 +179,8 @@ namespace Data.Migrations
                 columns: table => new
                 {
                     IdGroup = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    IdMember = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                    IdMember = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Position = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -515,7 +491,8 @@ namespace Data.Migrations
                 columns: table => new
                 {
                     IdGroup = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    IdPost = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                    IdPost = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    WaitState = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -723,11 +700,6 @@ namespace Data.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_AdminGroups_IdAdmin",
-                table: "AdminGroups",
-                column: "IdAdmin");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_ExamHistories_IdExam",
                 table: "ExamHistories",
                 column: "IdExam");
@@ -906,9 +878,6 @@ namespace Data.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropTable(
-                name: "AdminGroups");
-
             migrationBuilder.DropTable(
                 name: "ExamHistoryDetails");
 

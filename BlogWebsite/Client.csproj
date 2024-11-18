@@ -15,14 +15,17 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Remove="Components\ComponentCommunities\luu.razor" />
     <Content Remove="Components\Pages\Post\PostIntro.razor" />
   </ItemGroup>
 
   <ItemGroup>
+    <_ContentIncludedByDefault Remove="Components\ComponentCommunities\luu.razor" />
     <_ContentIncludedByDefault Remove="wwwroot\ButtonAnimation.css" />
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="Components\ComponentCommunities\luu.razor" />
     <None Include="Components\ComponentCustom\PostIntro.razor" />
     <None Include="Components\Pages\Post\CreatePost.razor" />
     <None Include="wwwroot\ForgotPassword.css" />
@@ -49,6 +52,10 @@
   <ItemGroup>
     <Folder Include="Components\Pages\User\" />
     <Folder Include="wwwroot\UploadVideo\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <UpToDateCheckInput Remove="Components\ComponentCommunities\luu.razor" />
   </ItemGroup>
 
 </Project>

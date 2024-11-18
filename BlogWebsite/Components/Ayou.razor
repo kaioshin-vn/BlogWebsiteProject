@@ -1,0 +1,128 @@
+﻿@* @page "/groups/{Name}/{id:guid}"
+@using Client.Components.Pages.Post
+@using Data.Database.Table
+@using Microsoft.EntityFrameworkCore
+@using Newtonsoft.Json
+@using Data.DTO.EntitiDTO
+@using Data.DTO
+@using Client.Components.ComponentCustom
+@using Data.Enums
+@inject ApplicationDbContext DbContext
+@inject UserManager<ApplicationUser> UserManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+@inject IHttpClientFactory HttpClientFactory
+@inject IJSRuntime JSRunTime
+
+<h1>Thông tin đối tượng</h1>
+@if (user != null)
+{
+	<MudTextField @bind-Value="user.FullName" Label="Tên" Disabled="true" Variant="Variant.Text" Margin="Margin.Dense"></MudTextField>
+	if (isChief == true)
+	{
+		<MudSelect @bind-Value="user.Position" Label="Chức vụ" AdornmentIcon="@Icons.Material.Filled.Fastfood" AdornmentColor="Color.Primary">
+			<MudSelectItem Value="Data.Enums.Position.Chief">Trưởng nhóm</MudSelectItem>
+			<MudSelectItem Value="Data.Enums.Position.Deputy">Phó nhóm</MudSelectItem>
+			<MudSelectItem Value="Data.Enums.Position.Member">Thành viên</MudSelectItem>
+		</MudSelect>
+	}
+	else
+	{
+		<MudSelect @bind-Value="user.Position" Label="Chức vụ" AdornmentIcon="@Icons.Material.Filled.Fastfood" AdornmentColor="Color.Primary">
+			<MudSelectItem Value="Data.Enums.Position.Chief" Disabled="true">Trưởng nhóm</MudSelectItem>
+			<MudSelectItem Value="Data.Enums.Position.Deputy">Phó nhóm</MudSelectItem>
+			<MudSelectItem Value="Data.Enums.Position.Member">Thành viên</MudSelectItem>
+		</MudSelect>
+	}
+	<MudButton OnClick="() => SubmitRequest()" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Send">
+		Gửi yêu cầu
+	</MudButton>
+}
+else
+{
+	<MudText Typo="Typo.h6">Không tìm thấy đối tượng với ID này.</MudText>
+}
+@code {
+	[Parameter]
+	public string Name { get; set; }
+	[Parameter]
+	public Guid Id { get; set; }
+	private MemberDTO user = new MemberDTO();
+	bool isChief = false;
+
+	protected override async Task OnInitializedAsync()
+	{
+		await CheckUser();
+		if (Id != Guid.Empty)
+		{
+			user = await GetUserInfo(Id);
+		}
+	}
+	protected override async Task OnParametersSetAsync()
+	{
+		user = await GetUserInfo(Id);
+	}
+	private async Task<MemberDTO> GetUserInfo(Guid id)
+	{
+
+		var member = await DbContext.MemberGroups
+				.Where(ag => ag.IdMember == id)
+				.Select(ag => new MemberDTO
+					{
+						FullName = ag.User.FullName,
+						Position = ag.Position
+					})
+				.FirstOrDefaultAsync();
+		return member;
+	}
+
+	private async Task CheckUser()
+	{
+		var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+		var userCurrent = await UserManager.GetUserAsync(authState.User);
+		if (userCurrent != null)
+		{
+			isChief = await DbContext.MemberGroups.AnyAsync(a => a.IdMember == userCurrent.Id && (a.Position == Data.Enums.Position.Chief));
+		}
+		Console.WriteLine(isChief);
+	}
+	private async Task SubmitRequest()
+	{
+		var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+		var userCurrent = await UserManager.GetUserAsync(authState.User); // Cập nhật UserManager theo cách của bạn
+		var currentUserId = userCurrent?.Id;
+		Console.WriteLine($"Id: {Id}");
+		Console.WriteLine(JsonConvert.SerializeObject(user));
+
+		if (Id == Guid.Empty || user == null)
+		{
+			Console.WriteLine("Dữ liệu không hợp lệ!");
+			return;
+		}
+		Guid memberId = Id;
+		user.Id = Id;
+		Console.WriteLine($"User Id: {user.Id}");
+		Console.WriteLine($"User FullName: {user.FullName}");
+		Console.WriteLine($"User Position: {user.Position}");
+
+		var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+
+		// Truyền thêm userId trong tham số truy vấn
+		var response = await httpClient.PutAsJsonAsync($"api/group/update-member/{memberId}?userId={currentUserId}", user);
+
+		if (response.IsSuccessStatusCode)
+		{
+			user = await GetUserInfo(Id);
+			StateHasChanged();
+			Navigation.NavigateTo($"/groups/{Name}/mod");
+			Console.WriteLine("Thành công");
+		}
+		else
+		{
+			Console.WriteLine("Thất bại");
+		}
+	}
+
+
+}
+ *@

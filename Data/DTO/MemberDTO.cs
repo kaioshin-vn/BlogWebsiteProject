@@ -1,16 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Data.Enums;
 using System.Text;
 using System.Threading.Tasks;
-using Data.Enums;
 
 namespace Data.DTO
 {
-	public class MemberGroupRequest
+	public class MemberDTO
 	{
-		public string GroupId { get; set; }
-		public string MemberId { get; set; }
+		public Guid Id { get; set; }
+		public string FullName { get; set; }
 		public Position Position { get; set; }
 	}
 }

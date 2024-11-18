@@ -5,7 +5,7 @@
 
 @using Client.Components
 @using Data.Database.Table
-
+@using Client.Components.ComponentCustom
 
 <style>
 	.mud-nav-group .mud-navmenu .mud-nav-item .mud-nav-link {
@@ -36,13 +36,13 @@
 		<MudText>Download Excel</MudText>
 	</MudNavLink>
 
-	<MudNavGroup Title="Cộng đồng" Icon="@Icons.Material.Filled.DataArray" Expanded="true" Class="rounded-3 overflow-hidden ms-3 ps-3 " Style="width:200px; padding-left: 0; ">
-		<MudNavLink Icon="@Icons.Material.Filled.Add" Class="rounded-3 overflow-hidden mt-2 mb-2" Style="padding-left: 0" @onclick="OpenStepperDialog">Tạo một cộng đồng </MudNavLink>
+	<MudNavGroup Title="Cộng đồng" Icon="@Icons.Material.Filled.DataArray" Expanded="false" Class="rounded-3 overflow-hidden ms-3 ps-3" @onclick="ClickMe" Style="width:200px; padding-left: 0; ">
+		<MudNavLink Icon="@Icons.Material.Filled.Add" Class="rounded-3 overflow-hidden mt-2 mb-2" Style="padding-left: 0" @onclick="OpenStepperDialog">Tạo cộng đồng </MudNavLink>
 		@if (groups != null && groups.Count > 0)
 		{
 			foreach (var group in groups)
 			{
-				var href = $"/{Uri.EscapeDataString(group.Name)}";
+				var href = $"/groups/{Uri.EscapeDataString(group.Name)}"; 
 				var imgSrc = string.IsNullOrEmpty(group.ImgCover) ? "/img/icon.jpg" : group.ImgCover;
 
 				<MudNavLink Href="@href" Class="rounded-3 overflow-hidden d-flex align-items-center">
@@ -52,8 +52,6 @@
 			}
 		}
 	</MudNavGroup>
-
-
 
 	<MudNavLink Match="NavLinkMatch.Prefix" Href="/Error" Class="rounded-3 overflow-hidden m-3">
 		<MudIcon Icon="@Icons.Material.Filled.Save"></MudIcon>
@@ -75,7 +73,7 @@
 		<MudText>Thống kê</MudText>
 	</MudNavLink>
 
-	<MudNavGroup Title="Tài nguyên" Icon="@Icons.Material.Filled.Settings" Expanded="true" Class="rounded-3 overflow-hidden m-3 py-3" Style="width:200px;">
+	<MudNavGroup Title="Tài nguyên" Icon="@Icons.Material.Filled.Settings" Expanded="false" Class="rounded-3 overflow-hidden m-3 py-3" Style="width:200px;">
 		<MudNavLink Href="/users" Icon="@Icons.Material.Filled.People" IconColor="Color.Success" Class="rounded-3 overflow-hidden m-3">About Kaizen</MudNavLink>
 		<MudNavLink Href="/security" Icon="@Icons.Material.Filled.Security" IconColor="Color.Info" Class="rounded-3 overflow-hidden m-3">Dịch vụ</MudNavLink>
 		<MudNavLink Href="/security" Icon="@Icons.Material.Filled.Security" IconColor="Color.Info" Class="rounded-3 overflow-hidden m-3">Liên hệ </MudNavLink>
@@ -90,7 +88,6 @@
 	{
 		currentUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
 		NavigationManager.LocationChanged += OnLocationChanged;
-		// await LoadGroupAsync();
 	}
 
 	private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
@@ -112,7 +109,9 @@
 }
 
 @code {
-	private List<Group>? groups;
+	List<Group>? groups;
+	bool loadGroup = false;
+	// bool isExpanded = false;
 
 	private async Task OpenStepperDialog()
 	{
@@ -126,25 +125,33 @@
 		await DialogService.ShowAsync<Stepper>("", options);
 	}
 
+	private async Task ClickMe()
+	{
+		if (!loadGroup)
+		{
+			await LoadGroupAsync();
+			loadGroup = true;
+			StateHasChanged();
+		}
+		
+	}
 
-	
+	private async Task LoadGroupAsync()
+	{
+		var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+		var response = await httpClient.GetAsync("api/group/get-all-group");
 
-	// private async Task LoadGroupAsync()
-	// {
-	// 	var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
-	// 	var response = await httpClient.GetAsync("api/group/get-all-group");
-
-	// 	if (response.IsSuccessStatusCode)
-	// 	{
-	// 		// Gán danh sách nhóm vào biến cấp lớp
-	// 		groups = await response.Content.ReadFromJsonAsync<List<Group>>();
-	// 	}
-	// 	else
-	// 	{
-	// 		var errorContent = await response.Content.ReadAsStringAsync();
-	// 		Console.WriteLine($"Có lỗi xảy ra: {errorContent}");
-	// 	}
-	// }
+		if (response.IsSuccessStatusCode)
+		{
+			// Gán danh sách nhóm vào biến cấp lớp
+			groups = await response.Content.ReadFromJsonAsync<List<Group>>();
+		}
+		else
+		{
+			var errorContent = await response.Content.ReadAsStringAsync();
+			Console.WriteLine($"Có lỗi xảy ra: {errorContent}");
+		}
+	}
 }
 
 
