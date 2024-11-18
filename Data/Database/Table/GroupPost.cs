@@ -13,6 +13,7 @@ namespace Data.Database.Table
     {
         public Guid IdGroup { get; set; }
         public Guid IdPost { get; set; }
+        
         public WaitState WaitState { get; set; }
 
         [ForeignKey("IdPost")]

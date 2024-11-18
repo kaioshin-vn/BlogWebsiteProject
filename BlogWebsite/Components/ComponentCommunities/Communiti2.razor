@@ -15,6 +15,11 @@
 @inject IJSRuntime JSRunTime
 
 <style>
+    .cover-image {
+        width: 100%;
+        height: auto; /* Chiều cao nhỏ hơn */
+        object-fit: cover; /* Đảm bảo ảnh không bị méo */
+    }
 
 
 	.spt {
@@ -128,6 +133,23 @@ else
 			</div>
 		</MudItem>
 
+        <div class="d-flex justify-content-between">
+            <div class="ms-4" style="width:68% ; margin-top:-52px;">
+                @foreach (var item in listIntroPost)
+                {
+                    <PostIntro Avatar="@item.Avatar" Content="@item.Content"
+                               CreateDate="@item.CreateDate" IdPost="@item.Id"
+                               CommentCount="@item.CommentCount" Like="@item.Like"
+                               VideoFile="@item.VideoFile" ImgFile="@item.ImgFile" UserName="@item.UserName" Title="@item.Title">
+                    </PostIntro>
+                }
+            </div>
+                <div class="p-2" style="height : 200px; position: sticky;top: 120px; border:none;" id="replaceHidden">
+                    <div class="" style="width:auto;background: #f4f8f5;border-radius:5px;">
+                        @{
+                            var day = group.DateTime.ToString("dd");
+                            var month = group.DateTime.ToString("MM");
+                            var year = group.DateTime.ToString("yyyy");
 		<div class="d-flex justify-content-between">
 			<div class="ms-4" style="width:68% ; margin-top:-52px;">
 				@foreach (var item in listIntroPost)
@@ -345,7 +367,7 @@ else
 		var userCurrent = UserManager.GetUserId(user);
 		var memberId = Guid.Parse(userCurrent);  // Chuyển UserId thành Guid
 
-		Console.WriteLine($"UserId từ UserManager: {memberId}");
+        Console.WriteLine($"UserId từ UserManager: {memberId}");
 
 		var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
 		var response = await httpClient.PostAsJsonAsync("api/group/memberGroup", new
@@ -368,7 +390,7 @@ else
 			Console.WriteLine($"Lỗi xảy ra: {response.StatusCode}. Chi tiết: {errorContent}");
 		}
 
-	}
+    }
 
 
 	private void NavigateToCreatePostPage()

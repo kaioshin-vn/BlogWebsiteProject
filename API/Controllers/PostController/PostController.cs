@@ -21,7 +21,7 @@ namespace API.Controllers.PostController
         public PostController(ApplicationDbContext context, IWebHostEnvironment environment)
         {
             _context = context;
-            _environment = environment;
+            _environment = environment; 
         }
 
         [HttpGet("getPostPagination")]
@@ -65,10 +65,6 @@ namespace API.Controllers.PostController
             return listIntroPost;
         }
 
-        
-
-
-
         [HttpPost("/createPost")]
         public async Task<IActionResult> CreatePostAsync([FromBody] PostDTO _post)
         {
@@ -91,7 +87,6 @@ namespace API.Controllers.PostController
             await _context.SaveChangesAsync();
             return Ok(post);
         }
-
 
         [HttpPut("updatePost/{idPost}")]
         public async Task<IActionResult> EditPost(Guid idPost, PostDTO post)
