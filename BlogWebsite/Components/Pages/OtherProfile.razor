@@ -47,7 +47,10 @@
                 </MudCardHeader>
                 <MudCardContent>
                     <MudList T="string">
-                        <MudListItem Icon="@Icons.Material.Filled.LocationOn" Text="@($"Địa chỉ: {model.Address}")" />
+                        @if (!string.IsNullOrEmpty(model.Address))
+                        {
+                            <MudListItem Icon="@Icons.Material.Filled.LocationOn" Text="@($"Địa chỉ: {model.Address}")" />
+                        }
                         <MudListItem Icon="@Icons.Material.Filled.Phone" Text="@($"Điện thoại: {model.PhoneNumber}")" />
                         <MudListItem Icon="@Icons.Material.Filled.Email" Text="@($"Email: {model.Email}")" />
                     </MudList>

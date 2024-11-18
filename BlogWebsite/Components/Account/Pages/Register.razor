@@ -35,12 +35,16 @@
 
                     <div class="d-flex justify-content-between">
                         <div style="width : 300px;">
-                            <MudTextField Class="mt-3" @bind-Value="Input.FullName" Label="Tên đăng nhập" Variant="Variant.Outlined" InputType="@InputType.Text" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Person" AdornmentAriaLabel="Tên đăng nhập" name="Input.FullName" />
+                            <MudTextField Class="mt-3" @bind-Value="Input.FullName" Label="Họ và tên" Variant="Variant.Outlined" InputType="@InputType.Text" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Person" AdornmentAriaLabel="Tên đăng nhập" name="Input.FullName" />
+                            <ValidationMessage For="() => Input.FullName" style="text-align:left" class="alert alert-info my-2 " />
+                            <MudTextField Class="mt-3" @bind-Value="Input.Username" Label="Tên đăng nhập" Variant="Variant.Outlined" InputType="@InputType.Text" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Person" AdornmentAriaLabel="Tên đăng nhập" name="Input.Username" />
                             <ValidationMessage For="() => Input.FullName" style="text-align:left" class="alert alert-info my-2 " />
                             <MudTextField Class="mt-3" @bind-Value="Input.NumberPhone" Label="Số điện thoại" Variant="Variant.Outlined" InputType="@InputType.Telephone" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Smartphone" name="Input.NumberPhone" />
                             <ValidationMessage For="() => Input.NumberPhone" style="text-align:left" class="alert alert-info my-2 " />
                         </div>
                         <div style="width : 300px;">
+                            <MudTextField Class="mt-3" @bind-Value="Input.Email" Label="Email" Variant="Variant.Outlined" InputType="@InputType.Text" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Email" AdornmentAriaLabel="Email" name="Input.Email" />
+                            <ValidationMessage For="() => Input.Email" style="text-align:left" class="alert alert-info my-2 " />
                             <MudTextField Class="mt-3" @bind-Value="Input.Password" Label="Mật khẩu" Variant="Variant.Outlined" InputType="@PasswordInput" OnAdornmentClick="Fix" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon" AdornmentAriaLabel="Hiện mật khẩu" name="Input.Password" />
                             <ValidationMessage For="() => Input.Password" style="text-align:left" class="alert alert-info my-2 " />
                             <MudTextField Class="mt-3" @bind-Value="Input.ConfirmPassword" Label="Nhập lại mật khẩu" Variant="Variant.Outlined" InputType="@PasswordInput" OnAdornmentClick="Fix" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon" AdornmentAriaLabel="Hiện mật khẩu" name="Input.ConfirmPassword" />
@@ -78,8 +82,10 @@
     }) ;
 
     // Lấy input element
-    const emailInput = document.querySelector('input[name="Input.NumberPhone"]');
+    const numberInput = document.querySelector('input[name="Input.NumberPhone"]');
+    const emailInput = document.querySelector('input[name="Input.Email"]');
     const nameInput = document.querySelector('input[name="Input.FullName"]');
+    const usernameInput = document.querySelector('input[name="Input.Username"]');
     const passwordlInput = document.querySelector('input[name="Input.Password"]');
     const confirmPassword = document.querySelector('input[name="Input.ConfirmPassword"]');
     // Lấy thẻ div cha bao bọc bên ngoài
@@ -95,7 +101,30 @@
             inputEmailWrapper.classList.remove('mud-shrink');
         }
     });
-
+    const numberInputWrapper = numberInput.closest('div.mud-input');
+    // Thêm sự kiện lắng nghe thay đổi của input
+    numberInputWrapper.addEventListener('input', () => {
+        // Kiểm tra nếu input không rỗng
+        if (numberInput.value.trim() !== '') {
+            // Thêm class vào thẻ div cha
+            numberInputWrapper.classList.add('mud-shrink');
+        } else {
+            // Loại bỏ class khỏi thẻ div cha
+            numberInputWrapper.classList.remove('mud-shrink');
+        }
+    });
+    const inputUserNameWrapper = usernameInput.closest('div.mud-input');
+    // Thêm sự kiện lắng nghe thay đổi của input
+    inputUserNameWrapper.addEventListener('input', () => {
+        // Kiểm tra nếu input không rỗng
+        if (usernameInput.value.trim() !== '') {
+            // Thêm class vào thẻ div cha
+            inputUserNameWrapper.classList.add('mud-shrink');
+        } else {
+            // Loại bỏ class khỏi thẻ div cha
+            inputUserNameWrapper.classList.remove('mud-shrink');
+        }
+    });
     const inputNameWrapper = nameInput.closest('div.mud-input');
     // Thêm sự kiện lắng nghe thay đổi của input
     inputNameWrapper.addEventListener('input', () => {
@@ -213,19 +242,19 @@
         var user = CreateUser();
         user.Id = Guid.NewGuid();
         user.FullName = Input.FullName;
+        user.UserName = Input.Username;
         user.PhoneNumber = Input.NumberPhone;
         user.Img = @"\Img\avatar_default1.jpg";
-
-        await UserStore.SetUserNameAsync(user, Input.NumberPhone, CancellationToken.None);
-        // var emailStore = GetEmailStore();
-        // await emailStore.SetEmailAsync(user, Input.NumberPhone, CancellationToken.None);
+        await UserStore.SetUserNameAsync(user, Input.Username, CancellationToken.None);
+        var emailStore = GetEmailStore();
+        await emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
         var result = await UserManager.CreateAsync(user, Input.Password);
 
         if (!result.Succeeded)
         {
             if (result.Errors.Any(a => a.Code == "DuplicateUserName"))
             {
-                Message = "Số điện thoại này đã được đăng kí, hãy sử dụng số điện thoại khác ";
+                Message = "Tên đăng nhập đã tồn tại, hãy sử dụng tên đăng nhập khác khác ";
             }
             return;
         }
@@ -273,6 +302,12 @@
         [Required(ErrorMessage = "Không được bỏ trống tên")]
         [Display(Name = "FullName")]
         public string FullName { get; set; } = "";
+        [Required(ErrorMessage = "Không được bỏ trống tên đăng nhập")]
+        [Display(Name = "Username")]
+        public string Username { get; set; } = "";  
+        [Required(ErrorMessage = "Không được bỏ trống Email")]
+        [Display(Name = "Email")]
+        public string Email { get; set; } = "";
 
         [RegularExpression(@"^(0|\+84)(3|5|7|8|9)\d{8}$", ErrorMessage = "Hãy nhập số điện thoại hợp lệ")]
         [Required(ErrorMessage = "Không được bỏ trống số điện thoại !")]
