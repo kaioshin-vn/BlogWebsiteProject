@@ -15,11 +15,6 @@
 @inject IJSRuntime JSRunTime
 
 <style>
-    .cover-image {
-        width: 100%;
-        height: auto; /* Chiều cao nhỏ hơn */
-        object-fit: cover; /* Đảm bảo ảnh không bị méo */
-    }
 
 
 	.spt {
@@ -133,23 +128,6 @@ else
 			</div>
 		</MudItem>
 
-        <div class="d-flex justify-content-between">
-            <div class="ms-4" style="width:68% ; margin-top:-52px;">
-                @foreach (var item in listIntroPost)
-                {
-                    <PostIntro Avatar="@item.Avatar" Content="@item.Content"
-                               CreateDate="@item.CreateDate" IdPost="@item.Id"
-                               CommentCount="@item.CommentCount" Like="@item.Like"
-                               VideoFile="@item.VideoFile" ImgFile="@item.ImgFile" UserName="@item.UserName" Title="@item.Title">
-                    </PostIntro>
-                }
-            </div>
-                <div class="p-2" style="height : 200px; position: sticky;top: 120px; border:none;" id="replaceHidden">
-                    <div class="" style="width:auto;background: #f4f8f5;border-radius:5px;">
-                        @{
-                            var day = group.DateTime.ToString("dd");
-                            var month = group.DateTime.ToString("MM");
-                            var year = group.DateTime.ToString("yyyy");
 		<div class="d-flex justify-content-between">
 			<div class="ms-4" style="width:68% ; margin-top:-52px;">
 				@foreach (var item in listIntroPost)
@@ -249,96 +227,96 @@ else
 }
 
 @code {
-    [Parameter]
-    public string Name { get; set; }
+	[Parameter]
+	public string Name { get; set; }
 
-    private Group? group;
-    private bool isJoined;  // Biến lưu trạng thái tham gia
-    private string buttonText = "Tham gia"; // Thay đổi nội dung của nút dựa trên trạng thái
-    List<PostIntroDTO> listIntroPost;
-    int memberCount;
-    bool IsAdmin { get; set; }
-    // List<Group> groups = new List<Group>();
-    protected override async Task OnInitializedAsync()
-    {
-        IsAdmin = await GetAdmin();
-        var _httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+	private Group? group;
+	private bool isJoined;  // Biến lưu trạng thái tham gia
+	private string buttonText = "Tham gia"; // Thay đổi nội dung của nút dựa trên trạng thái
+	List<PostIntroDTO> listIntroPost;
+	int memberCount;
+	bool IsAdmin { get; set; }
+	// List<Group> groups = new List<Group>();
+	protected override async Task OnInitializedAsync()
+	{
+		IsAdmin = await GetAdmin();
+		var _httpClient = HttpClientFactory.CreateClient("MyHttpClient");
 
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        var user = authState.User;
-        var idUserCurrent = UserManager.GetUserId(user);
-        var idUser = Guid.Parse(idUserCurrent);
+		var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+		var user = authState.User;
+		var idUserCurrent = UserManager.GetUserId(user);
+		var idUser = Guid.Parse(idUserCurrent);
 
-        var result = await _httpClient.GetStringAsync($"/GetListPostIntro/{idUser}");
+		var result = await _httpClient.GetStringAsync($"/GetListPostIntro/{idUser}");
 
-        var resultConverted = JsonConvert.DeserializeObject<List<PostIntroDTO>>(result);
-        if (resultConverted != null)
-        {
-            listIntroPost = resultConverted;
-        }
-    }
+		var resultConverted = JsonConvert.DeserializeObject<List<PostIntroDTO>>(result);
+		if (resultConverted != null)
+		{
+			listIntroPost = resultConverted;
+		}
+	}
 
-    protected override async Task OnParametersSetAsync()
-    {
-        if (!string.IsNullOrEmpty(Name))
-        {
-            // Tìm nhóm trong cơ sở dữ liệu dựa trên tên nhóm từ URL
-            group = await DbContext.Groups.FirstOrDefaultAsync(g => g.Name == Name);
+	protected override async Task OnParametersSetAsync()
+	{
+		if (!string.IsNullOrEmpty(Name))
+		{
+			// Tìm nhóm trong cơ sở dữ liệu dựa trên tên nhóm từ URL
+			group = await DbContext.Groups.FirstOrDefaultAsync(g => g.Name == Name);
 
-            if (group != null)
-            {
-                // Kiểm tra nếu người dùng hiện tại đã tham gia nhóm hay chưa
-                var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-                var user = authState.User;
-                var userCurrent = UserManager.GetUserId(user);
-                var memberId = Guid.Parse(userCurrent);
+			if (group != null)
+			{
+				// Kiểm tra nếu người dùng hiện tại đã tham gia nhóm hay chưa
+				var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+				var user = authState.User;
+				var userCurrent = UserManager.GetUserId(user);
+				var memberId = Guid.Parse(userCurrent);
 
-                isJoined = await DbContext.MemberGroups.AnyAsync(mg => mg.IdGroup == group.IdGroup && mg.IdMember == memberId);
-                buttonText = isJoined ? "Đã tham gia" : "Tham gia";
-                memberCount = await GetMemberCount(Name);
-                IsAdmin = await GetAdmin();
-                StateHasChanged();
-            }
-        }
-    }
-    private async Task<int> GetMemberCount(string groupName)
-    {
-        var memberCount = await DbContext.MemberGroups
-            .Where(mg => mg.Group.Name == groupName)
-            .CountAsync();
-        return memberCount ;
-    }
+				isJoined = await DbContext.MemberGroups.AnyAsync(mg => mg.IdGroup == group.IdGroup && mg.IdMember == memberId);
+				buttonText = isJoined ? "Đã tham gia" : "Tham gia";
+				memberCount = await GetMemberCount(Name);
+				IsAdmin = await GetAdmin();
+				StateHasChanged();
+			}
+		}
+	}
+	private async Task<int> GetMemberCount(string groupName)
+	{
+		var memberCount = await DbContext.MemberGroups
+			.Where(mg => mg.Group.Name == groupName)
+			.CountAsync();
+		return memberCount;
+	}
 
 
 
-    private async Task<bool> GetAdmin()
-    {
-        if (string.IsNullOrEmpty(Name))
-        {
-            // Xử lý nếu Name không hợp lệ
-            Console.WriteLine("Group name is empty.");
-            return false;
-        }
+	private async Task<bool> GetAdmin()
+	{
+		if (string.IsNullOrEmpty(Name))
+		{
+			// Xử lý nếu Name không hợp lệ
+			Console.WriteLine("Group name is empty.");
+			return false;
+		}
 
-        // Tìm nhóm trong bảng Groups dựa trên tên nhóm (Name)
-        var group = await DbContext.Groups.FirstOrDefaultAsync(g => g.Name == Name);
+		// Tìm nhóm trong bảng Groups dựa trên tên nhóm (Name)
+		var group = await DbContext.Groups.FirstOrDefaultAsync(g => g.Name == Name);
 
-        if (group == null)
-        {
-            // Xử lý khi không tìm thấy nhóm
-            Console.WriteLine("Group not found.");
-            return false;
-        }
+		if (group == null)
+		{
+			// Xử lý khi không tìm thấy nhóm
+			Console.WriteLine("Group not found.");
+			return false;
+		}
 
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        var user = authState.User;
-        var userCurrent = UserManager.GetUserId(user);
-        var userId = Guid.Parse(userCurrent);  // Chuyển UserId thành Guid
+		var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+		var user = authState.User;
+		var userCurrent = UserManager.GetUserId(user);
+		var userId = Guid.Parse(userCurrent);  // Chuyển UserId thành Guid
 
-        // Lấy IdGroup từ bảng Groups
-        var idGroup = group.IdGroup;
+		// Lấy IdGroup từ bảng Groups
+		var idGroup = group.IdGroup;
 
-        // Kiểm tra xem người dùng có phải là admin của nhóm hay không
+		// Kiểm tra xem người dùng có phải là admin của nhóm hay không
 		var getAdmin = await DbContext.MemberGroups
 			.Where(a => a.IdGroup == idGroup && a.IdMember == userId
 						&& (a.Position == Data.Enums.Position.Chief || a.Position == Data.Enums.Position.Deputy))
@@ -367,7 +345,7 @@ else
 		var userCurrent = UserManager.GetUserId(user);
 		var memberId = Guid.Parse(userCurrent);  // Chuyển UserId thành Guid
 
-        Console.WriteLine($"UserId từ UserManager: {memberId}");
+		Console.WriteLine($"UserId từ UserManager: {memberId}");
 
 		var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
 		var response = await httpClient.PostAsJsonAsync("api/group/memberGroup", new
@@ -379,7 +357,7 @@ else
 
 		if (response.IsSuccessStatusCode)
 		{
-			isJoined = await DbContext.MemberGroups.AnyAsync(mg => mg.IdGroup == group.IdGroup && mg.IdMember == memberId && mg.Position == Data.Enums.Position.Member );
+			isJoined = await DbContext.MemberGroups.AnyAsync(mg => mg.IdGroup == group.IdGroup && mg.IdMember == memberId && mg.Position == Data.Enums.Position.Member);
 			buttonText = isJoined ? "Đã tham gia" : "Tham gia";
 			memberCount = await GetMemberCount(Name);
 			StateHasChanged();
@@ -390,7 +368,7 @@ else
 			Console.WriteLine($"Lỗi xảy ra: {response.StatusCode}. Chi tiết: {errorContent}");
 		}
 
-    }
+	}
 
 
 	private void NavigateToCreatePostPage()
