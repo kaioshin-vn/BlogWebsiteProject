@@ -118,11 +118,12 @@ builder.Services.ConfigureApplicationCookie(options =>
 });
 
 builder.Services.AddIdentityCore<ApplicationUser>(options => { })
-    .AddRoles<IdentityRole<Guid>>()
-    .AddEntityFrameworkStores<ApplicationDbContext>()
-    .AddSignInManager()
-    .AddDefaultTokenProviders();
-
+	.AddRoles<IdentityRole<Guid>>()
+	.AddEntityFrameworkStores<ApplicationDbContext>()
+	.AddSignInManager<SignInManager<ApplicationUser>>()
+	.AddDefaultTokenProviders()
+	.AddUserManager<UserManager<ApplicationUser>>()
+	.AddRoleManager<RoleManager<IdentityRole<Guid>>>();
 
 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
 builder.Services.AddScoped<VnPayService>();

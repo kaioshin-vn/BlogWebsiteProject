@@ -1,4 +1,5 @@
 ﻿@page "/step"
+
 @using System.Globalization;
 @using Data.Enums
 @using Data.DTO
@@ -26,19 +27,19 @@
 			outline: none;
 		}
 
-	#another_unique_identifier {
-		height: 300px;
-		overflow: hidden;
-		transition: overflow 0.3s ease-in-out;
+	.scrollbar {
+		overflow: hidden; /* Ẩn thanh cuộn khi không hover */
+		transition: overflow 0.5s ease; /* Thêm hiệu ứng chuyển đổi */
 	}
 
-		#another_unique_identifier:hover {
-			overflow: auto;
+		.scrollbar:hover {
+			overflow-y: auto; /* Hiện thanh cuộn khi hover */
 		}
 
 </style>
 
-<MudPaper Style="width: 800px">
+
+<MudPaper Style="width: 800px; height: auto">
 	<MudStepper @ref="stepper" @bind-ActiveIndex="_index" CompletedStepColor="Color.Success" CurrentStepColor="Color.Primary" NavClass="border-b mud-border-lines-default" StepClass="pt-4" ShowResetButton>
 		<TitleTemplate>@*This empty template prevents rendering the title*@</TitleTemplate>
 		<ConnectorTemplate Context="step">
@@ -211,7 +212,7 @@
 									</MudItem>
 									<MudItem xs="10" Style="padding-left: 38px;">
 										<MudText Typo="Typo.h6">@CommunityName</MudText>
-										<MudText Typo="Typo.caption">1 thành viên · 1 hoạt động</MudText>
+										<MudText Typo="Typo.caption">1 thành viên </MudText>
 									</MudItem>
 								</MudGrid>
 
@@ -262,8 +263,8 @@
 				</MudChipSet>
 
 				<!-- Tiêu đề -->
-				<div id="another_unique_identifier" class="ma-0" style="height:230px; "
-			<MudList T="Topic">
+				<div class="scrollbar" style="height : 230px; border: none">
+					<MudList T="Topic">
 						@if (filteredTopics != null && filteredTopics.Any())
 						{
 							@foreach (var topic in filteredTopics)
@@ -279,25 +280,25 @@
 						}
 						else if (topics != null && !topics.Any())
 						{
-						<MudText Typo="Typo.body1">
-							Không có đề tài nào.
-						</MudText>
+							<MudText Typo="Typo.body1">
+								Không có đề tài nào.
+							</MudText>
 						}
 						else
 						{
-						<MudItem Class="d-flex align-items-center ">
-							<MudIcon Icon="@Icons.Material.Filled.PriorityHigh" Color="Color.Default" />
-							<MudText Typo="Typo.body1">
-								Không có chủ đề nào khớp với tìm kiếm của bạn.
-							</MudText>
-						</MudItem>
+							<MudItem Class="d-flex align-items-center ">
+								<MudIcon Icon="@Icons.Material.Filled.PriorityHigh" Color="Color.Default" />
+								<MudText Typo="Typo.body1">
+									Không có chủ đề nào khớp với tìm kiếm của bạn.
+								</MudText>
+							</MudItem>
 						}
-			</MudList>
-		</div>
+					</MudList>
+				</div>
 			</MudStep>
 			<MudStep Title="Complete check-in" @bind-Completed="_completed">
-				<MudText Typo="Typo.h4" Class="mb-6">What kind of community is this?</MudText>
-				<MudText Typo="Typo.body1" Class="mb-8">Decide who can view and contribute in your community. Only public communities show up in search. Important: Once set, you will need to submit a request to change your community type.</MudText>
+				<MudText Typo="Typo.h4" Class="mb-6">Đây là loại cộng đồng nào?</MudText>
+				<MudText Typo="Typo.body1" Class="mb-8">Quyết định ai có thể xem và đóng góp trong cộng đồng của bạn. Chỉ những cộng đồng công khai mới hiển thị trong tìm kiếm. Quan trọng: Sau khi thiết lập, bạn sẽ cần gửi yêu cầu để thay đổi loại cộng đồng của mình.</MudText>
 
 				<MudRadioGroup @bind-Value="selectedCommunityType" Name="communityType">
 					<MudGrid Spacing="1"
@@ -311,8 +312,8 @@
 						</MudItem>
 
 						<MudItem xs="10">
-							<MudText Typo="Typo.h6" Style="color: #2e292a; padding-left: 8px; font-size: 17px; font-family: -webkit-body;">Public</MudText>
-							<MudText Typo="Typo.h6" Style="color: #817678; padding-left: 8px; font-size: 14px; font-family: -webkit-body;">Anyone can view, post, and comment to this community</MudText>
+							<MudText Typo="Typo.h6" Style="color: #2e292a; padding-left: 8px; font-size: 17px; font-family: -webkit-body;">Công khai</MudText>
+							<MudText Typo="Typo.h6" Style="color: #817678; padding-left: 8px; font-size: 14px; font-family: -webkit-body;">Bất kỳ ai cũng có thể xem, đăng và bình luận vào cộng đồng này</MudText>
 						</MudItem>
 
 						<MudItem xs="1" Class="d-flex align-items-center justify-end" Style="padding:0;">
@@ -331,8 +332,8 @@
 						</MudItem>
 
 						<MudItem xs="10">
-							<MudText Typo="Typo.h6" Style="color: #2e292a; padding-left: 8px; font-size: 17px; font-family: -webkit-body;">Restricted</MudText>
-							<MudText Typo="Typo.h6" Style="color: #817678; padding-left: 8px; font-size: 14px; font-family: -webkit-body;">Anyone can view, but only approved users can contribute</MudText>
+							<MudText Typo="Typo.h6" Style="color: #2e292a; padding-left: 8px; font-size: 17px; font-family: -webkit-body;">Hạn chế</MudText>
+							<MudText Typo="Typo.h6" Style="color: #817678; padding-left: 8px; font-size: 14px; font-family: -webkit-body;">Bất kỳ ai cũng có thể xem, nhưng chỉ những người dùng được chấp thuận mới có thể đóng góp</MudText>
 						</MudItem>
 
 						<MudItem xs="1" Class="d-flex align-items-center justify-end" Style="padding:0;">
@@ -351,8 +352,8 @@
 						</MudItem>
 
 						<MudItem xs="10">
-							<MudText Typo="Typo.h6" Style="color: #2e292a; padding-left: 8px; font-size: 17px; font-family: -webkit-body;">Private</MudText>
-							<MudText Typo="Typo.h6" Style="color: #817678; padding-left: 8px; font-size: 14px; font-family: -webkit-body;">Only approved users can view and contribute</MudText>
+							<MudText Typo="Typo.h6" Style="color: #2e292a; padding-left: 8px; font-size: 17px; font-family: -webkit-body;">Riêng tư</MudText>
+							<MudText Typo="Typo.h6" Style="color: #817678; padding-left: 8px; font-size: 14px; font-family: -webkit-body;">Chỉ những người dùng được chấp thuận mới có thể xem</MudText>
 						</MudItem>
 
 						<MudItem xs="1" Class="d-flex align-items-center justify-end" Style="padding:0;">
@@ -538,7 +539,6 @@
 		if (string.IsNullOrEmpty(Description))
 		{
 			isValid = false;
-			errorDes = "Mô tả không được để trống.";
 		}
 		else if (Description.Length > 500)
 		{
@@ -569,7 +569,8 @@
 		}
 		else
 		{
-			Console.WriteLine("Người dùng chưa đăng nhập.");
+			Snackbar.Add("Người dùng chưa đăng nhập", Severity.Warning);
+			return;
 		}
 		groupDto.Topics = new List<Guid>(selectedTopics);
 
@@ -582,7 +583,7 @@
 			var createdGroup = await response.Content.ReadFromJsonAsync<Group>();
 			_completed = true;
 			await Task.Delay(100);
-			Navigation.NavigateTo("/download-excel");
+			Navigation.NavigateTo($"/groups/{groupDto.Name}");
 		}
 		else
 		{

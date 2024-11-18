@@ -22,7 +22,7 @@ namespace API.Controllers.PostController
         public PostController(ApplicationDbContext context, IWebHostEnvironment environment)
         {
             _context = context;
-            _environment = environment;
+            _environment = environment; 
         }
 
         [HttpGet("getPostPagination")]
@@ -127,7 +127,6 @@ namespace API.Controllers.PostController
                 return NotFound();
             }
         }
-
 
         [HttpPut("updatePost/{idPost}")]
         public async Task<IActionResult> EditPost(Guid idPost, PostDTO post)

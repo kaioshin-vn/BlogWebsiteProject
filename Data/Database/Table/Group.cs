@@ -21,7 +21,6 @@ namespace Data.Database.Table
         public DateTime DateTime { get; set; }
         public KindGroup StateGroup { get; set; } // Trạng thái của nhóm 
 
-        public ICollection<AdminGroup>? AdminGroups { get; set; }
         public ICollection<MemberGroup>? MemberGroups { get; set; }
         public ICollection<Topic>? Topics { get; set; }
     }

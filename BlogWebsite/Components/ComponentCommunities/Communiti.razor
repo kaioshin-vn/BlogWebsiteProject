@@ -1,99 +1,437 @@
-﻿@page "/create-community"
+﻿@page "/groups/{Name}/mod"
+
+@using Client.Components.Pages.Post
 @using Data.Database.Table
 @using Microsoft.EntityFrameworkCore
+@using Newtonsoft.Json
+@using Data.DTO.EntitiDTO
+@using Data.DTO
+@using Client.Components.ComponentCustom
+@using Data.Enums
 @inject ApplicationDbContext DbContext
-@inject NavigationManager Navigate
-
-<MudContainer MaxWidth="MaxWidth.Medium" Class="d-flex justify-center align-center flex-column py-8">
-    <MudPaper Elevation="3" Class="pa-8">
-        <MudText Typo="Typo.h4" Class="mb-6">Add topics</MudText>
-        <MudText Typo="Typo.body1" Class="mb-8">
-            Add up to 3 topics to help interested redditors find your community.
-        </MudText>
-
-        <!-- Thanh tìm kiếm -->
-        <MudTextField @bind-Value="Search"
-                      Placeholder="Filter topics"
-                      Variant="Variant.Outlined"
-                      Adornment="Adornment.End"
-                      AdornmentIcon="@Icons.Material.Filled.Search"
-                      AdornmentColor="Color.Secondary"
-                      Class="rounded-input">
-        </MudTextField>
-
-        <!-- Tiêu đề -->
-        <MudText Typo="Typo.h6" Class="mt-4">Topics 0/3</MudText>
-
-        @if (topics == null)
-        {
-            <p><em>Loading...</em></p>
-        }
-        else if (topics.Count == 0)
-        {
-            <p>No topics found.</p>
-        }
-        else
-        {
-            <MudList T="Topic"> @* Chỉ định loại cho MudList *@
-                @foreach (var topic in topics)
-                {
-                    <MudListItem>
-                        <MudCheckbox 
-                            Checked="@selectedTopics.Contains(topic)" 
-                            OnChange="(checked) => ToggleTopicSelection(topic, checked)" /> 
-                        @topic.TopicName
-                    </MudListItem>
-                }
-            </MudList>
-        }
-
-        <!-- Hiển thị các chủ đề đã chọn -->
-        <MudText Typo="Typo.h6" Class="mt-4">Selected Topics:</MudText>
-        <ul>
-            @if (selectedTopics.Count == 0)
-            {
-                <li><em>No topics selected.</em></li>
-            }
-            else
-            {
-                @foreach (var selectedTopic in selectedTopics)
-                {
-                    <li>@selectedTopic.TopicName</li> <!-- Hiển thị tên chủ đề đã chọn -->
-                }
-            }
-        </ul>
-
-    </MudPaper>
-</MudContainer>
-
+@inject UserManager<ApplicationUser> UserManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+@inject IHttpClientFactory HttpClientFactory
+@inject IJSRuntime JSRunTime
+@inject ISnackbar Snackbar
 <style>
-    .rounded-input {
-        border-radius: 12px; /* Thay đổi giá trị này theo ý muốn */
-    }
+	.person-list {
+		list-style-type: none;
+		padding: 0;
+	}
+
+		.person-list li {
+			display: flex;
+			gap: 20px; /* Điều chỉnh khoảng cách giữa các cột */
+			padding: 5px 0;
+		}
+
+	.header {
+		font-weight: bold;
+	}
 </style>
+<MudTabs Elevation="1" Rounded="true" PanelClass="pa-6">
+	@if (stateGroup)
+	{
+		@if (isChiefOrDeputy)
+		{
+			<MudTabPanel Text="Danh sách">
+				<MudText>
+					<h3>Danh sách Thành viên và Admin của Nhóm: @Name</h3>
+
+					@if (allMembers != null && allMembers.Any())
+					{
+						<MudTable Items="@allMembers" Hover="true" Breakpoint="Breakpoint.Sm" LoadingProgressColor="Color.Info">
+							<HeaderContent>
+								<MudTh>Tên</MudTh>
+								<MudTh>Chức vụ</MudTh>
+								<MudTh>Quyền chỉnh sửa</MudTh>
+								<MudTh>Thao tác</MudTh>
+							</HeaderContent>
+							<RowTemplate>
+								<MudTd DataLabel="Tên">@context.FullName</MudTd>
+								@if (context.Position == Data.Enums.Position.Chief)
+								{
+									<MudTd DataLabel="Chức vụ">Trưởng nhóm</MudTd>
+								}
+								else if (context.Position == Data.Enums.Position.Deputy)
+								{
+									<MudTd DataLabel="Chức vụ">Phó nhóm</MudTd>
+								}
+								else
+								{
+									<MudTd DataLabel="Chức vụ">Thành viên</MudTd>
+								}
+								@if (context.Position == Data.Enums.Position.Chief)
+								{
+									<MudTd DataLabel="Quyền chỉnh sửa">Mọi thứ</MudTd>
+								}
+								else if (context.Position == Data.Enums.Position.Deputy)
+								{
+									<MudTd DataLabel="Quyền chỉnh sửa">Xóa thành viên, duyệt bài</MudTd>
+								}
+								else
+								{
+									<MudTd DataLabel="Quyền chỉnh sửa">Không có quyền</MudTd>
+								}
+								<MudTd DataLabel="Thao tác" Style="padding-left: 0">
+									<MudIconButton Icon="@Icons.Material.Filled.Delete"
+												   OnClick="() => OnclickDelete(context.Id)"
+												   Disabled="isActionDisabled[context.Id]" />
+
+									<MudIconButton Icon="@Icons.Material.Filled.Create"
+												   OnClick="() => OnclickNavigation(context.Id)"
+												   Disabled="isActionDisabled[context.Id]" />
+								</MudTd>
+
+							</RowTemplate>
+						</MudTable>
+					}
+					else
+					{
+						<p>Không có thành viên hoặc admin nào trong nhóm.</p>
+					}
+				</MudText>
+			</MudTabPanel>
+			<MudTabPanel Text="Duyệt bài">
+				<MudText>
+					<h3>Danh sách bài cần duyệt của Nhóm: @Name</h3>
+
+					@if (allMembers != null && allMembers.Any())
+					{
+						<ul class="person-list">
+							<li class="header">
+								<span>Duyệt bài</span>
+							</li>
+							@foreach (var name in allMembers)
+							{
+								<li>
+									<span>Duyệt bài</span>
+								</li>
+							}
+						</ul>
+					}
+					else
+					{
+						<p>Không có thành viên hoặc admin nào trong nhóm.</p>
+					}
+				</MudText>
+			</MudTabPanel>
+		}
+		else
+		{
+			<MudTabPanel Text="Danh sách" >
+				<MudText>
+					<h3>Danh sách Thành viên và Admin của Nhóm: @Name</h3>
+
+					@if (allMembers != null && allMembers.Any())
+					{
+						<MudTable Items="@allMembers" Hover="true" Breakpoint="Breakpoint.Sm" LoadingProgressColor="Color.Info">
+							<HeaderContent>
+								<MudTh>Tên</MudTh>
+								<MudTh>Chức vụ</MudTh>
+								<MudTh>Quyền chỉnh sửa</MudTh>
+
+							</HeaderContent>
+							<RowTemplate>
+								<MudTd DataLabel="Tên">@context.FullName</MudTd>
+								@if (context.Position == Data.Enums.Position.Chief)
+								{
+									<MudTd DataLabel="Chức vụ">Trưởng nhóm</MudTd>
+								}
+								else if (context.Position == Data.Enums.Position.Deputy)
+								{
+									<MudTd DataLabel="Chức vụ">Phó nhóm</MudTd>
+								}
+								else if (context.Position == Data.Enums.Position.Member)
+								{
+									<MudTd DataLabel="Chức vụ">Thành viên</MudTd>
+								}
+								@if (context.Position == Data.Enums.Position.Chief)
+								{
+									<MudTd DataLabel="Quyền chỉnh sửa">Mọi thứ</MudTd>
+								}
+								else if (context.Position == Data.Enums.Position.Deputy)
+								{
+									<MudTd DataLabel="Quyền chỉnh sửa">Xóa thành viên, duyệt bài</MudTd>
+
+								}
+								else
+								{
+									<MudTd DataLabel="Quyền chỉnh sửa">Không có quyền</MudTd>
+								}
+							</RowTemplate>
+						</MudTable>
+					}
+					else
+					{
+						<p>Không có thành viên hoặc admin nào trong nhóm.</p>
+					}
+				</MudText>
+			</MudTabPanel>
+		}
+	}
+	else
+	{
+		@if (isChiefOrDeputy)
+		{
+			<MudTabPanel Text="Danh sách">
+				<MudText>
+					<h3>Danh sách Thành viên và Admin của Nhóm: @Name</h3>
+
+					@if (allMembers != null && allMembers.Any())
+					{
+						<MudTable Items="@allMembers" Hover="true" Breakpoint="Breakpoint.Sm" LoadingProgressColor="Color.Info">
+							<HeaderContent>
+								<MudTh>Tên</MudTh>
+								<MudTh>Chức vụ</MudTh>
+								<MudTh>Quyền chỉnh sửa</MudTh>
+								<MudTh>Thao tác</MudTh>
+							</HeaderContent>
+							<RowTemplate>
+								<MudTd DataLabel="Tên">@context.FullName</MudTd>
+								@if (context.Position == Data.Enums.Position.Chief)
+								{
+									<MudTd DataLabel="Chức vụ">Trưởng nhóm</MudTd>
+								}
+								else if (context.Position == Data.Enums.Position.Deputy)
+								{
+									<MudTd DataLabel="Chức vụ">Phó nhóm</MudTd>
+								}
+								else
+								{
+									<MudTd DataLabel="Chức vụ">Thành viên</MudTd>
+								}
+								@if (context.Position == Data.Enums.Position.Chief)
+								{
+									<MudTd DataLabel="Quyền chỉnh sửa">Mọi thứ</MudTd>
+								}
+								else if (context.Position == Data.Enums.Position.Deputy)
+								{
+									<MudTd DataLabel="Quyền chỉnh sửa">Xóa thành viên, duyệt bài</MudTd>
+								}
+								else
+								{
+									<MudTd DataLabel="Quyền chỉnh sửa">Không có quyền</MudTd>
+								}
+								<MudTd DataLabel="Thao tác" Style="padding-left: 0">
+									<MudIconButton Icon="@Icons.Material.Filled.Delete"
+												   OnClick="() => OnclickDelete(context.Id)"
+												   Disabled="isActionDisabled[context.Id]" />
+
+									<MudIconButton Icon="@Icons.Material.Filled.Create"
+												   OnClick="() => OnclickNavigation(context.Id)"
+												   Disabled="isActionDisabled[context.Id]" />
+								</MudTd>
+
+							</RowTemplate>
+						</MudTable>
+					}
+					else
+					{
+						<p>Không có thành viên hoặc admin nào trong nhóm.</p>
+					}
+				</MudText>
+			</MudTabPanel>
+		}
+		else
+		{
+			<MudTabPanel Text="Danh sách">
+				<MudText>
+					<h3>Danh sách Thành viên và Admin của Nhóm: @Name</h3>
+
+					@if (allMembers != null && allMembers.Any())
+					{
+						<MudTable Items="@allMembers" Hover="true" Breakpoint="Breakpoint.Sm" LoadingProgressColor="Color.Info">
+							<HeaderContent>
+								<MudTh>Tên</MudTh>
+								<MudTh>Chức vụ</MudTh>
+								<MudTh>Quyền chỉnh sửa</MudTh>
+
+							</HeaderContent>
+							<RowTemplate>
+								<MudTd DataLabel="Tên">@context.FullName</MudTd>
+								@if (context.Position == Data.Enums.Position.Chief)
+								{
+									<MudTd DataLabel="Chức vụ">Trưởng nhóm</MudTd>
+								}
+								else if (context.Position == Data.Enums.Position.Deputy)
+								{
+									<MudTd DataLabel="Chức vụ">Phó nhóm</MudTd>
+								}
+								else if (context.Position == Data.Enums.Position.Member)
+								{
+									<MudTd DataLabel="Chức vụ">Thành viên</MudTd>
+								}
+								@if (context.Position == Data.Enums.Position.Chief)
+								{
+									<MudTd DataLabel="Quyền chỉnh sửa">Mọi thứ</MudTd>
+								}
+								else if (context.Position == Data.Enums.Position.Deputy)
+								{
+									<MudTd DataLabel="Quyền chỉnh sửa">Xóa thành viên, duyệt bài</MudTd>
+
+								}
+								else
+								{
+									<MudTd DataLabel="Quyền chỉnh sửa">Không có quyền</MudTd>
+								}
+							</RowTemplate>
+						</MudTable>
+					}
+					else
+					{
+						<p>Không có thành viên hoặc admin nào trong nhóm.</p>
+					}
+				</MudText>
+			</MudTabPanel>
+		}
+	}
+</MudTabs>
+
+
 
 @code {
-    public string Search { get; set; }
-    private List<Topic> topics;
-    private List<Topic> selectedTopics = new List<Topic>();
+	[Parameter]
+	public string Name { get; set; }
+	List<MemberDTO> allMembers = new List<MemberDTO>();
+	bool isChiefOrDeputy = false;
+	bool currentUserIsDeputy = false;
+	private bool stateGroup = false;
+	private Dictionary<Guid, bool> isActionDisabled = new Dictionary<Guid, bool>();
 
-    protected override async Task OnInitializedAsync()
-    {
-        topics = await DbContext.Topics.ToListAsync();
-    }
+	protected override async Task OnInitializedAsync()
+	{
+		if (!string.IsNullOrEmpty(Name))
+		{
+			stateGroup = await GetStateGroup();
+			allMembers = await GetMemberAndAdminNames(Name);
+			await CheckUser();
+		}
+		foreach (var member in allMembers)
+		{
+			// Lưu trữ kết quả của mỗi thành viên vào dictionary
+			bool isDisabled = await IsActionDisabled(member.Id);
+			isActionDisabled[member.Id] = isDisabled;
+		}
+	}
 
-    private void ToggleTopicSelection(Topic topic, bool isChecked)
-    {
-        if (isChecked)
-        {
-            if (selectedTopics.Count < 3) // Giới hạn tối đa là 3 chủ đề
-            {
-                selectedTopics.Add(topic);
-            }
-        }
-        else
-        {
-            selectedTopics.Remove(topic);
-        }
-    }
+	protected override async Task OnParametersSetAsync()
+	{
+		allMembers = await GetMemberAndAdminNames(Name);
+	}
+
+	private async Task<bool> GetStateGroup()
+	{
+		var state = await DbContext.Groups.AnyAsync(a => a.Name == Name && a.StateGroup == KindGroup.Restricted);
+		return state;
+	}
+
+
+	private async Task<List<MemberDTO>> GetMemberAndAdminNames(string groupName)
+	{
+		var memberNames = await DbContext.MemberGroups
+			.Where(ag => ag.Group.Name == groupName)
+			.Select(ag => new MemberDTO
+				{
+					Id = ag.IdMember,
+					FullName = ag.User.FullName,
+					Position = ag.Position
+				})
+			.ToListAsync();
+		var allMembers = memberNames.ToList();
+		return allMembers;
+	}
+
+	private async Task<bool> IsActionDisabled(Guid targetUserId)
+	{
+		var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+		var userCurrent = await UserManager.GetUserAsync(authState.User);
+		if (userCurrent != null)
+		{
+			bool currentUserIsDeputy = allMembers.Any(a => a.Id == userCurrent.Id && a.Position == Data.Enums.Position.Deputy);
+			bool targetUserIsChief = allMembers.Any(mg => mg.Id == targetUserId && mg.Position == Data.Enums.Position.Chief);
+			return currentUserIsDeputy && targetUserIsChief;
+		}
+		return false;
+	}
+
+	private async Task CheckUser()
+	{
+		var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+		var userCurrent = await UserManager.GetUserAsync(authState.User);
+		if (userCurrent != null)
+		{
+			isChiefOrDeputy = allMembers.Any(a => a.Id == userCurrent.Id && (
+				a.Position == Data.Enums.Position.Chief ||
+				a.Position == Data.Enums.Position.Deputy));
+		}
+	}
+
+	private async Task OnclickDelete(Guid id)
+	{
+		var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+		var userCurrent = await UserManager.GetUserAsync(authState.User);
+		var currentUserId = userCurrent?.Id;
+		Console.WriteLine($"currentUserId:t {currentUserId}");
+		if (currentUserId == null)
+		{
+			Console.WriteLine("Không tìm thấy người dùng.");
+			return;
+		}
+
+		// ID thành viên cần xóa
+		Guid memberId = id;
+		Console.WriteLine($"memberId:t {memberId}");
+		Console.WriteLine($"currentUserId: {currentUserId}, memberId: {memberId}");
+
+		// Lấy vai trò của người dùng hiện tại
+		var currentUserRole = allMembers.FirstOrDefault(m => m.Id == currentUserId)?.Position;
+		//Lấy thành viên bị xóa từ danh sách
+		var targetMemberRole = allMembers.FirstOrDefault(m => m.Id == memberId)?.Position;
+
+		// Kiểm tra nếu người dùng là phó nhóm và đang cố gắng xóa một phó nhóm khác
+		if (currentUserRole == Data.Enums.Position.Deputy && targetMemberRole == Data.Enums.Position.Deputy)
+		{
+			Snackbar.Add("Phó nhóm không thể xóa phó nhóm khác.", Severity.Warning);
+			return;
+		}
+		// Kiểm tra nếu người dùng là chủ nhóm và đang cố gắng tự đăng xuất mình
+		if (currentUserId == memberId)
+		{
+			Snackbar.Add("Không xóa được chính mình khi là trưởng nhóm.", Severity.Warning);
+			return;
+		}
+		var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+		var response = await httpClient.DeleteAsync($"api/group/member/{memberId}?userId={currentUserId}");
+		if (response.IsSuccessStatusCode)
+		{
+			Console.WriteLine("Xóa thành công.");
+			allMembers = await GetMemberAndAdminNames(Name);
+		}
+		else
+		{
+			var errorResponse = await response.Content.ReadAsStringAsync();
+			Console.WriteLine("Error Response: " + errorResponse);
+		}
+		StateHasChanged();
+	}
+
+	private async Task OnclickNavigation(Guid id)
+	{
+		var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+		var userCurrent = await UserManager.GetUserAsync(authState.User);
+		var currentUserId = userCurrent?.Id;
+		var checkDeputy = DbContext.MemberGroups.FirstOrDefault(a => a.IdMember == currentUserId && a.Position == Data.Enums.Position.Deputy);
+		if (checkDeputy != null)
+		{
+			Snackbar.Add("Chỉ có trưởng nhóm mới có quyền chỉnh sửa", Severity.Warning);
+			return;
+		}
+		Console.WriteLine($"id đây: {id}");
+		Navigation.NavigateTo($"/groups/{(Name)}/{id}");
+	}
+
 }
+

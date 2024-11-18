@@ -27,7 +27,6 @@ namespace BlogWebsite.Data
         public ICollection<PostView> PostViews { get; set; }
         public ICollection<Notice> NoticesSent { get; set; }
         public ICollection<Notice> NoticesReceived { get; set; }
-        public ICollection<AdminGroup> AdminGroups { get; set; }
         public ICollection<MemberGroup> MemberGroups { get; set; }
     }
 }

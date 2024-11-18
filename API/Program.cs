@@ -1,5 +1,6 @@
 using BlogWebsite.Data;
 using Client.VNPayService;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
 
@@ -11,22 +12,25 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddControllers()
-    .AddJsonOptions(x =>
-                x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
+	.AddJsonOptions(x =>
+				x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
-    options.EnableSensitiveDataLogging(false);
-    options.UseSqlServer(connectionString);
+	options.EnableSensitiveDataLogging(false);
+	options.UseSqlServer(connectionString);
 }, ServiceLifetime.Transient);
+builder.Services.AddIdentity<ApplicationUser,IdentityRole<Guid>>()
+    .AddEntityFrameworkStores<ApplicationDbContext>()
+    .AddDefaultTokenProviders();
 builder.Services.AddScoped<VnPayService>();
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll",
-        builder => builder.AllowAnyOrigin()
-                          .AllowAnyMethod()
-                          .AllowAnyHeader());
+	options.AddPolicy("AllowAll",
+		builder => builder.AllowAnyOrigin()
+						  .AllowAnyMethod()
+						  .AllowAnyHeader());
 });
 
 var app = builder.Build();
@@ -34,8 +38,8 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+	app.UseSwagger();
+	app.UseSwaggerUI();
 }
 
 app.UseHttpsRedirection();

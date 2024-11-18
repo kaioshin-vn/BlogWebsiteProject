@@ -22,5 +22,6 @@ namespace API.Controllers
             var listTopic = await _context.Topics.ToListAsync();
             return Ok(listTopic);
         }
-    }
+		
+	}
 }
