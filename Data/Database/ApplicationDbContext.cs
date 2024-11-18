@@ -33,6 +33,7 @@ namespace BlogWebsite.Data
         public DbSet<AdminGroup> AdminGroups { get; set; }
         public DbSet<MemberGroup> MemberGroups { get; set; }
         public DbSet<Topic> Topics { get; set; }
+        public DbSet<Flower> Flower { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

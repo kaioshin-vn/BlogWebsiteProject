@@ -14,6 +14,7 @@ namespace Data.Database.Table
         public Guid IdUser { get; set; }
 
         public Guid IdFlower { get; set; }
+        public bool IsFollowing { get; set; }
 
         [ForeignKey("IdFlower")]
         public ApplicationUser? UserFlower { get; set; }
