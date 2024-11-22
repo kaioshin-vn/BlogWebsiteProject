@@ -10,7 +10,7 @@
 
 @if (lstPostSave == null)
 {
-<MudText>loading</MudText>    
+    <MudText>loading</MudText>
 }
 <MudDialog Class="w-50">
     <DialogContent >
@@ -26,40 +26,62 @@
         <MudDivider Light/>
     </DialogContent>
     <DialogActions>
-        <MudGrid >
+        <MudGrid>
             <MudItem xs="12">
-                <MudList T="string" CheckBoxColor="Color.Tertiary">
+                     <MudList T="string" CheckBoxColor="Color.Tertiary">
                     @foreach (var item in lstPostSave)
                     {
-                        <MudListItem Class="d-flex" OnClick="() => SaveId(item.Id)">
-                            <AvatarContent>
-                                @*  @if (!string.IsNullOrWhiteSpace(item.SaveName))
-                                {
-                                <MudImage Src="@item.PostImageUrl" ObjectFit="ObjectFit.Cover" Height="40" Width="40" Class="rounded-2" />
-                                } *@
-                                <MudAvatar Color="Color.Primary" Class="rounded-2">
-                                    @item.SaveName[0] <!-- Lấy chữ cái đầu tiên của tên bộ sưu tập -->
-                                </MudAvatar>
-                            </AvatarContent>
-                            <ChildContent>
-                                @item.SaveName
-                            </ChildContent>
+                        <MudListItem>
+                            <MudRadioGroup @bind-Value="IdSave">
+                                <MudGrid Justify="Justify.SpaceBetween"
+                                         Class="cursor-pointer"
+                                         @onclick="@(() => IdSave = item.Id)">
+                                    <MudItem Class="d-flex align-content-around">
+                                        <MudAvatar Color="Color.Primary" Class="rounded-2">
+                                            @item.SaveName[0]
+                                        </MudAvatar>
+                                        <MudText Class="px-2 pt-2">@item.SaveName</MudText>
+                                    </MudItem>
+                                    <MudItem>
+                                        <MudRadio T="Guid" Value="item.Id" Color="Color.Primary" />
+                                    </MudItem>
+                                </MudGrid>
+                            </MudRadioGroup>
                         </MudListItem>
                     }
                 </MudList>
+               
             </MudItem>
             <MudItem xs="12">
-                <MudDivider/>
-                <MudButton OnClick="OpenDialogCreateSave" Variant="Variant.Filled" Class="m-3">
-                    <MudIcon Icon="@Icons.Material.Filled.Add" />
-                    <MudText>Bộ sưu tập mới</MudText>
-                </MudButton>
-                <MudDivider Light/>
+                <MudDivider />
+                @if (!isCreatingNewCollection)
+                {
+                    <MudButton OnClick="ShowCreateInput" Variant="Variant.Filled" Class="m-3">
+                        <MudIcon Icon="@Icons.Material.Filled.Add" />
+                        <MudText>Bộ sưu tập mới</MudText>
+                    </MudButton>
+                }
+                else
+                {
+                    <MudPaper Class="m-3 d-flex align-center gap-2 pa-2">
+                        <MudTextField @bind-Value="savePost.SaveName"
+                                      Placeholder="Nhập tên bộ sưu tập"
+                                      Immediate="true"
+                                      Class="flex-grow-1" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Check"
+                                       Color="Color.Success"
+                                       OnClick="CreateNewCollection" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Close"
+                                       Color="Color.Error"
+                                       OnClick="CancelCreate" />
+                    </MudPaper>
+                }
+                <MudDivider Light />
             </MudItem>
             <MudItem xs="12" Class="d-flex justify-content-end">
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddPostSave">Xong</MudButton>
             </MudItem>
-       </MudGrid>
+        </MudGrid>
     </DialogActions>
 </MudDialog>
 
@@ -69,11 +91,16 @@
     [Parameter]
     public Guid idPost { get; set; }
 
-    private Guid IdSave {get; set;}
+    private Guid IdSave { get; set; }
+    private string radio { get; set; }
 
     List<SaveDTO> lstPostSave = new List<SaveDTO>();
 
     PostDTO lstPost = new PostDTO();
+
+    SaveDTO savePost = new SaveDTO();
+
+    private bool isCreatingNewCollection = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -109,10 +136,46 @@
         }
     }
 
-    private async Task OpenDialogCreateSave()
+    private void ShowCreateInput()
     {
-        var diaLog = DialogService.Show<CreateSaveDialog>();
-        var result = await diaLog.Result;
+        isCreatingNewCollection = true;
+    }
+
+    private void CancelCreate()
+    {
+        isCreatingNewCollection = false;
+    }
+
+    private async Task CreateNewCollection()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        var userCurrent = await UserManager.GetUserAsync(user);
+        var userId = userCurrent.Id;
+        savePost.IdUser = userId;
+
+        if (string.IsNullOrWhiteSpace(savePost.SaveName))
+        {
+            Snackbar.Add("Vui lòng nhập tên bộ sưu tập!", Severity.Warning);
+            return;
+        }
+        var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+        var response = await httpClient.PostAsJsonAsync("/api/save/create_savepost", savePost);
+        if (response.IsSuccessStatusCode)
+        {
+            // Cập nhật lại danh sách
+            lstPostSave = await httpClient.GetFromJsonAsync<List<SaveDTO>>("/api/save/get_savepost");
+            Snackbar.Add("Tạo bộ sưu tập thành công!", Severity.Success);
+
+            // Reset trạng thái
+            isCreatingNewCollection = false;
+            savePost.SaveName = "";
+            StateHasChanged();
+        }
+        else
+        {
+            Snackbar.Add("Tạo bộ sưu tập thất bại!", Severity.Error);
+        }
     }
 
     private void Cancel()
