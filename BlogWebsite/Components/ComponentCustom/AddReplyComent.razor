@@ -1,0 +1,83 @@
+﻿
+@if (isAddComment)
+{
+    <div style="border:1px solid  rgb(206, 206, 206); border-radius:12px;" class="p-2 my-3">
+        <Radzen.Blazor.RadzenHtmlEditor @bind-Value="@Comment.Content" Execute="@OnExecute" style="min-height:120px; height: auto;max-width:990px;border:none ;overflow:hidden;" UploadUrl="minimalApi/uploadImage">
+            <Radzen.Blazor.RadzenHtmlEditorUndo Title="Trước" />
+            <Radzen.Blazor.RadzenHtmlEditorRedo Title="Sau" />
+            <Radzen.Blazor.RadzenHtmlEditorSeparator />
+            <Radzen.Blazor.RadzenHtmlEditorBold Title="In đậm" />
+            <Radzen.Blazor.RadzenHtmlEditorItalic Title="In nghiêng" />
+            <Radzen.Blazor.RadzenHtmlEditorUnderline Title="Gạch chân" />
+            <Radzen.Blazor.RadzenHtmlEditorStrikeThrough Title="Xuyên qua" />
+            <Radzen.Blazor.RadzenHtmlEditorSeparator />
+            <Radzen.Blazor.RadzenHtmlEditorAlignLeft Title="Căn trái" />
+            <Radzen.Blazor.RadzenHtmlEditorAlignCenter Title="Căn giữa" />
+            <Radzen.Blazor.RadzenHtmlEditorAlignRight Title="Căn phải" />
+            @* <RadzenHtmlEditorJustify Title="Căn đều" /> *@
+            <Radzen.Blazor.RadzenHtmlEditorSeparator />
+            <Radzen.Blazor.RadzenHtmlEditorIndent Title="Thụt lề" />
+            <Radzen.Blazor.RadzenHtmlEditorOutdent Title="Nhô lề" />
+            @* <RadzenHtmlEditorUnorderedList Title="Danh sách" /> *@
+            <Radzen.Blazor.RadzenHtmlEditorOrderedList Title="Danh sách sắp xếp" />
+            <Radzen.Blazor.RadzenHtmlEditorSeparator />
+            @* <Radzen.Blazor.RadzenHtmlEditorColor Title="Màu chữ" />
+        <Radzen.Blazor.RadzenHtmlEditorBackground Title="Màu nền" />
+        <Radzen.Blazor.RadzenHtmlEditorRemoveFormat Title="Bỏ định dạng" />
+        <Radzen.Blazor.RadzenHtmlEditorSeparator /> *@
+            @* <RadzenHtmlEditorSubscript Title="Chữ phía dưới" />
+        <RadzenHtmlEditorSuperscript Title="Chữ phía trên" /> *@
+            @* <RadzenHtmlEditorSeparator /> *@
+            <Radzen.Blazor.RadzenHtmlEditorLink Title="Thêm link" CancelText="Hủy" LinkText="Hiển thị" OpenInNewWindowText="Mở trong cửa số mới" UrlText="Đường dẫn" />
+            <Radzen.Blazor.RadzenHtmlEditorUnlink Title="Bỏ đường dẫn" />
+            <Radzen.Blazor.RadzenHtmlEditorImage Title="Thêm ảnh" ShowHeight="false" ShowWidth="false" ShowAlt="false" UploadChooseText="Tải ảnh lên" AltText="Tên ảnh" CancelText="Hủy" SelectText="Chọn ảnh tải lên" UrlText="Nếu không có sẵn ảnh trên máy, hãy nhập đường dẫn ảnh trên web" HeightText="Chiều cao" WidthText="Chiều rộng" />
+            <Radzen.Blazor.RadzenHtmlEditorSeparator />
+            @* <Radzen.Blazor.RadzenHtmlEditorFontName Title="Phông chữ" Placeholder="Phông chữ" />
+        <Radzen.Blazor.RadzenHtmlEditorFontSize Title="Kích thước" Placeholder="Cỡ chữ" /> *@
+            @* <RadzenHtmlEditorFormatBlock Title="Cỡ chữ" Placeholder="Cỡ chữ" NormalText="Thông thường" Heading1Text="Loại 1" Heading2Text="Loại 2" Heading3Text="Loại 3" Heading4Text="Loại 4" Heading5Text="Loại 5" Heading6Text="Loại 6" /> *@
+            @* <Radzen.Blazor.RadzenHtmlEditorSeparator /> *@
+            <Radzen.Blazor.RadzenHtmlEditorCustomTool CommandName="AddCode" Icon="code" Title="Code" />
+        </Radzen.Blazor.RadzenHtmlEditor>
+
+        <div class="d-flex justify-content-end mb-2">
+            <MudButton Variant="Variant.Filled" OnClick="ToggleComment" Class="mx-3">Hủy</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Tertiary" OnClick="AddNewComment">Bình luận</MudButton>
+        </div>
+    </div>
+}
+else
+{
+    <div style="width:100%;" class="my-3" @onclick="ToggleComment">
+        <input style="border-radius:10px; border:1px solid rgb(206, 206, 206); width:95%" class="py-2 ps-4 ms-3" placeholder="Bình luận" />
+    </div>
+}
+
+@code {
+    bool isAddComment { get; set; }
+    PostCommentDTO Comment { get; set; } = new PostCommentDTO();
+
+    async Task OnExecute(Radzen.HtmlEditorExecuteEventArgs args)
+    {
+        if (args.CommandName == "AddCode")
+        {
+            await AddCode(args.Editor);
+        }
+    }
+
+    async Task AddCode(Radzen.Blazor.RadzenHtmlEditor editor)
+    {
+        await editor.ExecuteCommandAsync(Radzen.HtmlEditorCommands.InsertHtml, "<br></br>");
+        await editor.ExecuteCommandAsync(Radzen.HtmlEditorCommands.InsertHtml, $@"<div style=""background-color:beige;border-radius:5px;"" class=""m-3 pt-3 ps-3 codeContainer""><pre><code>&nbsp;</code></pre></div> <br/>");
+    }
+
+    void ToggleComment()
+    {
+        isAddComment = !isAddComment;
+    }
+
+    async Task AddNewComment()
+    {
+        return;
+    }
+
+}

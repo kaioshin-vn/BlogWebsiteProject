@@ -28,9 +28,9 @@ else
             scroll-behavior: auto !important;
         }
     </style>
-    if (PostDetail == null)
-    {
-        <div class="mt-3 ms-4" style="width:70%;">
+
+    <div>
+        <div class="mt-3 ms-4" style="width:70%; display: @(PostDetail == null?"block":"none");">
             @foreach (var item in listIntroPost)
             {
                 <PostIntro Avatar="@item.Avatar" Content="@item.Content"
@@ -42,18 +42,20 @@ else
                 </PostIntro>
             }
         </div>
-    }
-    else
-    {
-        <div class="mt-3 ms-4" style="width:70%;">
+    </div>
 
-            <PostDetail Avatar="@PostDetail.Avatar" Content="@PostDetail.Content"
-                        CreateDate="@PostDetail.CreateDate" IdPost="@PostDetail.Id"
-                        CommentCount="@PostDetail.CommentCount" Like="@PostDetail.Like"
-                        VideoFile="@PostDetail.VideoFile" ImgFile="@PostDetail.ImgFile"
-                        UserName="@PostDetail.UserName" TagNames="@PostDetail.ListTag"
-                        Title="@PostDetail.Title" GoBack="GoBack">
-            </PostDetail>
+    @if (PostDetail != null)
+    {
+        <div>
+            <div class="mt-3 ms-4" style="width:70%;">
+                <PostDetail Avatar="@PostDetail.Avatar" Content="@PostDetail.Content"
+                            CreateDate="@PostDetail.CreateDate" IdPost="@PostDetail.Id"
+                            CommentCount="@PostDetail.CommentCount" Like="@PostDetail.Like"
+                            VideoFile="@PostDetail.VideoFile" ImgFile="@PostDetail.ImgFile"
+                            UserName="@PostDetail.UserName" TagNames="@PostDetail.ListTag"
+                            Title="@PostDetail.Title" GoBack="GoBack">
+                </PostDetail>
+            </div>
         </div>
     }
 }
@@ -83,10 +85,18 @@ else
         }
     }
 
+    protected override async void OnAfterRender(bool firstRender)
+    {
+        if (!firstRender && ScrollPosition > 0 && PostDetail == null)
+        {
+            await JSRunTime.InvokeVoidAsync("restoreScrollPosition", ScrollPosition);
+        }
+    }
+
     async Task DetailPost(Guid idPost)
     {
         ScrollPosition = await JSRunTime.InvokeAsync<double>("saveScrollPosition");
-        
+
         PostDetail = listIntroPost.FirstOrDefault(a => a.Id == idPost);
         StateHasChanged();
         await JSRunTime.InvokeVoidAsync("restoreScrollPosition", 0);
@@ -94,8 +104,5 @@ else
     async Task GoBack()
     {
         PostDetail = null;
-        StateHasChanged();
-        await Task.Delay(50);
-        await JSRunTime.InvokeVoidAsync("restoreScrollPosition", ScrollPosition);
     }
 }

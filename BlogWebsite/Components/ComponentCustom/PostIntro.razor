@@ -178,19 +178,19 @@ else
 
         <MudGrid Class="mx-5 my-2">
             <MudItem xs="6" Class="p-0" sm="3">
-                <MudButton Variant="Variant.Text" Style="width:85%;padding:0px;" OnClick="LikeClick">
+                <MudButton Variant="Variant.Text" Style="width:75%;padding:0px;" OnClick="LikeClick">
                     <MudIconButton Style="padding:10px;" Disabled="@(!isUserLike)" OnClick="LikeClick" Icon="@Icons.Material.Filled.Favorite" Color="Color.Secondary" />
                     <MudText>Yêu thích</MudText>
                 </MudButton>
             </MudItem>
             <MudItem xs="6" Class="p-0" sm="3">
-                <MudButton Variant="Variant.Text" OnClick="() => DetailPost(IdPost)" Style="width:85%;padding:0px;">
+                <MudButton Variant="Variant.Text" OnClick="() => DetailPost(IdPost)" Style="width:75%;padding:0px;">
                     <MudIconButton Disabled Style="padding:10px;" Icon="@Icons.Material.Filled.ChatBubbleOutline" />
                     <MudText>Bình luận</MudText>
                 </MudButton>
             </MudItem>
             <MudItem xs="6" Class="p-0" sm="3">
-                <MudButton Variant="Variant.Text" Style="width:85%;padding:0px;" OnClick="CopyCurrentUrl">
+                <MudButton Variant="Variant.Text" Style="width:75%;padding:0px;" OnClick="CopyCurrentUrl">
                     <MudIconButton Disabled Style="padding:10px;" OnClick="CopyCurrentUrl" Icon="@Icons.Material.Filled.InsertLink" />
                     <MudText>Sao chép</MudText>
                 </MudButton>
@@ -308,6 +308,13 @@ else
         if (VideoFile != null)
         {
             SrcVideo = VideoFile.Split("|")[0];
+        }
+
+        var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+        var response = await httpClient.GetStringAsync($"/getLikePost/{IdPost}");
+        if (response != null)
+        {
+            Like = response;
         }
 
         LikeCount();

@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using System;
+using System.Linq;
 using System.Net.WebSockets;
 using System.Security.Claims;
 
@@ -22,7 +23,7 @@ namespace API.Controllers.PostController
         public PostController(ApplicationDbContext context, IWebHostEnvironment environment)
         {
             _context = context;
-            _environment = environment; 
+            _environment = environment;
         }
 
         [HttpGet("getPostPagination")]
@@ -93,13 +94,27 @@ namespace API.Controllers.PostController
             return Ok(post);
         }
 
+        [HttpGet("/getLikePost/{idPost}")]
+        public async Task<string> GetLikePostAsync(Guid idPost)
+        {
+            var post = _context.Posts.FirstOrDefault(a => a.Id == idPost);
+            if (post != null)
+            {
+                return post.Like;
+            }
+            else
+            {
+                return "";
+            }
+        }
+
         [HttpGet("/likePost/{idPost}/{idUser}/{likeState}")]
         public async Task<IActionResult> LikePost(Guid idPost, Guid idUser, bool likeState)
         {
             var existingPost = await _context.Posts.FirstOrDefaultAsync(p => p.Id == idPost);
             if (existingPost != null)
             {
-                List<string> listLike ;
+                List<string> listLike;
                 if (existingPost.Like == null || existingPost.Like == "")
                 {
                     listLike = new List<string>();
@@ -110,7 +125,14 @@ namespace API.Controllers.PostController
                 }
                 if (likeState)
                 {
-                    listLike.Add(idUser.ToString());
+                    if (listLike.Count == 0)
+                    {
+                        listLike.Add(idUser.ToString());
+                    }
+                    else if (listLike.Any(a => a != idUser.ToString()))
+                    {
+                        listLike.Add(idUser.ToString());
+                    }
                 }
                 else
                 {
