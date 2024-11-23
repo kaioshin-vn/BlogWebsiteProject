@@ -211,7 +211,7 @@ namespace API.Controllers
 					ImgGroup = g.group.ImgGroup,
 					ImgCover = g.group.ImgCover,
 					StateGroup = g.group.StateGroup,
-					Topics = g.group.Topics.Select(t => t.IdTopic).ToList(),
+					Topics = g.group.GroupTopics.Select(t => t.IdTopic).ToList(),
 
 					// Lấy UserId của người tạo nhóm
 					UserId = g.userGroups
