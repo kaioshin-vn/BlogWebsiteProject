@@ -10,6 +10,7 @@ namespace Data.DTO.EntitiDTO
     {
         public Guid Id { get; set; }
         public Guid IdUser { get; set; }
-        public string SaveName { get; set; }
+        public string? SaveName { get; set; }
+        public string? FirstImage { get; set; }
     }
 }

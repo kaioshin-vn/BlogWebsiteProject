@@ -14,7 +14,8 @@ namespace Data.Database.Table
         [Key]
         public Guid Id { get; set; }
         public Guid IdUser { get; set; }
-        public string SaveName { get; set; }
+        public string? SaveName { get; set; }
+        public string? FirstImage { get; set; }
         [ForeignKey("IdUser")]
         public ApplicationUser? User { get; set; }
         public ICollection<PostSave>? PostSaves { get; set; }

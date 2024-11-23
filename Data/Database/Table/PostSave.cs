@@ -11,6 +11,7 @@ namespace Data.Database.Table
     {
         public Guid IdSave { get; set; }
         public Guid IdPost { get; set; }
+        public DateTime? CreateDate { get; set; }
         [ForeignKey("IdSave")]
         public Save? Save { get; set; }
         [ForeignKey("IdPost")]
