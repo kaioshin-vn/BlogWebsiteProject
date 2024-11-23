@@ -6,7 +6,9 @@ using Data.DTO.EntitiDTO;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
 using System;
+using System.Linq;
 using System.Net.WebSockets;
 using System.Security.Claims;
 
@@ -21,7 +23,7 @@ namespace API.Controllers.PostController
         public PostController(ApplicationDbContext context, IWebHostEnvironment environment)
         {
             _context = context;
-            _environment = environment; 
+            _environment = environment;
         }
 
         [HttpGet("getPostPagination")]
@@ -52,9 +54,9 @@ namespace API.Controllers.PostController
         }
 
         [HttpGet("/GetListPostIntro/{idUser}")]
-        public async Task<List<PostIntroDTO>> GetListPostIntro (Guid idUser)
+        public async Task<List<PostIntroDTO>> GetListPostIntro(Guid idUser)
         {
-            var listPost = await _context.Posts.Where(a => a.IsDeleted == false ).ToListAsync();
+            var listPost = await _context.Posts.Where(a => a.IsDeleted == false).ToListAsync();
 
             var listIntroPost = new List<PostIntroDTO>();
             foreach (var item in listPost)
@@ -64,6 +66,10 @@ namespace API.Controllers.PostController
             }
             return listIntroPost;
         }
+
+
+
+
 
         [HttpPost("/createPost")]
         public async Task<IActionResult> CreatePostAsync([FromBody] PostDTO _post)
@@ -86,6 +92,62 @@ namespace API.Controllers.PostController
             _context.Posts.Add(post);
             await _context.SaveChangesAsync();
             return Ok(post);
+        }
+
+        [HttpGet("/getLikePost/{idPost}")]
+        public async Task<string> GetLikePostAsync(Guid idPost)
+        {
+            var post = _context.Posts.FirstOrDefault(a => a.Id == idPost);
+            if (post != null)
+            {
+                return post.Like;
+            }
+            else
+            {
+                return "";
+            }
+        }
+
+        [HttpGet("/likePost/{idPost}/{idUser}/{likeState}")]
+        public async Task<IActionResult> LikePost(Guid idPost, Guid idUser, bool likeState)
+        {
+            var existingPost = await _context.Posts.FirstOrDefaultAsync(p => p.Id == idPost);
+            if (existingPost != null)
+            {
+                List<string> listLike;
+                if (existingPost.Like == null || existingPost.Like == "")
+                {
+                    listLike = new List<string>();
+                }
+                else
+                {
+                    listLike = existingPost.Like.Split("|").ToList();
+                }
+                if (likeState)
+                {
+                    if (listLike.Count == 0)
+                    {
+                        listLike.Add(idUser.ToString());
+                    }
+                    else if (listLike.Any(a => a != idUser.ToString()))
+                    {
+                        listLike.Add(idUser.ToString());
+                    }
+                }
+                else
+                {
+                    listLike.Remove(idUser.ToString());
+                }
+                existingPost.Like = string.Join('|', listLike);
+
+                _context.Posts.Update(existingPost);
+                await _context.SaveChangesAsync();
+                return Ok(existingPost.Like);
+            }
+            else
+            {
+                return NotFound();
+            }
         }
 
         [HttpPut("updatePost/{idPost}")]
@@ -122,17 +184,47 @@ namespace API.Controllers.PostController
         }
         private async Task<PostIntroDTO> GetPostIntro(Post post)
         {
+            string Avatar;
+            string UserName;
+
             var introPost = post.GetIntroPost();
-            var user = await _context.Users.FirstOrDefaultAsync(a => a.Id == post.IdUser);
-            var commment =  _context.Responses.Where(a => a.IdPost == post.Id);
+            var groupPost = _context.GroupPosts.FirstOrDefault(a => a.IdPost == post.Id);
+
+            if (groupPost != null)
+            {
+                var group = await _context.Groups.FirstOrDefaultAsync(a => a.IdGroup == groupPost.IdGroup);
+                UserName = group.Name;
+                Avatar = group.ImgGroup;
+            }
+            else
+            {
+                var user = await _context.Users.FirstOrDefaultAsync(a => a.Id == post.IdUser);
+                UserName = user.FullName;
+                Avatar = user.Img;
+            }
+            var commment = _context.Responses.Where(a => a.IdPost == post.Id);
             var replyCount = 0;
-            var replyComment = _context.ReplyResponses.Where(a => commment.Any(b => b.Id == a.IdResponse) );
+            var replyComment = _context.ReplyResponses.Where(a => commment.Any(b => b.Id == a.IdResponse));
+
+            var tagNames = new List<string>();
+            var listTag = _context.PostTags
+                            .Where(a => a.IdPost == post.Id)
+                            .Select(a => a.IdTag)
+                            .ToList();
+            if (listTag != null && listTag.Count > 0)
+            {
+                tagNames = _context.Tags
+                                    .Where(tag => listTag.Contains(tag.Id))
+                                    .Select(tag => tag.TagName)
+                                    .ToList();
+            }
 
             var totalReply = commment.Count() + replyComment.Count();
 
             introPost.CommentCount = totalReply;
-            introPost.UserName = user.FullName;
-            introPost.Avatar = user.Img;
+            introPost.UserName = UserName;
+            introPost.Avatar = Avatar;
+            introPost.ListTag = tagNames;
             return introPost;
         }
 

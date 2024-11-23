@@ -1,4 +1,4 @@
-﻿@page "/createQuestion"
+﻿@page "/createPost"
 @using ASM_PH35423.StaticClass
 @using Client.Components.ComponentCustom
 @using Data.DTO.EntitiDTO
@@ -6,6 +6,7 @@
 @using Newtonsoft.Json.Linq
 @using Radzen
 @using Radzen.Blazor
+@using Blazorise.Video
 
 @inject IJSRuntime JSRunTime
 @inject IHttpClientFactory HttpClientFactory
@@ -21,7 +22,14 @@
     <LoadingLocal></LoadingLocal>
 }
 
-<link rel="stylesheet" href="./Css/video.css" />
+<style>
+    .rz-html-editor-content img {
+        display: block; /* Chuyển ảnh thành khối để dễ căn giữa */
+        margin: 0 auto; /* Căn giữa theo chiều ngang */
+        height: 300px; /* Chiều cao của ảnh */
+        border-radius: 8px; /* Bo góc */
+    }
+</style>
 
 <div class="p-5">
     <MudDivider />
@@ -82,7 +90,7 @@
                         @* <RadzenHtmlEditorSeparator /> *@
                         <RadzenHtmlEditorLink Title="Thêm link" CancelText="Hủy" LinkText="Hiển thị" OpenInNewWindowText="Mở trong cửa số mới" UrlText="Đường dẫn" />
                         <RadzenHtmlEditorUnlink Title="Bỏ đường dẫn" />
-                        <RadzenHtmlEditorImage Title="Thêm ảnh" UploadChooseText="Tải ảnh lên" AltText="Tên ảnh" CancelText="Hủy" SelectText="Chọn ảnh tải lên" UrlText="Nếu không có sẵn ảnh trên máy, hãy nhập đường dẫn ảnh trên web" HeightText="Chiều cao" WidthText="Chiều rộng" />
+                        <RadzenHtmlEditorImage Title="Thêm ảnh" ShowHeight="false" ShowWidth ="false" ShowAlt="false"  UploadChooseText="Tải ảnh lên" AltText="Tên ảnh" CancelText="Hủy" SelectText="Chọn ảnh tải lên" UrlText="Nếu không có sẵn ảnh trên máy, hãy nhập đường dẫn ảnh trên web" HeightText="Chiều cao" WidthText="Chiều rộng" />
                         <RadzenHtmlEditorSeparator />
                         <RadzenHtmlEditorFontName Title="Phông chữ" Placeholder="Phông chữ" />
                         <RadzenHtmlEditorFontSize Title="Kích thước" Placeholder="Cỡ chữ" />
@@ -114,8 +122,8 @@
                         <MudFab Class="mt-5" StartIcon="@Icons.Material.Filled.Delete" @onclick="(() => DeleteVideo(item.Id))" Color="Color.Error" Size="Size.Small" Style="border:none;background-color:none;" />
                         <div style="height:500px; border-radius:6px; background-color:aliceblue;overflow:hidden" class="d-flex mt-2 justify-content-center align-items-center">
                             <div class="video_player d-flex justify-content-center align-items-center ">
-                                <video class="main-video " style="height : 500px;" controls src="@item.Data">
-                                </video>
+                                <Video class="main-video " style="height : 500px;" AutomaticallyHideControls="true" SeekTime="5" controls Source="@item.Data">
+                                </Video>
                             </div>
                         </div>
 

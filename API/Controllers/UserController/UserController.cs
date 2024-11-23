@@ -69,33 +69,6 @@ namespace API.Controllers.UserController
             };
         }
 
-        [HttpPost("{id}/{idViewer}/{isFl}/toggle-follow")]
-        public async Task<IActionResult> ToggleFollowUser(Guid id /*th follow*/, Guid? idViewer/*th bấm follow*/, bool isFl)
-        {
-            if (idViewer == null)
-            {
-                return Unauthorized();
-            }
-            var fl = await _context.Flower.FirstOrDefaultAsync(c => c.IdUser == id && c.IdFlower == idViewer.Value);
-            if (fl != null)
-            {
-                fl.IsFollowing = !isFl;
-                _context.Update(fl);
-                await _context.SaveChangesAsync();
-            }
-            else
-            {
-                var fln = new Flower()
-                {
-                    IdFlower = idViewer.Value,
-                    IdUser = id,
-                    IsFollowing = true
-                };
-                await _context.Flower.AddAsync(fln);
-                await _context.SaveChangesAsync();
-            }
-            return Ok();
-        }
         [HttpPut("{id}")]
         public async Task UpdateUser(string id, [FromBody]UserDto userDto)
         {

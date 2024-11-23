@@ -66,7 +66,7 @@
                                     <MudIconButton Class="mx-1" Icon="@Icons.Material.Filled.Chat"></MudIconButton>
 
                                     <MudTooltip Class="mx-1" Text="Thêm mới bài viết">
-                                        <MudFab Class="mx-1" StartIcon="@Icons.Material.Filled.Add" Size="Size.Medium" Style="border:none;box-shadow:none;background-color:none;" Label="Tạo mới" />
+                                        <MudFab Class="mx-1" StartIcon="@Icons.Material.Filled.Add" @onclick="CreatePost" Size="Size.Medium" Style="border:none;box-shadow:none;background-color:none;" Label="Tạo mới" />
                                     </MudTooltip>
 
                                     <MudIconButton Style="overflow:visible;">
@@ -171,6 +171,20 @@
         if (audioPlayer) {
             audioPlayer.play();
         }
+    }
+</script>
+
+<script>
+    function saveScrollPosition() {
+        return window.scrollY; // Lấy vị trí cuộn dọc hiện tại
+    }
+
+    function restoreScrollPosition(position) {
+        window.scrollTo({
+            top: position,
+            left: 0,
+            behavior: 'auto' // Cuộn ngay lập tức
+        });
     }
 </script>
 
@@ -290,4 +304,8 @@
         false => Icons.Material.Outlined.DarkMode,
     };
 
+    void CreatePost ()
+    {
+        Navigation.NavigateTo("/createPost");
+    }
 }

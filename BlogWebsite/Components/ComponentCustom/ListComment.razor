@@ -1,0 +1,92 @@
+﻿
+@using ASM_PH35423.StaticClass
+@using Client.Components.ComponentCustom
+@using Data.DTO.EntitiDTO
+@using System.Net.Http.Headers
+@using Newtonsoft.Json
+@using Newtonsoft.Json.Linq
+@using Radzen
+@using Radzen.Blazor
+
+@inject IJSRuntime JSRuntime
+@inject IHttpClientFactory HttpClientFactory
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+@inject UserManager<ApplicationUser> UserManager
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject IWebHostEnvironment env
+
+@if (ListCommentPost == null)
+{
+    <LoadingLocal></LoadingLocal>
+}
+else
+{
+    for (int i = 0; i < 100; i++)
+    {
+        <p>Hello</p>
+    }
+}
+<script>
+    function onScrollToEnd(dotNetHelper) {
+        window.addEventListener('scroll', () => {
+            if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight) {
+                dotNetHelper.invokeMethodAsync('OnScrollToEnd');
+            }
+            else{
+                console.log('Vị trí' + (window.innerHeight + window.scrollY))
+                console.log('Chiều dài' + document.body.offsetHeight)
+            }
+        });
+    }
+</script>
+
+@code {
+
+    Guid IdPost { get; set; }
+
+    List<PostCommentDTO> ListCommentPost { get; set; } = new List<PostCommentDTO>(); 
+
+    private double ScrollPosition = 0;
+    
+    private DotNetObjectReference<ListComment>? dotNetRef;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        var _httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        var idUserCurrent = UserManager.GetUserId(user);
+        var idUser = Guid.Parse(idUserCurrent);
+
+        var result = await _httpClient.GetStringAsync($"/GetListPostIntro/{idUser}");
+
+        
+    }
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            dotNetRef = DotNetObjectReference.Create(this);
+            await JSRuntime.InvokeVoidAsync("onScrollToEnd", dotNetRef);
+        }
+    }
+
+    [JSInvokable]
+    public Task OnScrollToEnd()
+    {
+        // Hành động khi lướt đến cuối trang
+        Console.WriteLine("Đã đến cuối trang!");
+        return Task.CompletedTask;
+    }
+
+    public void Dispose()
+    {
+        dotNetRef?.Dispose();
+    }
+}

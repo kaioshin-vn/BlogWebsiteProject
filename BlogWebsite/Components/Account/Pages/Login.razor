@@ -24,7 +24,7 @@
                 }
                 <EditForm Model="Input" method="post" OnValidSubmit="LoginUser" FormName="login">
                     <DataAnnotationsValidator />
-                    <MudTextField @bind-Value="Input.Username" Label="Tên đăng nhập" Variant="Variant.Outlined" InputType="@InputType.Telephone" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Smartphone" name="Input.PhoneNumber" />
+                    <MudTextField @bind-Value="Input.Username" Label="Tên đăng nhập" Variant="Variant.Outlined" InputType="@InputType.Telephone" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Smartphone" name="Input.Username" />
                     <ValidationMessage For="() => Input.Username" style="text-align:left" class="alert alert-info my-2 " />
                     <MudTextField @bind-Value="Input.Password" Label="Mật khẩu" Variant="Variant.Outlined" InputType="@PasswordInput" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon" OnAdornmentClick="ShowPassword" AdornmentAriaLabel="Hiện mật khẩu" name="Input.Password" />
                     <ValidationMessage For="() => Input.Password" style="text-align:left" class="alert alert-info my-2 " />
@@ -61,7 +61,7 @@
     });
 
     // Lấy input element
-    const emailInput = document.querySelector('input[name="Input.PhoneNumber"]');
+    const emailInput = document.querySelector('input[name="Input.Username"]');
     const passwordlInput = document.querySelector('input[name="Input.Password"]');
     // Lấy thẻ div cha bao bọc bên ngoài
     const inputEmailWrapper = emailInput.closest('div.mud-input');

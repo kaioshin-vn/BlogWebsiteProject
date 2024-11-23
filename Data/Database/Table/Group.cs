@@ -22,6 +22,5 @@ namespace Data.Database.Table
         public KindGroup StateGroup { get; set; } // Trạng thái của nhóm 
 
         public ICollection<MemberGroup>? MemberGroups { get; set; }
-        public ICollection<Topic>? Topics { get; set; }
     }
 }

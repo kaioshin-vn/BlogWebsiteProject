@@ -23,22 +23,49 @@
 }
 else
 {
-    <div class="mt-3 ms-4" style="width:70%;">
-        @foreach (var item in listIntroPost)
-        {
-            <PostIntro Avatar="@item.Avatar" Content="@item.Content" 
-            CreateDate="@item.CreateDate" IdPost="@item.Id" 
-            CommentCount="@item.CommentCount" Like="@item.Like"
-            VideoFile="@item.VideoFile" ImgFile="@item.ImgFile" UserName="@item.UserName" Title="@item.Title">
-            </PostIntro>
+    <style>
+        html {
+            scroll-behavior: auto !important;
         }
+    </style>
+
+    <div>
+        <div class="mt-3 ms-4" style="width:70%; display: @(PostDetail == null?"block":"none");">
+            @foreach (var item in listIntroPost)
+            {
+                <PostIntro Avatar="@item.Avatar" Content="@item.Content"
+                           CreateDate="@item.CreateDate" IdPost="@item.Id"
+                           CommentCount="@item.CommentCount" Like="@item.Like"
+                           VideoFile="@item.VideoFile" ImgFile="@item.ImgFile"
+                           UserName="@item.UserName" TagNames="@item.ListTag"
+                           Title="@item.Title" WatchDetailPost="DetailPost">
+                </PostIntro>
+            }
+        </div>
     </div>
-    
+
+    @if (PostDetail != null)
+    {
+        <div>
+            <div class="mt-3 ms-4" style="width:70%;">
+                <PostDetail Avatar="@PostDetail.Avatar" Content="@PostDetail.Content"
+                            CreateDate="@PostDetail.CreateDate" IdPost="@PostDetail.Id"
+                            CommentCount="@PostDetail.CommentCount" Like="@PostDetail.Like"
+                            VideoFile="@PostDetail.VideoFile" ImgFile="@PostDetail.ImgFile"
+                            UserName="@PostDetail.UserName" TagNames="@PostDetail.ListTag"
+                            Title="@PostDetail.Title" GoBack="GoBack">
+                </PostDetail>
+            </div>
+        </div>
+    }
 }
 
 
 @code {
     List<PostIntroDTO> listIntroPost;
+
+    PostIntroDTO? PostDetail = null;
+    private double ScrollPosition = 0;
 
     protected override async Task OnInitializedAsync()
     {
@@ -56,5 +83,26 @@ else
         {
             listIntroPost = resultConverted;
         }
+    }
+
+    protected override async void OnAfterRender(bool firstRender)
+    {
+        if (!firstRender && ScrollPosition > 0 && PostDetail == null)
+        {
+            await JSRunTime.InvokeVoidAsync("restoreScrollPosition", ScrollPosition);
+        }
+    }
+
+    async Task DetailPost(Guid idPost)
+    {
+        ScrollPosition = await JSRunTime.InvokeAsync<double>("saveScrollPosition");
+
+        PostDetail = listIntroPost.FirstOrDefault(a => a.Id == idPost);
+        StateHasChanged();
+        await JSRunTime.InvokeVoidAsync("restoreScrollPosition", 0);
+    }
+    async Task GoBack()
+    {
+        PostDetail = null;
     }
 }

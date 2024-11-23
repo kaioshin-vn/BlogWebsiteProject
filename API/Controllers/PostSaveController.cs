@@ -1,5 +1,6 @@
 ﻿using BlogWebsite.Data;
 using Data.Database.Table;
+using Data.DTO.EntitiDTO;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -40,6 +41,20 @@ namespace API.Controllers
             return Ok(post);
         }
 
+        [HttpGet("getFirstImageSave/{saveId}")]
+        public async Task<ActionResult<List<PostDTO>>> GetFirstImageSave(Guid saveId)
+        {
+            var posts = await _context.PostSaves
+                .Where(ps => ps.IdSave == saveId)
+                .OrderBy(ps => ps.CreateDate)
+                .Select(ps => new PostDTO
+                {
+                    ImgFile = ps.Post.ImgFile,
+                }).ToListAsync();
+
+            return Ok(posts);
+        }
+
         [HttpPost("addPostSave/{idPost}/{idSave}")]
         public async Task<IActionResult> AddPostSave(Guid idPost, Guid idSave)
         {
@@ -51,7 +66,8 @@ namespace API.Controllers
             var postSave = new PostSave()
             {
                 IdPost = idPost,
-                IdSave = idSave
+                IdSave = idSave,
+                CreateDate = DateTime.Now
             };
             _context.PostSaves.Add(postSave);
             await _context.SaveChangesAsync();
@@ -70,6 +86,17 @@ namespace API.Controllers
             _context.PostSaves.Remove(getId);
             await _context.SaveChangesAsync();
             return Ok(getId);
+        }
+
+        [HttpDelete("deleteSaveColection/{idSave}")]
+        public async Task<IActionResult> DeletePost(Guid idSave)
+        {
+            var listDelete =  _context.PostSaves.Where(x => x.IdSave == idSave);
+            _context.PostSaves.RemoveRange(listDelete);
+            var postSaveColection = _context.Saves.FirstOrDefault(x => x.Id == idSave);
+            _context.Saves.Remove(postSaveColection); 
+            await _context.SaveChangesAsync();
+            return Ok();
         }
     }
 }
