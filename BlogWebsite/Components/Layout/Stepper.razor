@@ -80,7 +80,7 @@
 							<MudText Typo="Typo.caption">@CommunityName.Length/21</MudText>
 							@if (!string.IsNullOrEmpty(errorName))
 							{
-								<MudText Color="Color.Error">@errorName</MudText> <!-- Hiển thị thông báo lỗi -->
+								<MudText Color="Color.Error">@errorName</MudText>
 							}
 							<MudTextField @bind-Value="Description"
 										  Label="Mô tả *"
@@ -90,7 +90,7 @@
 							<MudText Typo="Typo.caption">@Description.Length/500</MudText>
 							@if (!string.IsNullOrEmpty(errorDes))
 							{
-								<MudText Color="Color.Error">@errorDes</MudText> <!-- Hiển thị thông báo lỗi -->
+								<MudText Color="Color.Error">@errorDes</MudText>
 							}
 						</MudItem>
 						<MudItem xs="4">
@@ -105,7 +105,7 @@
 										@CommunityName
 									}
 								</MudText>
-								<MudText Typo="Typo.caption">1 thành viên · 1 hoạt dộng</MudText>
+								<MudText Typo="Typo.caption">1 thành viên</MudText>
 								<MudText Typo="Typo.body2">
 									@if (string.IsNullOrEmpty(Description))
 									{
@@ -139,7 +139,7 @@
 													font-family: -webkit-body;">Ảnh nhóm</MudText>
 							</MudItem>
 							<MudItem xs="4" class="d-flex align-items-center justify-end" Style="padding:0 ">
-								<MudFileUpload @ref="fileUploadIcon" T="IBrowserFile" FilesChanged="UploadIconFile" AcceptedFileTypes="new string[] { 'image/jpeg', 'image/png', 'image/jpg', 'image/webp'}">
+								<MudFileUpload @ref="fileUploadIcon" T="IBrowserFile" FilesChanged="UploadIconFile" AcceptedFileTypes="new string[] { \" image /jpeg\", \"image /png\", \"image /jpg\", \"image /webp\" }">
 									<ActivatorContent>
 										<MudFab StartIcon="@Icons.Material.Filled.Image"
 												Label="@CapitalizeFirstLetter(iconButtonLabel)"
@@ -160,6 +160,10 @@
 								</MudItem>
 							</MudGrid>
 						}
+						else
+						{
+							<MudText Class="mt-2 ps-2" Typo="Typo.body2" Style="overflow:hidden;text-overflow: ellipsis; color: #dc3545">@errorMessageIcon</MudText>
+						}
 
 						<!-- Dòng cho Banner -->
 						<MudGrid Spacing="2" Style="transition: background-color 0.3s; margin-top: 6px;"
@@ -173,7 +177,7 @@
 											font-family: -webkit-body;">Ảnh bìa</MudText>
 							</MudItem>
 							<MudItem xs="4" class="d-flex align-items-center justify-end" Style=" padding: 0;">
-								<MudFileUpload @ref="fileUploadBanner" T="IBrowserFile" FilesChanged="UploadBannerFile">
+								<MudFileUpload @ref="fileUploadBanner" T="IBrowserFile" FilesChanged="UploadBannerFile" AcceptedFileTypes="new string[] { \" image /jpeg\", \"image /png\", \"image /jpg\", \"image /webp\" }">
 									<ActivatorContent>
 										<MudFab StartIcon="@Icons.Material.Filled.Image"
 												Label="@CapitalizeFirstLetter(bannerButtonLabel)"
@@ -194,6 +198,10 @@
 									<MudIconButton Icon="@Icons.Material.Filled.Delete" Style="margin-top: -7px;" OnClick="RemoveBanner" />
 								</MudItem>
 							</MudGrid>
+						}
+						else
+						{
+							<MudText Class="mt-2 ps-2" Typo="Typo.body2" Style="overflow:hidden;text-overflow: ellipsis; color: #dc3545">@errorMessageBanner</MudText>
 						}
 
 					</MudItem>
@@ -389,7 +397,7 @@
 
 				else
 				{
-					<MudIconButton OnClick="@Next" Icon="@Icons.Material.Filled.ArrowForward" Color="@(isValid ? Color.Primary : Color.Default)" Disabled="!isValid" />
+					<MudIconButton OnClick="@Next" Icon="@Icons.Material.Filled.ArrowForward" Color="Color.Primary"  />
 				}
 			}
 		</ActionContent>
@@ -417,15 +425,20 @@
 
 	private GroupDTO groupDto = new GroupDTO();
 	private string errorMessage = "";
+	private string errorMessageBanner = "";
+	private string errorMessageIcon = "";
 	private string errorName = "";
 	private string errorDes = "";
+	private bool isValid = false;
+	bool isStepValid;
+
+	// List<string> ListTopic
 
 
 	private KindGroup selectedCommunityType = KindGroup.Public;
 	private KindGroup? hoveredCommunityType = null; // Lưu trữ phần tử đang di chuột qua
 
 	private MudStepper stepper;
-	private bool isValid = false;
 
 	[CascadingParameter]
 	public MudDialogInstance MudDialog { get; set; }
@@ -499,7 +512,6 @@
 		Console.WriteLine($"Đã xóa đề tài: {topicId}");
 	}
 
-
 	private async Task CheckCommunityName()
 	{
 		groupDto.Name = CommunityName;
@@ -532,6 +544,7 @@
 			}
 			else
 			{
+				isValid = false;
 				errorName = "Lỗi khi kiểm tra tên nhóm. Vui lòng thử lại.";
 			}
 		}
@@ -539,6 +552,7 @@
 		if (string.IsNullOrEmpty(Description))
 		{
 			isValid = false;
+			errorDes = "Mô tả không được để trống";
 		}
 		else if (Description.Length > 500)
 		{
@@ -610,8 +624,18 @@
 
 	private async Task UploadIconFile(IBrowserFile file)
 	{
+		// Mảng các định dạng file hợp lệ
+		var validExtensions = new[] { ".jpeg", ".png", ".jpg", ".webp" };
+
 		if (file != null)
 		{
+			var fileExtension = Path.GetExtension(file.Name).ToLowerInvariant();
+			if (!validExtensions.Contains(fileExtension))
+			{
+				Console.WriteLine($"File {file.Name} bị từ chối vì không hợp lệ.");
+				errorMessageIcon = "File chỉ chứa đuôi jpeg, png, jpg, webp";
+				return;
+			}
 			IconFileName = file.Name;
 			using (var stream = file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024))
 			{
@@ -623,6 +647,7 @@
 					groupDto.ImgCover = iconUrl;
 					isIconUploaded = true;
 					iconButtonLabel = "Thay đổi";
+					errorMessageIcon = string.Empty;
 					StateHasChanged();
 				}
 			}
@@ -636,8 +661,17 @@
 
 	private async Task UploadBannerFile(IBrowserFile file)
 	{
+		var validExtensions = new[] { ".jpeg", ".png", ".jpg", ".webp" };
+
 		if (file != null)
 		{
+			var fileExtension = Path.GetExtension(file.Name).ToLowerInvariant();
+			if (!validExtensions.Contains(fileExtension))
+			{
+				Console.WriteLine($"File {file.Name} bị từ chối vì không hợp lệ.");
+				errorMessageBanner = "File chỉ chứa đuôi jpeg, png, jpg, webp";
+				return;
+			}
 			BannerFileName = file.Name;
 			using (var stream = file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024))
 			{
@@ -649,6 +683,7 @@
 					groupDto.ImgGroup = bannerUrl;
 					isBannerUploaded = true;
 					bannerButtonLabel = "Thay đổi";
+					errorMessageBanner = string.Empty;
 					StateHasChanged();
 				}
 			}
@@ -737,20 +772,36 @@
 
 	private async void Next()
 	{
-		// Kiểm tra tên cộng đồng
-		if (string.IsNullOrWhiteSpace(CommunityName) || CommunityName.Length > 21)
+		// // Kiểm tra tên cộng đồng
+		// if (string.IsNullOrWhiteSpace(CommunityName) || CommunityName.Length > 21)
+		// {
+		// 	Snackbar.Add("Tên cộng đồng không được bỏ trống và không quá 21 ký tự.", Severity.Warning);
+		// 	return;
+		// }
+
+		// // Kiểm tra mô tả
+		// if (string.IsNullOrWhiteSpace(Description) || Description.Length > 500)
+		// {
+		// 	Snackbar.Add("Mô tả không được bỏ trống và không quá 500 ký tự.", Severity.Warning);
+		// 	return;
+		// }
+
+		// await stepper.NextStepAsync();
+		if (stepper.ActiveIndex == 2)
 		{
-			Snackbar.Add("Tên cộng đồng không được bỏ trống và không quá 21 ký tự.", Severity.Warning);
-			return;
+			if (selectedTopics.Count < 1)
+			{
+				Snackbar.Add("Chọn tối thiểu 1 chủ đề.", Severity.Warning);
+				return;
+			}
+		}
+		await CheckCommunityName();
+		if (isValid)
+		{
+			await stepper.NextStepAsync();
+			Console.WriteLine($"bước :{stepper.ActiveIndex} ");
 		}
 
-		// Kiểm tra mô tả
-		if (string.IsNullOrWhiteSpace(Description) || Description.Length > 500)
-		{
-			Snackbar.Add("Mô tả không được bỏ trống và không quá 500 ký tự.", Severity.Warning);
-			return;
-		}
-		await stepper.NextStepAsync();
 	}
 
 }

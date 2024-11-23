@@ -2,7 +2,8 @@
 @inject NavigationManager NavigationManager
 @inject IDialogService DialogService
 @inject IHttpClientFactory HttpClientFactory
-
+@inject UserManager<ApplicationUser> UserManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
 @using Client.Components
 @using Data.Database.Table
 @using Client.Components.ComponentCustom
@@ -36,7 +37,23 @@
 		<MudText>Download Excel</MudText>
 	</MudNavLink>
 
-	<MudNavGroup Title="Cộng đồng" Icon="@Icons.Material.Filled.DataArray" Expanded="false" Class="rounded-3 overflow-hidden ms-3 ps-3" @onclick="ClickMe" Style="width:200px; padding-left: 0; ">
+	<MudNavGroup Title="Nhóm đã tham gia" Expanded="false" Class="rounded-3 overflow-hidden ps-3" @onclick="ClickMe2" Style="width:200px; padding-left: 0; ">
+		@if (userGroups != null && userGroups.Count > 0)
+		{
+			foreach (var userGroup in userGroups)
+			{
+				var href = $"/groups/{Uri.EscapeDataString(userGroup.Name)}";
+				var imgSrc = string.IsNullOrEmpty(userGroup.ImgCover) ? "/img/icon.jpg" : userGroup.ImgCover;
+
+				<MudNavLink Href="@href" Class="rounded-3 overflow-hidden d-flex align-items-center">
+					<img src="@imgSrc" alt="@userGroup.Name" style="width:30px; height:30px; border-radius:50%; margin-right: 8px;" />
+					@userGroup.Name
+				</MudNavLink>
+			}
+		}
+	</MudNavGroup>
+
+	<MudNavGroup Title="Cộng đồng" Expanded="false" Class="rounded-3 overflow-hidden ps-3" @onclick="ClickMe" Style="width:200px; padding-left: 0; ">
 		<MudNavLink Icon="@Icons.Material.Filled.Add" Class="rounded-3 overflow-hidden mt-2 mb-2" Style="padding-left: 0" @onclick="OpenStepperDialog">Tạo cộng đồng </MudNavLink>
 		@if (groups != null && groups.Count > 0)
 		{
@@ -64,7 +81,7 @@
 		<MudText>Theo dõi</MudText>
 	</MudNavLink>
 
-	<MudNavLink Match="NavLinkMatch.Prefix" Href="/question" Class="rounded-3 overflow-hidden m-3">
+	<MudNavLink Match="NavLinkMatch.Prefix" Href="/communities" Class="rounded-3 overflow-hidden m-3">
 		<MudIcon Icon="@Icons.Material.Filled.DataArray"></MudIcon>
 		<MudText>Cộng đồng</MudText>
 	</MudNavLink>
@@ -116,8 +133,9 @@
 
 @code {
 	List<Group>? groups;
+	List<Group>? userGroups;
 	bool loadGroup = false;
-	// bool isExpanded = false;
+	bool loadUserGroup = false;
 
 	private async Task OpenStepperDialog()
 	{
@@ -142,15 +160,42 @@
 		
 	}
 
+	private async Task ClickMe2()
+	{
+		if (!loadUserGroup)
+		{
+			await LoadUserGroupAsync();
+			loadUserGroup = true;
+			StateHasChanged();
+		}
+	}
+
 	private async Task LoadGroupAsync()
 	{
 		var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
 		var response = await httpClient.GetAsync("api/group/get-all-group");
-
 		if (response.IsSuccessStatusCode)
 		{
-			// Gán danh sách nhóm vào biến cấp lớp
 			groups = await response.Content.ReadFromJsonAsync<List<Group>>();
+		}
+		else
+		{
+			var errorContent = await response.Content.ReadAsStringAsync();
+			Console.WriteLine($"Có lỗi xảy ra: {errorContent}");
+		}
+	}
+
+	private async Task LoadUserGroupAsync()
+	{
+		var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+		var user = authState.User;
+		var userCurrent = UserManager.GetUserId(user);
+		var currentUserId = Guid.Parse(userCurrent);
+		var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+		var response = await httpClient.GetAsync($"api/group/get-all-group-user?userId={currentUserId}");
+		if (response.IsSuccessStatusCode)
+		{
+			userGroups = await response.Content.ReadFromJsonAsync<List<Group>>();
 		}
 		else
 		{

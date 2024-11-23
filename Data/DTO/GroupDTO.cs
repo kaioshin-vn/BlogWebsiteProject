@@ -23,5 +23,6 @@ namespace Data.DTO
 		public KindGroup StateGroup { get; set; } // Trạng thái của nhóm 
 		public Guid UserId { get; set; }
 		public List<Guid> Topics { get; set; } = new List<Guid>();
+		public int MemberCount { get; set; } // Đếm số thành viên
 	}
 }

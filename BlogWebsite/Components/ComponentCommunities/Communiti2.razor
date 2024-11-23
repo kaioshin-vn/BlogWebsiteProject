@@ -97,6 +97,7 @@ else
 											@onclick="NavigateToCreatePostPage" />
 								</MudTooltip>
 							}
+							
 						}
 
 						<!-- Icon thông báo (chỉ hiển thị khi đã tham gia) -->
@@ -234,12 +235,12 @@ else
 	private bool isJoined;  // Biến lưu trạng thái tham gia
 	private string buttonText = "Tham gia"; // Thay đổi nội dung của nút dựa trên trạng thái
 	List<PostIntroDTO> listIntroPost;
-	int memberCount;
+	int memberCount = 0;
 	bool IsAdmin { get; set; }
 	// List<Group> groups = new List<Group>();
 	protected override async Task OnInitializedAsync()
 	{
-		IsAdmin = await GetAdmin();
+		await GetAdmin();
 		var _httpClient = HttpClientFactory.CreateClient("MyHttpClient");
 
 		var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
@@ -270,72 +271,60 @@ else
 				var user = authState.User;
 				var userCurrent = UserManager.GetUserId(user);
 				var memberId = Guid.Parse(userCurrent);
-
-				isJoined = await DbContext.MemberGroups.AnyAsync(mg => mg.IdGroup == group.IdGroup && mg.IdMember == memberId);
+				await GetMember();
 				buttonText = isJoined ? "Đã tham gia" : "Tham gia";
-				memberCount = await GetMemberCount(Name);
-				IsAdmin = await GetAdmin();
+				await GetMemberCount();
+				await GetAdmin();
 				StateHasChanged();
 			}
 		}
 	}
-	private async Task<int> GetMemberCount(string groupName)
+
+
+	private async Task GetMemberCount()
 	{
-		var memberCount = await DbContext.MemberGroups
-			.Where(mg => mg.Group.Name == groupName)
-			.CountAsync();
-		return memberCount;
-	}
-
-
-
-	private async Task<bool> GetAdmin()
-	{
-		if (string.IsNullOrEmpty(Name))
+		var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+		var response = await httpClient.GetFromJsonAsync<int>($"api/group/member-count/{Name}");
+		if (response != 0)
 		{
-			// Xử lý nếu Name không hợp lệ
-			Console.WriteLine("Group name is empty.");
-			return false;
-		}
-
-		// Tìm nhóm trong bảng Groups dựa trên tên nhóm (Name)
-		var group = await DbContext.Groups.FirstOrDefaultAsync(g => g.Name == Name);
-
-		if (group == null)
-		{
-			// Xử lý khi không tìm thấy nhóm
-			Console.WriteLine("Group not found.");
-			return false;
-		}
-
-		var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-		var user = authState.User;
-		var userCurrent = UserManager.GetUserId(user);
-		var userId = Guid.Parse(userCurrent);  // Chuyển UserId thành Guid
-
-		// Lấy IdGroup từ bảng Groups
-		var idGroup = group.IdGroup;
-
-		// Kiểm tra xem người dùng có phải là admin của nhóm hay không
-		var getAdmin = await DbContext.MemberGroups
-			.Where(a => a.IdGroup == idGroup && a.IdMember == userId
-						&& (a.Position == Data.Enums.Position.Chief || a.Position == Data.Enums.Position.Deputy))
-			.FirstOrDefaultAsync();
-
-		if (getAdmin != null)
-		{
-			// Xử lý nếu tìm thấy Admin
-			Console.WriteLine("Admin found.");
+			memberCount = response;
+			Console.WriteLine($"Số lượng thành viên của nhóm {Name}: {response}");
 		}
 		else
 		{
-			// Xử lý nếu không tìm thấy Admin
-			Console.WriteLine("Admin not found.");
+			Console.WriteLine("Không có dữ liệu hoặc số lượng thành viên bằng 0.");
 		}
-
-		return getAdmin != null;
 	}
 
+	private async Task GetAdmin()
+	{
+		var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+		var user = authState.User;
+		var userCurrent = UserManager.GetUserId(user);
+		var currentUserId = Guid.Parse(userCurrent);
+		var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+		var response = await httpClient.GetAsync($"api/group/is-admin/{Name}?userId={currentUserId}");
+		if (response.IsSuccessStatusCode)
+		{
+			// Gán kết quả trả về vào biến isAdmin
+			IsAdmin = await response.Content.ReadFromJsonAsync<bool>();
+		}
+	}
+
+	private async Task GetMember()
+	{
+		var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+		var user = authState.User;
+		var userCurrent = UserManager.GetUserId(user);
+		var currentUserId = Guid.Parse(userCurrent);
+		var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+		var response = await httpClient.GetAsync($"api/group/is-member/{Name}?userId={currentUserId}");
+		if (response.IsSuccessStatusCode)
+		{
+			// Gán kết quả trả về vào biến isJoined
+			isJoined = await response.Content.ReadFromJsonAsync<bool>();
+		}
+	}
 
 	// Hàm xử lý sự kiện khi nhấn vào nút
 	private async Task ToggleJoinStatus(Guid groupId)
@@ -357,9 +346,9 @@ else
 
 		if (response.IsSuccessStatusCode)
 		{
-			isJoined = await DbContext.MemberGroups.AnyAsync(mg => mg.IdGroup == group.IdGroup && mg.IdMember == memberId && mg.Position == Data.Enums.Position.Member);
+			await GetMember();
 			buttonText = isJoined ? "Đã tham gia" : "Tham gia";
-			memberCount = await GetMemberCount(Name);
+			await GetMemberCount();
 			StateHasChanged();
 		}
 		else

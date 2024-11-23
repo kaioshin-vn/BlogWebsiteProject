@@ -18,22 +18,17 @@
 @if (user != null)
 {
 	<MudTextField @bind-Value="user.FullName" Label="Tên" Disabled="true" Variant="Variant.Text" Margin="Margin.Dense"></MudTextField>
-	if (isChief == true)
-	{
-		<MudSelect @bind-Value="user.Position" Label="Chức vụ" AdornmentIcon="@Icons.Material.Filled.Fastfood" AdornmentColor="Color.Primary">
-			<MudSelectItem Value="Data.Enums.Position.Chief" >Trưởng nhóm</MudSelectItem>
-			<MudSelectItem Value="Data.Enums.Position.Deputy">Phó nhóm</MudSelectItem>
-			<MudSelectItem Value="Data.Enums.Position.Member">Thành viên</MudSelectItem>
-		</MudSelect>
-	}else{
-		<MudSelect @bind-Value="user.Position" Label="Chức vụ" AdornmentIcon="@Icons.Material.Filled.Fastfood" AdornmentColor="Color.Primary">
-			<MudSelectItem Value="Data.Enums.Position.Chief" Disabled="true">Trưởng nhóm</MudSelectItem>
-			<MudSelectItem Value="Data.Enums.Position.Deputy">Phó nhóm</MudSelectItem>
-			<MudSelectItem Value="Data.Enums.Position.Member">Thành viên</MudSelectItem>
-		</MudSelect>
-	}
-	<MudButton OnClick="() => SubmitRequest()" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Send">
-		Gửi yêu cầu
+	<MudSelect @bind-Value="user.Position" Label="Chức vụ" AdornmentIcon="@Icons.Material.Filled.Fastfood" AdornmentColor="Color.Primary">
+		<MudSelectItem Value="Data.Enums.Position.Chief">Trưởng nhóm</MudSelectItem>
+		<MudSelectItem Value="Data.Enums.Position.Deputy">Phó nhóm</MudSelectItem>
+		<MudSelectItem Value="Data.Enums.Position.Member">Thành viên</MudSelectItem>
+	</MudSelect>
+	<MudButton Class="mt-3" OnClick="() => SubmitRequest()" Variant="Variant.Filled" Color="Color.Success">
+		Cập nhật
+	</MudButton>
+
+	<MudButton Class="mt-3 ms-4" OnClick="() => ComBack()" Variant="Variant.Filled" Color="Color.Error">
+		Quay lại
 	</MudButton>
 }
 else
@@ -46,11 +41,9 @@ else
 	[Parameter]
 	public Guid Id { get; set; }
 	private MemberDTO user = new MemberDTO();
-	bool isChief = false;
 
 	protected override async Task OnInitializedAsync()
 	{
-		await CheckUser();
 		if (Id != Guid.Empty)
 		{
 			user = await GetUserInfo(Id);
@@ -60,34 +53,35 @@ else
 	{
 		user = await GetUserInfo(Id);
 	}
+
 	private async Task<MemberDTO> GetUserInfo(Guid id)
 	{
-
-		var	member = await DbContext.MemberGroups
-				.Where(ag => ag.IdMember == id)
-				.Select(ag => new MemberDTO
-					{
-						FullName = ag.User.FullName,
-						Position = ag.Position
-					})
-				.FirstOrDefaultAsync();
-		return member;
-	}
-
-	private async Task CheckUser()
-	{
-		var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-		var userCurrent = await UserManager.GetUserAsync(authState.User);
-		if (userCurrent != null)
+		try
 		{
-			isChief = await DbContext.MemberGroups.AnyAsync(a => a.IdMember == userCurrent.Id && (a.Position == Data.Enums.Position.Chief));
+			var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+			var response = await httpClient.GetAsync($"api/group/get-member/{id}?groupName={Name}");
+			if (response.IsSuccessStatusCode)
+			{
+				var member = await response.Content.ReadFromJsonAsync<MemberDTO>();
+				return member;
+			}
+			else
+			{
+				Console.WriteLine("Không thể lấy thông tin thành viên");
+				return null;
+			}
 		}
-		Console.WriteLine(isChief);
+		catch (Exception ex)
+		{
+			Console.WriteLine($"Lỗi khi gọi API: {ex.Message}");
+			return null;
+		}
 	}
+
 	private async Task SubmitRequest()
 	{
 		var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-		var userCurrent = await UserManager.GetUserAsync(authState.User); // Cập nhật UserManager theo cách của bạn
+		var userCurrent = await UserManager.GetUserAsync(authState.User);
 		var currentUserId = userCurrent?.Id;
 		Console.WriteLine($"Id: {Id}");
 		Console.WriteLine(JsonConvert.SerializeObject(user));
@@ -107,7 +101,7 @@ else
 		var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
 
 		// Truyền thêm userId trong tham số truy vấn
-		var response = await httpClient.PutAsJsonAsync($"api/group/update-member/{memberId}?userId={currentUserId}", user);
+		var response = await httpClient.PutAsJsonAsync($"api/group/update-member/{memberId}?userId={currentUserId}&groupName={Name}", user);
 
 		if (response.IsSuccessStatusCode)
 		{
@@ -118,6 +112,11 @@ else
 		{
 			Console.WriteLine("Thất bại");
 		}
+	}
+
+	private void ComBack()
+	{
+		Navigation.NavigateTo($"/groups/{Name}/mod");
 	}
 
 
