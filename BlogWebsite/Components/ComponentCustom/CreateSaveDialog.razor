@@ -7,6 +7,7 @@
 @inject NavigationManager Navigation
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject UserManager<ApplicationUser> UserManager
+@inject ISnackbar Snackbar
 
 @if (savePost == null)
 {
@@ -53,6 +54,14 @@ else
 
     SaveDTO savePost = new SaveDTO();
 
+    List<SaveDTO> lstSave = new List<SaveDTO>();
+
+    protected async Task LoadCreateSave()
+    {
+        var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+        lstSave = await httpClient.GetFromJsonAsync<List<SaveDTO>>("/api/save/get_savepost");
+        StateHasChanged();
+    }
 
     private async Task Create()
     {
@@ -66,7 +75,12 @@ else
         var result = await httpClient.PostAsJsonAsync("/api/save/create_savepost", savePost);
         if (result.IsSuccessStatusCode)
         {
-            Navigation.NavigateTo(Navigation.Uri, true);
+            Snackbar.Add("Thêm bài viết vào bộ sưu tập thành công!", Severity.Success);
+            Navigation.NavigateTo("/savepost", true);
+        }
+        else
+        {
+            Snackbar.Add("Thêm bài viết vào bộ sưu tập không thành công!", Severity.Error);
         }
     }
 

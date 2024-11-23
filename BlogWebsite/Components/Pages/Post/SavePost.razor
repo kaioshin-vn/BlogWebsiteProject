@@ -29,7 +29,7 @@ else
             <MudItem>
                 <MudButton Class="w-100 justify-content-start">
                     <MudAvatar>
-                        <MudImage Src="Screenshot2.png" ObjectFit="ObjectFit.Cover" Class="rounded-2" />
+                        <MudImage Src="FixedImage/Screenshot2.png" Class="rounded-2" />
                     </MudAvatar>
                     <MudText Class="px-2" Typo="Typo.h6">Mục đã lưu</MudText>
                 </MudButton>
@@ -41,13 +41,13 @@ else
                 {
                     <MudListItem OnClick="() => GetPostInSave(item.Id)">
                         <AvatarContent>
-                           @*  @if (!string.IsNullOrWhiteSpace(item.SaveName))
-                            {
-                                <MudImage Src="" ObjectFit="ObjectFit.Cover" Height="40" Width="40" Class="rounded-2" />
-                            } *@
-                            <MudAvatar Color="Color.Primary" Class="rounded-2">
-                                @item.SaveName[0] <!-- Lấy chữ cái đầu tiên của tên bộ sưu tập -->
-                            </MudAvatar>
+                               @*  @if (!string.IsNullOrWhiteSpace(item.SaveName))
+                                    {
+                                    <MudImage Src="" ObjectFit="ObjectFit.Cover" Height="40" Width="40" Class="rounded-2" />
+                                } *@
+                                <MudAvatar Color="Color.Primary" Class="rounded-2">
+                                    @item.SaveName[0]
+                                </MudAvatar>
                         </AvatarContent>
                         <ChildContent>
                             @item.SaveName
@@ -91,7 +91,7 @@ else
                         <MudCard Style="border-radius:10px" Class="mt-2">
                             <MudGrid Class="p-3" Style="">
                                 <MudItem xs="2">
-                                    <MudImage Style="border-radius:10px;" ObjectFit="ObjectFit.Cover" Src="@($"https://localhost:7272/uploads/{item.ImgFile}")" Height="150" Width="150" />
+                                    <MudImage Style="border-radius:10px;" ObjectFit="ObjectFit.Cover" Src="@(string.IsNullOrEmpty(item.ImgFile) ? "0cdea890-2ed5-4b5e-9192-c7d5de3dc9cb.jpg" : item.ImgFile)" Height="150" Width="150" />
                                 </MudItem>
                                 <MudItem xs="10">
                                     <MudGrid Class="d-flex align-content-between flex-wrap flex-grow-1 gap-4 ">
@@ -117,7 +117,6 @@ else
    
 @code {
     List<SaveDTO> lstPostSave = new List<SaveDTO>();
-
     List<PostDTO> lstPost = new List<PostDTO>();
 
     private Guid idSave { get; set; }
@@ -131,8 +130,17 @@ else
     private async Task GetPostInSave(Guid id)
     {
         idSave = id;
-        var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
-        lstPost = await httpClient.GetFromJsonAsync<List<PostDTO>>($"/api/postsave/getPostInSave/{id}");
+        await LoadPostsInCurrentSave();
+    }
+
+    private async Task LoadPostsInCurrentSave()
+    {
+        if (idSave != Guid.Empty)
+        {
+            var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+            lstPost = await httpClient.GetFromJsonAsync<List<PostDTO>>($"/api/postsave/getPostInSave/{idSave}");
+            StateHasChanged();
+        }
     }
 
     private async Task OpenAddPostSaveDialog(Guid id)
@@ -153,10 +161,10 @@ else
         var userId = userCurrent.Id;
 
         var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
-        var result = await httpClient.DeleteAsync($"/api/save/deleteSave/{idSave}/{userId}");
+        var result = await httpClient.DeleteAsync($"/api/PostSave/deleteSaveColection/{idSave}");
         if (result.IsSuccessStatusCode)
         {
-            Navigation.NavigateTo(Navigation.Uri, true);
+            lstPostSave = await httpClient.GetFromJsonAsync<List<SaveDTO>>("/api/save/get_savepost");
             Snackbar.Add("Xoá bộ sưu tập thành công!", Severity.Success);
         }
         else
@@ -171,13 +179,26 @@ else
         var result = await httpClient.DeleteAsync($"/api/PostSave/deletePostInSave/{idSave}/{idPost}");
         if (result.IsSuccessStatusCode)
         {
-            Navigation.NavigateTo(Navigation.Uri, true);
-
             Snackbar.Add("Xoá bài viết trong bộ sưu tập thành công!", Severity.Success);
+            await LoadPostsInCurrentSave();
         }
         else
         {
-            Snackbar.Add("Xoá bài viết trong bộ sưu tập không thành công!", Severity.Error);
+            Snackbar.Add("Hãy chọn bộ sưu tập để xoá!", Severity.Warning);
+        }
+    }
+
+    private async Task<PostDTO> GetFirstPostInSave(Guid saveId)
+    {
+        try
+        {
+            var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+            var posts = await httpClient.GetFromJsonAsync<List<PostDTO>>($"/api/postsave/getFirstImageSave/{saveId}");
+            return posts?.FirstOrDefault();
+        }
+        catch
+        {
+            return null;
         }
     }
 

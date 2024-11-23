@@ -23,6 +23,20 @@ namespace API.Controllers
             return Ok(await _context.Saves.ToListAsync());
         }
 
+        [HttpGet("getFirstImageSave/{idSave}")]
+        public async Task<List<SaveDTO>> GetFirstImageSave(Guid idSave)
+        {
+            var firstImage = await _context.PostSaves.Where(x => x.IdSave == idSave)
+                .OrderBy(o => o.CreateDate)
+                .Select(s => new SaveDTO
+                {
+                    Id  = s.IdSave,
+                    SaveName = s.Save.SaveName,
+                    FirstImage = s.Post.ImgFile
+                }).ToListAsync();
+            return firstImage;
+        }
+
         [HttpPost("create_savepost")]
         public async Task<IActionResult> GetCategoryPost([FromBody] SaveDTO savePost)
         {
