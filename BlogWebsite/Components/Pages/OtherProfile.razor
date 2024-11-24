@@ -4,7 +4,7 @@
 @inject IJSRuntime JSRuntime
 @inject IHttpClientFactory ClientFactory
 @inject AuthenticationStateProvider AuthenticationStateProvider
-
+@inject NavigationManager Navigation
 <MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
     <MudCard>
         <MudCardMedia Image="/Img/univer.png" Height="300" />
@@ -95,6 +95,10 @@
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
         var currentUserId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (currentUserId.ToLower() == Id.ToLower())
+        {
+           Navigation.NavigateTo("/profile");
+        }
         await GetInfoViewer(currentUserId, Id);
     }
     private async Task GetInfoViewer(string id, string idViewer)

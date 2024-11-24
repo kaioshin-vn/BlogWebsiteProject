@@ -1,0 +1,150 @@
+﻿@page "/followers/{Page:int?}"
+@using System.Security.Claims
+@using static Client.Components.Pages.OtherProfile
+@inject ISnackbar Snackbar
+@inject IHttpClientFactory ClientFactory
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="mt-16">
+    <MudText Typo="Typo.h4" Class="mb-4">Danh sách người theo dõi</MudText>
+    <MudTextField T="string" @bind-Value="SearchTerm" Label="Tìm kiếm" Variant="Variant.Outlined"
+                  Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
+                  OnDebounceIntervalElapsed="@CallAPI" DebounceInterval="500" Class="mb-4" Clearable OnInternalInputChanged="@CallAPI" />
+    @if (!_loading)
+    {
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+    }
+    else if (_followers.Followers.Count == 0)
+    {
+        <MudAlert Severity="Severity.Info">Không có người theo dõi nào.</MudAlert>
+    }
+    else
+    {
+
+        <MudList T="string" Clickable="true">
+            @foreach (var follower in _followers.Followers)
+            {
+                <MudListItem>
+                    <div class="d-flex align-center">
+                        <MudAvatar Class="mr-4">
+                            <MudImage Src="@follower.Img" Alt="AVT!"></MudImage>
+                        </MudAvatar>
+                        <div>
+                            <MudText Typo="Typo.body1">@follower.FullName</MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">@follower.FullName</MudText>
+                        </div>
+                        <MudSpacer />
+                        @if (follower.IsFollowing)
+                        {
+                            <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" OnClick="@(() =>  ToggleFollowUser(follower.Id, follower.IsFollowing))">
+                                Bỏ theo dõi
+                            </MudButton>
+                        }
+                        else
+                        {
+                            <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" OnClick="@(() =>  ToggleFollowUser(follower.Id, follower.IsFollowing))">
+                                Theo dõi lại
+                            </MudButton>
+                        }
+
+                    </div>
+                </MudListItem>
+                <MudDivider />
+            }
+        </MudList>
+    }
+    <div class="d-flex justify-content-end">
+        <MudPagination Count="@_totalPages" SelectedChanged="PageChanged" />
+    </div>
+</MudContainer>
+@code {
+    [Parameter]
+    public int? Page { get; set; }
+    private FollowerDto _followers = new FollowerDto();
+    private bool _loading = false;
+    private int _totalPages;
+    private const int PageSize = 20;
+    private string SearchTerm { get; set; }
+    protected override async Task OnParametersSetAsync()
+    {
+        await CallAPI();
+        _loading = true;
+    }
+
+    private async Task CallAPI()
+    {
+        try
+        {
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+            string currentUserId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var client = ClientFactory.CreateClient("MyHttpClient");
+            var page = Page ?? 1;
+            var response = await client.GetAsync($"api/users/followers/{currentUserId}?searchTerm={SearchTerm}&page={page}&pageSize={PageSize}");
+            if (response.IsSuccessStatusCode)
+            {
+                _followers = await response.Content.ReadFromJsonAsync<FollowerDto>();
+            }
+            if (_followers.Followers == null)
+            {
+                _followers.Followers = new List<UserDto>();
+            }
+            _totalPages = (int)Math.Ceiling((double)_followers.TotalCount / PageSize);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("Có lỗi xảy ra khi tải danh sách người theo dõi.", Severity.Error);
+        }
+    }
+    private async Task ToggleFollowUser(Guid Id, bool isFollowing)
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        var client = ClientFactory.CreateClient("MyHttpClient");
+        var currentUserId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var response = await client.PostAsync($"api/users/{Id}/{currentUserId}/{isFollowing}/toggle-follow", null);
+        if (response.IsSuccessStatusCode)
+        {
+            if (!isFollowing)
+            {
+                Snackbar.Add("Theo dõi thành công.", Severity.Info);
+            }
+            else
+            {
+                Snackbar.Add("Bỏ theo dõi thành công.", Severity.Info);
+            }
+            var fl = _followers.Followers.First(c => c.Id == Id);
+            fl.IsFollowing = !isFollowing;
+        }
+        else if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
+        {
+            Snackbar.Add("Không thể thực hiện hành động này.", Severity.Warning);
+        }
+        else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            Snackbar.Add("Không tìm thấy người dùng.", Severity.Error);
+        }
+        else
+        {
+            Snackbar.Add("Có lỗi xảy ra. Vui lòng thử lại.", Severity.Error);
+        }
+    }
+
+    private async Task PageChanged(int page)
+    {
+        Page = page;
+        await CallAPI();
+    }
+    public class FollowerDto
+    {
+        public List<UserDto> Followers { get; set; }
+        public int TotalCount { get; set; }
+    }
+    public class UserDto
+    {
+        public string FullName { get; set; }
+        public string Img { get; set; }
+        public Guid Id { get; set; }
+        public bool IsFollowing { get; set; }
+    }
+}
