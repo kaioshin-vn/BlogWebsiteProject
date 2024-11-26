@@ -1,7 +1,7 @@
-﻿using API.DTO;
-using BlogWebsite.Data;
+﻿using BlogWebsite.Data;
 using Client.Components.Pages;
 using Data.Database.Table;
+using Data.DTO.EntitiDTO;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -25,14 +25,14 @@ namespace API.Controllers.UserController
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<UserDto>> GetUser(string id)
+        public async Task<ActionResult<UserProfileDto>> GetUser(string id)
         {
             var user = await _userManager.FindByIdAsync(id);
             if (user == null)
             {
                 return null;
             }
-            return new UserDto
+            return new UserProfileDto
             {
                 Id = id,
                 Descript = user.Descript,
@@ -46,7 +46,7 @@ namespace API.Controllers.UserController
             };
         }
         [HttpGet("{id}/{idViewer}")]
-        public async Task<ActionResult<UserDto>> GetUserViewr(Guid id, Guid idViewer)
+        public async Task<ActionResult<UserProfileDto>> GetUserViewr(Guid id, Guid idViewer)
         {
             var user = await _userManager.FindByIdAsync(idViewer.ToString());
             if (user == null)
@@ -54,7 +54,7 @@ namespace API.Controllers.UserController
                 return null;
             }
             var isFl = _context.Flower.FirstOrDefault(c => c.IdFlower == id && c.IdUser == idViewer);
-            return new UserDto
+            return new UserProfileDto
             {
                 Id = id.ToString(),
                 IdViewer = idViewer.ToString(),
@@ -71,7 +71,7 @@ namespace API.Controllers.UserController
         }
 
         [HttpPut("{id}")]
-        public async Task UpdateUser(string id, [FromBody] UserDto userDto)
+        public async Task UpdateUser(string id, [FromBody] UserProfileDto userDto)
         {
             var user = await _userManager.FindByIdAsync(id);
             if (user != null)

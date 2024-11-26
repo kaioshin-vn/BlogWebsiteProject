@@ -1,0 +1,122 @@
+﻿@page "/topics"
+@inject IHttpClientFactory _httpClientFactory;
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-16">
+    <MudText Typo="Typo.h3" GutterBottom="true">Quản lý chủ đề</MudText>
+
+    <MudGrid>
+        <MudItem xs="12" sm="6" md="4">
+            <MudTextField @bind-Value="_searchString" Placeholder="Tìm kiếm" Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"
+                          Immediate="true" DebounceInterval="500" OnDebounceIntervalElapsed="@(async () => await LoadTopics())" OnInternalInputChanged="@(async () => await LoadTopics())" />
+        </MudItem>
+        <MudItem xs="12" sm="6" md="4"> </MudItem>
+        <MudItem xs="12" sm="6" md="4" Class="d-flex justify-content-end">
+            <MudButton StartIcon="@Icons.Material.Filled.Add" Variant="Variant.Filled" Color="Color.Primary" OnClick="@(async () => await OpenAddDialog())">Thêm chủ đề mới</MudButton>
+        </MudItem>
+    </MudGrid>
+    <MudTable Items="@_topics" ServerData="@(new Func<TableState,CancellationToken, Task<TableData<TopicDto>>>(ServerReload))"
+              Dense="true" Hover="true" @ref="_table">
+        <HeaderContent>
+            <MudTh>ID</MudTh>
+            <MudTh>Tên chủ đề</MudTh>
+            <MudTh>Thao tác</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="ID">@context.IdTopic</MudTd>
+            <MudTd DataLabel="Tên chủ đề">@context.TopicName</MudTd>
+            <MudTd DataLabel="Thao tác">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => OpenEditDialog(context))">Sửa</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="@(() => OpenDeleteDialog(context))">Xóa</MudButton>
+            </MudTd>
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager />
+        </PagerContent>
+    </MudTable>
+</MudContainer>
+
+@code {
+    private string _searchString = "";
+    private MudTable<TopicDto> _table;
+    private List<TopicDto> _topics = new List<TopicDto>();
+
+    private async Task<TableData<TopicDto>> ServerReload(TableState state, CancellationToken cancellationToken)
+    {
+        var url = $"api/topic/get-topics?searchString={_searchString}&page={state.Page + 1}&pageSize={state.PageSize}";
+        var client = _httpClientFactory.CreateClient("MyHttpClient");
+        var response = await client.GetFromJsonAsync<TopicResponse>(url);
+        _topics = response.Topics;
+        return new TableData<TopicDto>() { TotalItems = response.TotalCount, Items = _topics };
+    }
+
+    private async Task LoadTopics()
+    {
+        await _table.ReloadServerData();
+    }
+
+    private async Task OpenAddDialog()
+    {
+        var dialog = DialogService.Show<AddEditTopicDialog>("Thêm chủ đề mới");
+        var result = await dialog.Result;
+        if (!result.Canceled)
+        {
+            await _table.ReloadServerData();
+        }
+    }
+
+    private async Task OpenEditDialog(TopicDto topic)
+    {
+        var parameters = new DialogParameters { ["Topic"] = topic };
+        var dialog = DialogService.Show<AddEditTopicDialog>("Sửa chủ đề", parameters);
+        var result = await dialog.Result;
+        if (!result.Canceled)
+        {
+            await _table.ReloadServerData();
+        }
+    }
+
+    private async Task OpenDeleteDialog(TopicDto topic)
+    {
+        var parameters = new DialogParameters
+        {
+            { "ContentText", $"Bạn có chắc chắn muốn xóa chủ đề '{topic.TopicName}'?" },
+            { "ButtonText", "Xóa" },
+            { "Color", Color.Error }
+        };
+
+        var dialog = DialogService.Show<ConfirmDialog>("Xóa chủ đề", parameters);
+        var result = await dialog.Result;
+        if (!result.Canceled)
+        {
+            var client = _httpClientFactory.CreateClient("MyHttpClient");
+            var response = await client.DeleteAsync($"api/topic/{topic.IdTopic}");
+            if (response.IsSuccessStatusCode)
+            {
+                await _table.ReloadServerData();
+                Snackbar.Add("Đã xóa chủ đề thành công", Severity.Success);
+            }
+            else
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                Snackbar.Add($"Không thể xóa chủ đề: {error}", Severity.Error);
+            }
+        }
+    }
+
+    public class TopicResponse
+    {
+        public List<TopicDto> Topics { get; set; }
+        public int TotalCount { get; set; }
+        public int Page { get; set; }
+        public int PageSize { get; set; }
+    }
+
+    public class TopicDto
+    {
+        public Guid IdTopic { get; set; }
+        public string TopicName { get; set; }
+    }
+}
