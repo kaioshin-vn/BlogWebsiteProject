@@ -36,6 +36,7 @@ namespace API.StaticClass
             var introPost = new PostIntroDTO() 
             {
                 Id = post.Id,  
+                IdUser = post.IdUser,
                 Title = post.Title,
                 ImgFile = post.ImgFile,
                 VideoFile = post.VideoFile,

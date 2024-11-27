@@ -150,29 +150,38 @@ namespace API.Controllers.PostController
             }
         }
 
-        [HttpPut("updatePost/{idPost}")]
-        public async Task<IActionResult> EditPost(Guid idPost, PostDTO post)
+        [HttpPut("/updatePost/{idPost}")]
+        public async Task<IActionResult> EditPost(Guid idPost, [FromBody] PostDTO post)
         {
 
-            var existingPost = await _context.Posts.FirstOrDefaultAsync(p => p.Id == idPost && p.IdUser == post.IdUser);
+            var existingPost = await _context.Posts.FirstOrDefaultAsync(p => p.Id == idPost);
             if (existingPost == null)
             {
                 return NotFound(); // không tìm thầy bài viết
             }
             existingPost.Title = post.Title;
             existingPost.Content = post.Content;
+            if (post.VideoFile != null && post.VideoFile != null)
+            {
+                existingPost.VideoFile = post.VideoFile;
+            }
             existingPost.EditDate = DateTime.Now;
-            existingPost.ImgFile = post.ImgFile;
+            if (post.ImgFile != null && post.ImgFile != null)
+            {
+                existingPost.ImgFile = post.ImgFile;
+            }
 
             _context.Posts.Update(existingPost);
             await _context.SaveChangesAsync();
             return Ok(existingPost);
         }
 
-        [HttpPut("deletePost/{idPost}")]
-        public async Task<IActionResult> DeletePost(Guid idPost, PostDTO post)
+
+
+        [HttpPost("/deletePost/{idPost}")]
+        public async Task<IActionResult> DeletePost(Guid idPost, [FromBody] Guid IdUser)
         {
-            var deletePost = _context.Posts.FirstOrDefault(p => p.Id == idPost && p.IdUser == post.IdUser);
+            var deletePost = _context.Posts.FirstOrDefault(p => p.Id == idPost && p.IdUser == IdUser);
             if (deletePost == null)
             {
                 return NotFound();
@@ -226,6 +235,18 @@ namespace API.Controllers.PostController
             introPost.Avatar = Avatar;
             introPost.ListTag = tagNames;
             return introPost;
+        }
+
+        [HttpGet("/post/getPost/{idPost}")]
+        public async Task<PostIntroDTO> GetPost(Guid idPost)
+        {
+            var post = await _context.Posts.FirstOrDefaultAsync(a => a.Id == idPost);
+            if (post == null)
+            {
+                NotFound();
+            }
+            var postIntro = await GetPostIntro(post);
+            return postIntro;
         }
 
     }

@@ -1,0 +1,143 @@
+﻿@using ASM_PH35423.StaticClass
+@using Client.Components.ComponentCustom
+@using Data.DTO.EntitiDTO
+@using System.Net.Http.Headers
+@using Newtonsoft.Json
+@using Newtonsoft.Json.Linq
+@using Radzen
+@using Radzen.Blazor
+
+@inject IJSRuntime JSRuntime
+@inject IHttpClientFactory HttpClientFactory
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+@inject UserManager<ApplicationUser> UserManager
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject IWebHostEnvironment env
+
+@if (!isLoaded)
+{
+    <LoadingLocal></LoadingLocal>
+}
+else
+{
+    if (ListReplyCmt.Count == 0 && ListNewReply.Count == 0)
+    {
+        <p>Hiện chưa có bình luận nào</p>
+    }
+    else
+    {
+        if (ListNewReply.Count > 0)
+        {
+            @foreach (var item in ListNewReply)
+            {
+                <ReplyDetail Avatar="@item.Avatar" Content="@item.Content" IdReply="@item.Id" AddNewReply="UserAddNewComment"
+                             CreateDate="@item.CreateDate" IdPost="@item.Id" IdCmt="@this.IdCmt"
+                             Like="@item.Like" IdUserComment="@item.IdUser" IdMention="@item.Mention"
+                             UserName="@item.UserName" UserMentionName="@item.UserNameMention">
+                </ReplyDetail>
+            }
+        }
+        @foreach (var item in ListReplyCmt)
+        {
+            <ReplyDetail Avatar="@item.Avatar" Content="@item.Content" IdReply="@item.Id" AddNewReply="UserAddNewComment"
+                         CreateDate="@item.CreateDate" IdPost="@item.Id" IdCmt="@this.IdCmt"
+                         Like="@item.Like" IdUserComment="@item.IdUser" IdMention="@item.Mention"
+                         UserName="@item.UserName" UserMentionName="@item.UserNameMention">
+            </ReplyDetail>
+        }
+        if (isHasMoreReply)
+        {
+            <div class="d-flex my-1">
+                <div class="px-3 py-2 hover-backgroundblue d-flex align-items-end" style="color:deepskyblue;border-radius:14px;" @onclick="GetMoreReply">
+                    <MudIcon Icon="@Icons.Material.Filled.ArrowCircleDown" Class="p-0" Disabled="true" />
+                    <span>
+                        <b>Hiển thị thêm</b>
+                    </span>
+                </div>
+            </div>
+        }
+        if (loadMoreCmt)
+        {
+            <LoadingLocal></LoadingLocal>
+        }
+    }
+}
+
+@code {
+    [Parameter]
+    public Guid IdCmt { get; set; }
+
+    List<ReplyDTO> ListReplyCmt { get; set; } = new List<ReplyDTO>();
+    List<ReplyDTO> ListNewReply { get; set; } = new List<ReplyDTO>();
+
+    private double ScrollPosition = 0;
+
+    bool loadMoreCmt;
+
+    bool isHasMoreReply;
+
+    bool isLoaded;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var _httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+
+        var result = await _httpClient.PostAsJsonAsync($"/commment/getAllReplyComments/{IdCmt}", new List<Guid>());
+        if (result.IsSuccessStatusCode)
+        {
+            var data = await result.Content.ReadAsStringAsync();
+            ListReplyCmt = JsonConvert.DeserializeObject<List<ReplyDTO>>(data);
+            if (ListReplyCmt.Count == 20)
+            {
+                isHasMoreReply = true;
+            }
+            isLoaded = true;
+        }
+    }
+
+
+    public async Task GetMoreReply()
+    {
+        Console.WriteLine("Hello");
+        loadMoreCmt = true;
+        var _httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+
+        var listIdUserCmt = ListNewReply.Select(a => a.Id).ToList();
+        var listIdCmt = ListReplyCmt.Select(a => a.Id).ToList();
+        listIdCmt.AddRange(listIdUserCmt);
+        var result = await _httpClient.PostAsJsonAsync($"/commment/getAllComments/{IdCmt}", listIdCmt);
+        if (result.IsSuccessStatusCode)
+        {
+            var data = await result.Content.ReadAsStringAsync();
+            var ListCommentGetMore = JsonConvert.DeserializeObject<List<ReplyDTO>>(data);
+            if (ListCommentGetMore == null || ListCommentGetMore.Count == 0 || ListCommentGetMore.Count % 20 != 0)
+            {
+                isHasMoreReply = false;
+            }
+            else
+            {
+                isHasMoreReply = true;
+            }
+            if (ListCommentGetMore != null && ListCommentGetMore.Count != 0)
+            {
+
+                ListReplyCmt.AddRange(ListCommentGetMore);
+                StateHasChanged();
+            }
+            loadMoreCmt = false;
+        }
+    }
+    async Task UserAddNewComment(Guid idReply)
+    {
+        var _httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+        var result = await _httpClient.GetStringAsync($"/commment/getReplyCommentDetail/{idReply}");
+        var commentDTO = JsonConvert.DeserializeObject<ReplyDTO>(result);
+        if (commentDTO != null)
+        {
+            ListNewReply.Add(commentDTO);
+        }
+        StateHasChanged();
+    }
+}

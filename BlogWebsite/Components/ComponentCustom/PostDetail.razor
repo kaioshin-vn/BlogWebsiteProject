@@ -11,7 +11,7 @@
 @inject NavigationManager Navigation
 @inject UserManager<ApplicationUser> UserManager
 @inject ISnackbar Snackbar
-
+@inject IDialogService DialogService
 <style>
     html {
         scroll-behavior: auto !important;
@@ -72,6 +72,10 @@
         cursor: pointer;
     }
 
+    .codeContainer {
+        display: block !important;
+    }
+
     .hover-border {
         border: 2px solid lightgrey;
         transition: border 0.3s ease-in-out;
@@ -105,7 +109,14 @@ else
             </CardHeaderContent>
 
             <CardHeaderActions>
-                <MudIconButton Icon="@Icons.Material.Filled.MoreHoriz" Color="Color.Default" />
+                <MudMenu Icon="@Icons.Material.Filled.MoreHoriz" ActivationEvent="@MouseEvent.MouseOver" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter" Color="Color.Default" AriaLabel="Open user menu">
+                    @if (IdUser == IdUserPost)
+                    {
+                        <a href="/updatePost/@IdPost"><MudMenuItem>Chỉnh sửa</MudMenuItem></a>
+                        <MudMenuItem OnClick="DeletePost">Xóa bài viết</MudMenuItem>
+                    }
+                    <MudMenuItem>Báo cáo</MudMenuItem>
+                </MudMenu>
             </CardHeaderActions>
         </MudCardHeader>
 
@@ -135,15 +146,33 @@ else
             </MudCardContent>
         }
 
-        @if (VideoFile != null)
+        @if (ListVideo.Count != 0)
         {
-            <div style="height:420px; background-color:black;overflow:hidden" class="d-flex mt-2 justify-content-center align-items-center">
-
-                <Radzen.Blazor.RadzenHtml>
-                    <Blazorise.Video.Video Source="SrcVideo" AutomaticallyHideControls="true" SeekTime="5" style="height : 350px;">
-                    </Blazorise.Video.Video>
-                </Radzen.Blazor.RadzenHtml>
-            </div>
+            if (ListVideo.Count == 1)
+            {
+                <div style="height:400px; background-color:black;overflow:hidden" class="d-flex mt-2 justify-content-center rounded-3 align-items-center">
+                    <Radzen.Blazor.RadzenHtml>
+                        <Blazorise.Video.Video Source="ListVideo[0]" AutomaticallyHideControls="true" SeekTime="5" style="height : 350px;">
+                        </Blazorise.Video.Video>
+                    </Radzen.Blazor.RadzenHtml>
+                </div>
+            }
+            else
+            {
+                <div style="height:400px; background-color:black;overflow:hidden" class="d-flex mt-2 justify-content-center rounded-3 align-items-center">
+                    <MudCarousel Class="mud-width-full" TData="object" AutoCycle="false" ShowBullets="false" BulletsColor="Color.Tertiary" Style="height:100%;">
+                        @foreach (var item in ListVideo)
+                        {
+                            <MudCarouselItem>
+                                <Radzen.Blazor.RadzenHtml>
+                                    <Blazorise.Video.Video Source="item" AutomaticallyHideControls="true" SeekTime="5" style="height : 400px;">
+                                    </Blazorise.Video.Video>
+                                </Radzen.Blazor.RadzenHtml>
+                            </MudCarouselItem>
+                        }
+                    </MudCarousel>
+                </div>
+            }
         }
 
 
@@ -157,17 +186,9 @@ else
 
         <AddComment IdPost="IdPost" UserAddComment="UserAddNewComment"></AddComment>
 
-        @if (ListCommentUserNew.Count > 0)
-        {
-            foreach (var item in ListCommentUserNew)
-            {
-                <div>
-                    Hello
-                </div>
-            }   
-        }
-
-        <ListComment></ListComment>
+        <div style="margin-top:24px;">
+            <ListComment IdPost="IdPost" @ref="ListCommentComponent"></ListComment>
+        </div>
 
     </div>
 
@@ -189,6 +210,8 @@ else
     [Parameter]
     public Guid IdPost { get; set; }
     [Parameter]
+    public Guid IdUserPost { get; set; }
+    [Parameter]
     public string UserName { get; set; }
     [Parameter]
     public string Avatar { get; set; }
@@ -198,8 +221,6 @@ else
     public string? Content { get; set; }
     [Parameter]
     public string? VideoFile { get; set; }
-    [Parameter]
-    public string? ImgFile { get; set; }
     [Parameter]
     public string Like { get; set; }
     [Parameter]
@@ -213,6 +234,9 @@ else
     [Parameter]
     public EventCallback GoBack { get; set; }
 
+    ListComment ListCommentComponent { get; set; }
+
+    List<string> ListVideo { get; set; } = new List<string>();
 
     bool isUserLike;
 
@@ -224,8 +248,6 @@ else
     string Date { get; set; }
     private MarkupString ContentHtml { get; set; }
     private Guid IdUser { get; set; }
-
-    List<PostCommentDTO> ListCommentUserNew = new List<PostCommentDTO>();
 
     protected override async Task OnInitializedAsync()
     {
@@ -284,6 +306,10 @@ else
         if (response != null)
         {
             Like = response;
+        }
+        if (VideoFile != null && VideoFile != "")
+        {
+            ListVideo = VideoFile.Split('|').ToList();
         }
 
         LikeCount();
@@ -360,8 +386,32 @@ else
 
     async Task UserAddNewComment(PostCommentDTO commentDTO)
     {
-        ListCommentUserNew.Add(commentDTO);
-        StateHasChanged();
+        ListCommentComponent.AddNewComment(commentDTO);
+    }
+
+    async Task DeletePost()
+    {
+        var parameters = new DialogParameters<Dialog>();
+        parameters.Add(x => x.ContentText, "Xác nhận bạn muốn xóa bài viết này, sẽ xóa vĩnh viễn và không thể khôi phục?");
+        parameters.Add(x => x.ButtonText, "Xóa");
+        parameters.Add(x => x.Color, Color.Error);
+
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+        var result = await DialogService.Show<Dialog>("Xác nhận", parameters, options).Result;
+        if (result.Data != null)
+        {
+            if ((bool)result.Data)
+            {
+                var _httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+                var response = await _httpClient.PostAsJsonAsync($"/deletePost/{IdPost}", IdUser);
+                if (response.IsSuccessStatusCode)
+                {
+                    Snackbar.Add("Cập nhật bài viết thành công", Severity.Info);
+                    Navigation.NavigateTo("");
+                }
+            } 
+        }
     }
 }
 

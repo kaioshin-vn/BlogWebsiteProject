@@ -54,7 +54,7 @@
 else
 {
     <div style="width:100%;" class="my-3" @onclick="ToggleComment">
-        <input style="border-radius:10px; border:1px solid rgb(206, 206, 206); width:95%" class="py-4 ps-4 ms-3" placeholder="Bình luận" />
+        <input style="border-radius:10px; border:1px solid rgb(206, 206, 206); width:95%" class="py-2 ps-3 ms-3 mt-3" placeholder="Bình luận" />
     </div>
 }
 
@@ -64,7 +64,10 @@ else
     [Parameter]
     public EventCallback<PostCommentDTO> UserAddComment { get; set; }
 
-    PostCommentDTO Comment { get; set; } = new PostCommentDTO();
+    PostCommentDTO Comment { get; set; } = new PostCommentDTO()
+    {
+        Content = ""
+    };
     bool isAddComment { get; set; }
 
     async Task OnExecute(Radzen.HtmlEditorExecuteEventArgs args)
@@ -112,6 +115,7 @@ else
         {
             if (UserAddComment.HasDelegate)
             {
+                Comment.Content = "";
                 await UserAddComment.InvokeAsync(Comment);
             }
             ToggleComment();

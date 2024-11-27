@@ -1,5 +1,4 @@
-﻿
-@using ASM_PH35423.StaticClass
+﻿@using ASM_PH35423.StaticClass
 @using Client.Components.ComponentCustom
 @using Data.DTO.EntitiDTO
 @using System.Net.Http.Headers
@@ -17,54 +16,80 @@
 @inject ISnackbar Snackbar
 @inject IWebHostEnvironment env
 
-@if (ListCommentPost == null)
+@if (!isLoaded)
 {
     <LoadingLocal></LoadingLocal>
 }
 else
 {
-    for (int i = 0; i < 100; i++)
+    if (ListCommentPost.Count == 0 && ListNewComment.Count == 0)
     {
-        <p>Hello</p>
+        <p>Hiện chưa có bình luận nào</p>
+    }
+    else
+    {
+        if (ListNewComment.Count > 0)
+        {
+            @foreach (var item in ListNewComment)
+            {
+                <CommentDetail Avatar="@item.Avatar" Content="@item.Content"
+                               CreateDate="@item.CreateDate" IdPost="@item.Id" 
+                               ReplyCount="@item.ReplyCount" Like="@item.Like" IdUserComment="@item.IdUser"
+                               UserName="@item.UserName">
+                </CommentDetail>
+            }
+        }
+        @foreach (var item in ListCommentPost)
+        {
+            <CommentDetail Avatar="@item.Avatar" Content="@item.Content"
+                           CreateDate="@item.CreateDate" IdPost="@item.Id" IdCmt="@item.Id"
+                           ReplyCount="@item.ReplyCount" Like="@item.Like" IdUserComment="@item.IdUser"
+                           UserName="@item.UserName">
+            </CommentDetail>
+        }
+        if (loadMoreCmt)
+        {
+            <LoadingLocal></LoadingLocal>
+        }
     }
 }
 <script>
     function onScrollToEnd(dotNetHelper) {
         window.addEventListener('scroll', () => {
-            if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight) {
+            if (Math.ceil((window.innerHeight + window.scrollY)) >= document.body.offsetHeight) {
                 dotNetHelper.invokeMethodAsync('OnScrollToEnd');
-            }
-            else{
-                console.log('Vị trí' + (window.innerHeight + window.scrollY))
-                console.log('Chiều dài' + document.body.offsetHeight)
             }
         });
     }
 </script>
 
 @code {
+    [Parameter]
+    public Guid IdPost { get; set; }
 
-    Guid IdPost { get; set; }
-
-    List<PostCommentDTO> ListCommentPost { get; set; } = new List<PostCommentDTO>(); 
+    List<CommentDTO> ListCommentPost { get; set; } = new List<CommentDTO>();
+    List<CommentDTO> ListNewComment { get; set; } = new List<CommentDTO>();
 
     private double ScrollPosition = 0;
-    
+
+    int CommentCount = 20;
+
     private DotNetObjectReference<ListComment>? dotNetRef;
 
+    bool loadMoreCmt;
+
+    bool isLoaded;
 
     protected override async Task OnInitializedAsync()
     {
         var _httpClient = HttpClientFactory.CreateClient("MyHttpClient");
-
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        var user = authState.User;
-        var idUserCurrent = UserManager.GetUserId(user);
-        var idUser = Guid.Parse(idUserCurrent);
-
-        var result = await _httpClient.GetStringAsync($"/GetListPostIntro/{idUser}");
-
-        
+        var result = await _httpClient.PostAsJsonAsync($"/commment/getAllComments/{IdPost}", new List<Guid>());
+        if (result.IsSuccessStatusCode)
+        {
+            var data = await result.Content.ReadAsStringAsync();
+            ListCommentPost = JsonConvert.DeserializeObject<List<CommentDTO>>(data);
+            isLoaded = true;
+        }
     }
 
 
@@ -78,15 +103,50 @@ else
     }
 
     [JSInvokable]
-    public Task OnScrollToEnd()
+    public async Task OnScrollToEnd()
     {
-        // Hành động khi lướt đến cuối trang
-        Console.WriteLine("Đã đến cuối trang!");
-        return Task.CompletedTask;
+        if (ListCommentPost.Count < CommentCount || ListCommentPost.Count % 20 != 0)
+        {
+            return;
+        }
+        else
+        {
+            Console.WriteLine("Hello");
+            loadMoreCmt = true;
+            var _httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+
+            var listIdUserCmt = ListNewComment.Select(a => a.Id).ToList();
+            var listIdCmt = ListCommentPost.Select(a => a.Id).ToList();
+            listIdCmt.AddRange(listIdUserCmt);
+            var result = await _httpClient.PostAsJsonAsync($"/commment/getAllComments/{IdPost}", listIdCmt);
+            if (result.IsSuccessStatusCode)
+            {
+                var data = await result.Content.ReadAsStringAsync();
+                var ListCommentGetMore = JsonConvert.DeserializeObject<List<CommentDTO>>(data);
+                if (ListCommentGetMore != null && ListCommentGetMore.Count != 0)
+                {
+                    ListCommentPost.AddRange(ListCommentGetMore);
+                    CommentCount += ListCommentGetMore.Count;
+                    loadMoreCmt = false;
+                    StateHasChanged();
+                }
+            }
+        }
     }
 
     public void Dispose()
     {
         dotNetRef?.Dispose();
+    }
+    public async Task AddNewComment(PostCommentDTO newCmt)
+    {
+        var _httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+        var result = await _httpClient.GetStringAsync($"/commment/getCommentDetail/{newCmt.Id}");
+        var commentDTO = JsonConvert.DeserializeObject<CommentDTO>(result);
+        if (commentDTO != null)
+        {
+            ListNewComment.Add(commentDTO);
+        }
+        StateHasChanged();
     }
 }

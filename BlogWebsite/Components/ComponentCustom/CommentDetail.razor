@@ -1,0 +1,358 @@
+﻿@using ASM_PH35423.StaticClass
+@using Client.Components.ComponentCustom
+@using Data.DTO.EntitiDTO
+@using System.Net.Http.Headers
+@using Newtonsoft.Json
+@using Newtonsoft.Json.Linq
+@using System.Globalization;
+
+@inject IJSRuntime JSRunTime
+@inject IHttpClientFactory HttpClientFactory
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+@inject UserManager<ApplicationUser> UserManager
+@inject ISnackbar Snackbar
+
+<style>
+    html {
+        scroll-behavior: auto !important;
+    }
+
+    .content_by_user img {
+        display: block; /* Chuyển ảnh thành khối để dễ căn giữa */
+        margin: 0 auto; /* Căn giữa theo chiều ngang */
+        height: 300px; /* Chiều cao của ảnh */
+        border-radius: 8px; /* Bo góc */
+    }
+
+    .rz-html-editor:focus-within {
+        outline: none !important;
+    }
+
+    .rz-html-editor-content img {
+        display: block; /* Chuyển ảnh thành khối để dễ căn giữa */
+        margin: 0 auto; /* Căn giữa theo chiều ngang */
+        height: 300px; /* Chiều cao của ảnh */
+        border-radius: 8px; /* Bo góc */
+    }
+
+    .hover-post:hover {
+        background-color: rgb(249, 249, 249);
+        cursor: pointer;
+        transform: translateY(-4px);
+    }
+
+    .hover-post {
+        transform: translateY(0);
+        /* Thêm transition để tạo hiệu ứng mượt khi chuyển đổi */
+        transition: transform 0.3s ease;
+    }
+
+    .hover {
+        transform: translateY(0);
+        /* Thêm transition để tạo hiệu ứng mượt khi chuyển đổi */
+        transition: transform 0.3s ease;
+    }
+
+    .hover-underline:hover {
+        text-decoration: underline;
+        cursor: pointer;
+    }
+
+    .hover-border:hover {
+        border: 2px solid transparent;
+        cursor: pointer;
+    }
+
+    .hover-border {
+        border: 2px solid lightgrey;
+        transition: border 0.3s ease-in-out;
+    }
+
+    .hover-background:hover {
+        cursor: pointer;
+        background-color: rgb(245, 245, 245);
+    }
+
+    .hover-backgroundblue:hover {
+        cursor: pointer;
+        background-color: aliceblue;
+    }
+</style>
+
+@if (!Loaded)
+{
+    <LoadingLocal></LoadingLocal>
+}
+else
+{
+
+    <div class="d-flex align-items-start  ms-3 my-4">
+        <div>
+            <MudAvatar Style="height:32px;width:32px;" Class="hover-border">
+                <MudImage Height="25" Src="@this.Avatar"></MudImage>
+            </MudAvatar>
+        </div>
+
+        <div class="flex-grow-1 ms-3">
+            <div class="d-flex align-items-end">
+                <MudText Typo="Typo.body1"><b class="hover-underline">@this.UserName</b></MudText>
+                <span style="color:darkgray;" class="hover-underline mx-3">@this.Date</span>
+            </div>
+
+            <div>
+                @if (Content != null && Content != "")
+                {
+                    <MudCardContent Class="my-1 p-0">
+                        <div class="content_by_user">
+                            @ContentHtml
+                        </div>
+                    </MudCardContent>
+                }
+            </div>
+            <div class="d-flex align-items-center mt-2 ms-3">
+                <div @onclick="LikeClick" class="hover">
+                    <MudIconButton Style="padding:10px;" @onclick="LikeClick" Disabled="@(!isUserLike)" Icon="@Icons.Material.Filled.Favorite" Color="Color.Secondary" />
+                </div>
+                <MudText Class="">@LikeText</MudText>
+                <div class="p-2 hover-background d-flex align-items-end ms-4" style="border-radius:8px;" @onclick="ShowComment">
+                    <MudIcon Class="p-0" Icon="@Icons.Material.Filled.Reply" Disabled="true" />
+                    <span class=""> Phản hồi</span>
+                </div>
+            </div>
+            @if (isAddCmt)
+            {
+                <AddReplyComment HideComment="HideComment" UserAddComment="UserAddNewComment" IdUserComment="@IdUserComment" IdCmt="@IdCmt" UserName="@this.UserName"></AddReplyComment>
+            }
+            @if (ReplyCount > 0)
+            {
+                <div class="d-flex my-1">
+                    <div class="px-3 py-2 hover-backgroundblue d-flex align-items-end" style="color:deepskyblue;border-radius:14px;" @onclick="ToggleSeeReply">
+                        @if (isLoadReply)
+                        {
+                            <MudIcon Icon="@Icons.Material.Filled.KeyboardArrowDown" Class="p-0" Disabled="true" />
+                        }
+                        else
+                        {
+                            <MudIcon Icon="@Icons.Material.Filled.KeyboardArrowUp" Class="p-0" Disabled="true" />
+                        }
+                        <span>
+                            <b>@ReplyCount trả lời</b>
+                        </span>
+                    </div>
+                </div>
+            }
+            @if (ListReplyCommentUserNew.Count != 0)
+            {
+                foreach (var item in ListReplyCommentUserNew)
+                {
+                    <div style="width:100%;">
+                        <ReplyDetail Avatar="@item.Avatar" Content="@item.Content" IdReply="@item.Id"
+                                     CreateDate="@item.CreateDate" IdPost="@item.Id" IdCmt="@this.IdCmt"
+                                     Like="@item.Like" IdUserComment="@item.IdUser" IdMention="@item.Mention"
+                                     UserName="@item.UserName" UserMentionName="@item.UserNameMention">
+                        </ReplyDetail>
+                    </div>
+                }
+            }
+
+            @if (isFirstLoadReply)
+            {
+                <div style="width:100%; display: @(isLoadReply?"block":"none");">
+                    <ListReply IdCmt="@IdCmt"></ListReply>
+                </div>
+            }
+        </div>
+
+        <MudMenu Icon="@Icons.Material.Filled.MoreHoriz" Style="align-self:unset;" ActivationEvent="@MouseEvent.MouseOver" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter" Color="Color.Default" AriaLabel="Open user menu">
+            @if (IdUser == IdUserComment)
+            {
+                <a href="/updatePost/@IdPost"><MudMenuItem>Chỉnh sửa</MudMenuItem></a>
+                <MudMenuItem OnClick="DeleteCmt">Xóa bình luận</MudMenuItem>
+            }
+            <MudMenuItem>Báo cáo</MudMenuItem>
+        </MudMenu>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public Guid IdCmt { get; set; }
+    [Parameter]
+    public Guid IdPost { get; set; }
+    [Parameter]
+    public Guid IdUserComment { get; set; }
+    [Parameter]
+    public string UserName { get; set; }
+    [Parameter]
+    public string Avatar { get; set; }
+    [Parameter]
+    public string? Content { get; set; }
+    [Parameter]
+    public string Like { get; set; }
+    [Parameter]
+    public int ReplyCount { get; set; }
+    [Parameter]
+    public DateTime? CreateDate { get; set; }
+
+    bool isLoadReply { get; set; }
+
+    bool isAddCmt { get; set; }
+
+    bool isUserLike;
+
+    bool isFirstLoadReply;
+
+    bool Loaded { get; set; }
+    string LikeText { get; set; }
+    string Date { get; set; }
+    private MarkupString ContentHtml { get; set; }
+    private Guid IdUser { get; set; }
+
+    List<ReplyDTO> ListReplyCommentUserNew = new List<ReplyDTO>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        var userCurrent = UserManager.GetUserId(user);
+        IdUser = Guid.Parse(userCurrent);
+
+        var timeCacul = DateTime.Now - CreateDate.Value;
+
+        int yearsDifference = DateTime.Now.Year - CreateDate.Value.Year;
+        if (DateTime.Now < CreateDate.Value.AddYears(yearsDifference))
+        {
+            yearsDifference--;
+        }
+
+        int monthsDifference = (DateTime.Now.Year - CreateDate.Value.Year) * 12 + DateTime.Now.Month - CreateDate.Value.Month;
+        if (DateTime.Now.Day < CreateDate.Value.Day)
+        {
+            monthsDifference--;
+        }
+
+        if (yearsDifference >= 1)
+        {
+            Date = $"{yearsDifference} năm";
+        }
+        else if (monthsDifference >= 1)
+        {
+            Date = $"{monthsDifference} tháng";
+        }
+        else if (timeCacul.TotalDays >= 1)
+        {
+            Date = $"{(int)timeCacul.TotalDays} ngày";
+        }
+        else if (timeCacul.TotalHours >= 1)
+        {
+            Date = $"{(int)timeCacul.TotalHours} giờ";
+        }
+        else if (timeCacul.TotalMinutes >= 1)
+        {
+            Date = $"{(int)timeCacul.TotalMinutes} phút";
+        }
+        else
+        {
+            Date = "Vừa xong";
+        }
+
+        LikeCount();
+
+
+        if (Content != null)
+        {
+            ContentHtml = (MarkupString)Content;
+        }
+
+
+        Loaded = true;
+    }
+
+    async Task LikeClick()
+    {
+        var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+        var response = await httpClient.GetAsync($"/likeCmt/{IdCmt}/{IdUser}/{!isUserLike}");
+        if (response.IsSuccessStatusCode)
+        {
+            isUserLike = !isUserLike;
+            Like = await response.Content.ReadAsStringAsync();
+            LikeCount();
+            StateHasChanged();
+        }
+    }
+
+    void ToggleSeeReply()
+    {
+        if (!isFirstLoadReply)
+        {
+            isFirstLoadReply = true;
+            if (ListReplyCommentUserNew.Count != 0)
+            {
+                ListReplyCommentUserNew = new List<ReplyDTO>();
+            }
+        }
+        isLoadReply = !isLoadReply;
+    }
+
+    void LikeCount()
+    {
+        @if (Like == null || Like == "")
+        {
+            LikeText = "0";
+        }
+        else
+        {
+            var customCulture = (CultureInfo)CultureInfo.InvariantCulture.Clone();
+            customCulture.NumberFormat.NumberGroupSeparator = ".";
+            var ListLike = Like.Split("|").ToList();
+            if (ListLike.Contains(IdUser.ToString()))
+            {
+                LikeText = $"{(ListLike.Count).ToString("N0", customCulture)}";
+                isUserLike = true;
+            }
+            else
+            {
+                LikeText = ListLike.Count().ToString("N0", customCulture);
+                isUserLike = false;
+            }
+        }
+    }
+
+    private async Task CopyCurrentUrl()
+    {
+        var currentUrl = Navigation.Uri; // Lấy URL hiện tại
+                                         //currentUrl =
+        await JSRunTime.InvokeVoidAsync("copyToClipboard", currentUrl);
+        Snackbar.Add("Đã sao chép đường dẫn bài viết vào bộ nhớ", Severity.Success);
+    }
+
+    void ShowComment()
+    {
+        isAddCmt = true;
+    }
+
+    void HideComment()
+    {
+        isAddCmt = false;
+    }
+
+    async Task UserAddNewComment(Guid idReply)
+    {
+        var _httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+        var result = await _httpClient.GetStringAsync($"/commment/getReplyCommentDetail/{idReply}");
+        var commentDTO = JsonConvert.DeserializeObject<ReplyDTO>(result);
+        if (commentDTO != null)
+        {
+            ListReplyCommentUserNew.Add(commentDTO);
+        }
+        StateHasChanged();
+    }
+
+    async Task DeleteCmt ()
+    {
+        
+    }
+}
+

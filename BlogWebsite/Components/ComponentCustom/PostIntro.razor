@@ -105,9 +105,13 @@ else
             </CardHeaderContent>
 
             <CardHeaderActions>
-                <MudMenu Icon="@Icons.Material.Filled.MoreHoriz" Color="Color.Default" AriaLabel="Open user menu">
-                    <MudMenuItem>Edit</MudMenuItem>
-                    <MudMenuItem>Delete</MudMenuItem>
+                <MudMenu Icon="@Icons.Material.Filled.MoreHoriz" ActivationEvent="@MouseEvent.MouseOver" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter" Color="Color.Default" AriaLabel="Open user menu">
+                    @if (IdUser == IdUserPost)
+                    {
+                        <a href="/updatePost/@IdPost"><MudMenuItem>Chỉnh sửa</MudMenuItem></a>
+                        <MudMenuItem OnClick="DeletePost">Xóa bài viết</MudMenuItem>
+                    }
+                        <MudMenuItem>Báo cáo</MudMenuItem>
                 </MudMenu>
             </CardHeaderActions>
         </MudCardHeader>
@@ -138,14 +142,14 @@ else
             </MudCardContent>
         }
 
-        @if (VideoFile != null || ImgFile != null)
+        @if ((VideoFile != null && VideoFile != "") || ImgFile != null)
         {
             if (SrcVideo != null)
             {
                 <div style="height:420px; background-color:black;overflow:hidden" class="d-flex mt-2 justify-content-center align-items-center" onclick="preventParentClick(event)">
 
                     <Radzen.Blazor.RadzenHtml>
-                        <Blazorise.Video.Video Source="SrcVideo" AutomaticallyHideControls="true" SeekTime="5" style="height : 350px;" >
+                        <Blazorise.Video.Video Source="SrcVideo" AutomaticallyHideControls="true" SeekTime="5" style="height : 350px;">
                         </Blazorise.Video.Video>
                     </Radzen.Blazor.RadzenHtml>
                 </div>
@@ -198,7 +202,7 @@ else
             <MudItem xs="6" Class="p-0" sm="2">
                 <MudButton @onclick="async ()=> await OpenDialogSave(IdPost)" Variant="Variant.Text" Style="width:100%;padding:0px;">
                     <MudIconButton Disabled Icon="@Icons.Material.Filled.Save" />
-                    <MudText >Lưu</MudText>
+                    <MudText>Lưu</MudText>
                 </MudButton>
             </MudItem>
         </MudGrid>
@@ -224,6 +228,8 @@ else
 @code {
     [Parameter]
     public Guid IdPost { get; set; }
+    [Parameter]
+    public Guid IdUserPost { get; set; }
     [Parameter]
     public string UserName { get; set; }
     [Parameter]
@@ -305,7 +311,7 @@ else
             Date = "Vừa xong";
         }
 
-        if (VideoFile != null)
+        if (VideoFile != null && VideoFile != "" )
         {
             SrcVideo = VideoFile.Split("|")[0];
         }
@@ -398,6 +404,31 @@ else
         };
         var dialog = DialogService.Show<AddPostSaveDialog>(string.Empty, parameters);
         var result = await dialog.Result;
+    }
+
+    async Task DeletePost()
+    {
+        var parameters = new DialogParameters<Dialog>();
+        parameters.Add(x => x.ContentText, "Xác nhận bạn muốn xóa bài viết này, sẽ xóa vĩnh viễn và không thể khôi phục?");
+        parameters.Add(x => x.ButtonText, "Xóa");
+        parameters.Add(x => x.Color, Color.Error);
+
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+        var result = await DialogService.Show<Dialog>("Xác nhận", parameters, options).Result;
+        if (result.Data != null)
+        {
+            if ((bool)result.Data)
+            {
+                var _httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+                var response = await _httpClient.PostAsJsonAsync($"/deletePost/{IdPost}", IdUser);
+                if (response.IsSuccessStatusCode)
+                {
+                    Snackbar.Add("Cập nhật bài viết thành công", Severity.Info);
+                    Navigation.NavigateTo("");
+                }
+            }
+        }
     }
 }
 

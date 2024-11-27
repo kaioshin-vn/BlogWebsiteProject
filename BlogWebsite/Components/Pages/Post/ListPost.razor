@@ -37,7 +37,7 @@ else
                            CreateDate="@item.CreateDate" IdPost="@item.Id"
                            CommentCount="@item.CommentCount" Like="@item.Like"
                            VideoFile="@item.VideoFile" ImgFile="@item.ImgFile"
-                           UserName="@item.UserName" TagNames="@item.ListTag"
+                           UserName="@item.UserName" TagNames="@item.ListTag" IdUserPost="@item.IdUser"
                            Title="@item.Title" WatchDetailPost="DetailPost">
                 </PostIntro>
             }
@@ -51,7 +51,7 @@ else
                 <PostDetail Avatar="@PostDetail.Avatar" Content="@PostDetail.Content"
                             CreateDate="@PostDetail.CreateDate" IdPost="@PostDetail.Id"
                             CommentCount="@PostDetail.CommentCount" Like="@PostDetail.Like"
-                            VideoFile="@PostDetail.VideoFile" ImgFile="@PostDetail.ImgFile"
+                            VideoFile="@PostDetail.VideoFile" IdUserPost="@PostDetail.IdUser"
                             UserName="@PostDetail.UserName" TagNames="@PostDetail.ListTag"
                             Title="@PostDetail.Title" GoBack="GoBack">
                 </PostDetail>
