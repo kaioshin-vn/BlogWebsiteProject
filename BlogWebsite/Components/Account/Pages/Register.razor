@@ -243,11 +243,11 @@
         user.Id = Guid.NewGuid();
         user.FullName = Input.FullName;
         user.UserName = Input.Username;
-        user.PhoneNumber = Input.NumberPhone;
+        // user.PhoneNumber = Input.NumberPhone;
         user.Img = @"\Img\avatar_default1.jpg";
         await UserStore.SetUserNameAsync(user, Input.Username, CancellationToken.None);
         var emailStore = GetEmailStore();
-        await emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
+        // await emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
         var result = await UserManager.CreateAsync(user, Input.Password);
 
         if (!result.Succeeded)
@@ -305,14 +305,14 @@
         [Required(ErrorMessage = "Không được bỏ trống tên đăng nhập")]
         [Display(Name = "Username")]
         public string Username { get; set; } = "";  
-        [Required(ErrorMessage = "Không được bỏ trống Email")]
-        [Display(Name = "Email")]
-        public string Email { get; set; } = "";
+        // [Required(ErrorMessage = "Không được bỏ trống Email")]
+        // [Display(Name = "Email")]
+        // public string Email { get; set; } = "";
 
-        [RegularExpression(@"^(0|\+84)(3|5|7|8|9)\d{8}$", ErrorMessage = "Hãy nhập số điện thoại hợp lệ")]
-        [Required(ErrorMessage = "Không được bỏ trống số điện thoại !")]
-        [Display(Name = "NumberPhone")]
-        public string NumberPhone { get; set; } = "";
+        // [RegularExpression(@"^(0|\+84)(3|5|7|8|9)\d{8}$", ErrorMessage = "Hãy nhập số điện thoại hợp lệ")]
+        // [Required(ErrorMessage = "Không được bỏ trống số điện thoại !")]
+        // [Display(Name = "NumberPhone")]
+        // public string NumberPhone { get; set; } = "";
 
         [Required(ErrorMessage = "Không được bỏ trống mật khẩu!")]
         [RegularExpression("^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$", ErrorMessage = "Mật khẩu phải có ít nhất ít nhất có 8 kí tự, gồm ít nhất 1 kí tự in hoa, 1 kí tự thường,1 chữ số và 1 kí tự đặc biệt")]
