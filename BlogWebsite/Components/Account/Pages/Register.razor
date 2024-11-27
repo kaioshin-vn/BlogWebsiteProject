@@ -82,37 +82,37 @@
     }) ;
 
     // Lấy input element
-    const numberInput = document.querySelector('input[name="Input.NumberPhone"]');
-    const emailInput = document.querySelector('input[name="Input.Email"]');
+    // const numberInput = document.querySelector('input[name="Input.NumberPhone"]');
+    // const emailInput = document.querySelector('input[name="Input.Email"]');
     const nameInput = document.querySelector('input[name="Input.FullName"]');
     const usernameInput = document.querySelector('input[name="Input.Username"]');
     const passwordlInput = document.querySelector('input[name="Input.Password"]');
     const confirmPassword = document.querySelector('input[name="Input.ConfirmPassword"]');
     // Lấy thẻ div cha bao bọc bên ngoài
-    const inputEmailWrapper = emailInput.closest('div.mud-input');
-    // Thêm sự kiện lắng nghe thay đổi của input
-    inputEmailWrapper.addEventListener('input', () => {
-        // Kiểm tra nếu input không rỗng
-        if (emailInput.value.trim() !== '') {
-            // Thêm class vào thẻ div cha
-            inputEmailWrapper.classList.add('mud-shrink');
-        } else {
-            // Loại bỏ class khỏi thẻ div cha
-            inputEmailWrapper.classList.remove('mud-shrink');
-        }
-    });
-    const numberInputWrapper = numberInput.closest('div.mud-input');
-    // Thêm sự kiện lắng nghe thay đổi của input
-    numberInputWrapper.addEventListener('input', () => {
-        // Kiểm tra nếu input không rỗng
-        if (numberInput.value.trim() !== '') {
-            // Thêm class vào thẻ div cha
-            numberInputWrapper.classList.add('mud-shrink');
-        } else {
-            // Loại bỏ class khỏi thẻ div cha
-            numberInputWrapper.classList.remove('mud-shrink');
-        }
-    });
+    // const inputEmailWrapper = emailInput.closest('div.mud-input');
+    // // Thêm sự kiện lắng nghe thay đổi của input
+    // inputEmailWrapper.addEventListener('input', () => {
+    //     // Kiểm tra nếu input không rỗng
+    //     if (emailInput.value.trim() !== '') {
+    //         // Thêm class vào thẻ div cha
+    //         inputEmailWrapper.classList.add('mud-shrink');
+    //     } else {
+    //         // Loại bỏ class khỏi thẻ div cha
+    //         inputEmailWrapper.classList.remove('mud-shrink');
+    //     }
+    // });
+    // const numberInputWrapper = numberInput.closest('div.mud-input');
+    // // Thêm sự kiện lắng nghe thay đổi của input
+    // numberInputWrapper.addEventListener('input', () => {
+    //     // Kiểm tra nếu input không rỗng
+    //     if (numberInput.value.trim() !== '') {
+    //         // Thêm class vào thẻ div cha
+    //         numberInputWrapper.classList.add('mud-shrink');
+    //     } else {
+    //         // Loại bỏ class khỏi thẻ div cha
+    //         numberInputWrapper.classList.remove('mud-shrink');
+    //     }
+    // });
     const inputUserNameWrapper = usernameInput.closest('div.mud-input');
     // Thêm sự kiện lắng nghe thay đổi của input
     inputUserNameWrapper.addEventListener('input', () => {
