@@ -1,0 +1,68 @@
+﻿@using static Client.Components.Pages.Topic.Topic
+@inject IHttpClientFactory _httpClientFactory;
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <DialogContent>
+        <MudTextField @bind-Value="topic.TopicName" Label="Tên chủ đề" Required="true" RequiredError="Tên chủ đề là bắt buộc!" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Hủy</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Submit">@(Topic == null ? "Thêm" : "Cập nhật")</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    [Parameter] public TopicDto Topic { get; set; }
+
+    private TopicDto topic = new TopicDto();
+
+    protected override void OnInitialized()
+    {
+        if (Topic != null)
+        {
+            topic = new TopicDto { IdTopic = Topic.IdTopic, TopicName = Topic.TopicName };
+        }
+    }
+
+    private async Task Submit()
+    {
+        if (string.IsNullOrWhiteSpace(topic.TopicName))
+        {
+            Snackbar.Add("Tên chủ đề là bắt buộc", Severity.Error);
+            return;
+        }
+
+        try
+        {
+            HttpResponseMessage response;
+            var client = _httpClientFactory.CreateClient("MyHttpClient");
+            if (Topic == null)
+            {
+                response = await client.PostAsJsonAsync("api/topic", topic);
+            }
+            else
+            {
+                response = await client.PutAsJsonAsync($"api/topic/{topic.IdTopic}", topic);
+            }
+
+            if (response.IsSuccessStatusCode)
+            {
+                Snackbar.Add(Topic == null ? "Đã thêm chủ đề thành công" : "Đã cập nhật chủ đề thành công", Severity.Success);
+                MudDialog.Close(DialogResult.Ok(true));
+            }
+            else
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                Snackbar.Add($"Không thể lưu chủ đề: {error}", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Lỗi: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}

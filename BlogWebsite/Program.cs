@@ -14,6 +14,7 @@ using Microsoft.EntityFrameworkCore;
 using MudBlazor;
 using MudBlazor.Services;
 using Radzen;
+using System.Net.Http;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -124,7 +125,6 @@ builder.Services.AddIdentityCore<ApplicationUser>(options => { })
 	.AddDefaultTokenProviders()
 	.AddUserManager<UserManager<ApplicationUser>>()
 	.AddRoleManager<RoleManager<IdentityRole<Guid>>>();
-
 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
 builder.Services.AddScoped<VnPayService>();
 builder.Services.AddRadzenComponents();

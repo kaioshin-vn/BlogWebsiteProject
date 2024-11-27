@@ -1,6 +1,6 @@
-﻿namespace API.DTO
+﻿namespace Data.DTO.EntitiDTO
 {
-    public class UserDto
+    public class UserProfileDto
     {
         public string? Descript { get; set; }
         public string? Img { get; set; }

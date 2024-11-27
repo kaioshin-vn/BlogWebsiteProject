@@ -4,7 +4,7 @@
 @inject IJSRuntime JSRuntime
 @inject IHttpClientFactory ClientFactory
 @inject AuthenticationStateProvider AuthenticationStateProvider
-
+@inject NavigationManager Navigation
 <MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
     <MudCard>
         <MudCardMedia Image="/Img/univer.png" Height="300" />
@@ -20,20 +20,13 @@
             </div>
         </div>
         <div>
-            @if (IsCurrentUser)
+            @if (model.IsFollowing)
             {
-                <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="@(() => _editMode = true)" />
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ToggleFollowUser">Bỏ theo dõi</MudButton>
             }
             else
             {
-                if (model.IsFollowing)
-                {
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ToggleFollowUser">Bỏ theo dõi</MudButton>
-                }
-                else
-                {
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ToggleFollowUser">Theo dõi</MudButton>
-                }
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ToggleFollowUser">Theo dõi</MudButton>
             }
         </div>
     </div>
@@ -51,8 +44,14 @@
                         {
                             <MudListItem Icon="@Icons.Material.Filled.LocationOn" Text="@($"Địa chỉ: {model.Address}")" />
                         }
-                        <MudListItem Icon="@Icons.Material.Filled.Phone" Text="@($"Điện thoại: {model.PhoneNumber}")" />
-                        <MudListItem Icon="@Icons.Material.Filled.Email" Text="@($"Email: {model.Email}")" />
+                        @if (!string.IsNullOrEmpty(model.PhoneNumber))
+                        {
+                            <MudListItem Icon="@Icons.Material.Filled.Phone" Text="@($"Điện thoại: {model.PhoneNumber}")" />
+                        }
+                        @if (!string.IsNullOrEmpty(model.Email))
+                        {
+                            <MudListItem Icon="@Icons.Material.Filled.Email" Text="@($"Email: {model.Email}")" />
+                        }
                     </MudList>
                 </MudCardContent>
             </MudCard>
@@ -75,8 +74,6 @@
 @code {
     [Parameter]
     public string Id { get; set; }
-
-    private bool _editMode = false;
     private bool success;
     private string[] errors = { };
     private MudForm form;
@@ -95,6 +92,10 @@
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
         var currentUserId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (currentUserId.ToLower() == Id.ToLower())
+        {
+            Navigation.NavigateTo("/profile");
+        }
         await GetInfoViewer(currentUserId, Id);
     }
     private async Task GetInfoViewer(string id, string idViewer)

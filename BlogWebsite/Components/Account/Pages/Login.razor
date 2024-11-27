@@ -24,7 +24,7 @@
                 }
                 <EditForm Model="Input" method="post" OnValidSubmit="LoginUser" FormName="login">
                     <DataAnnotationsValidator />
-                    <MudTextField @bind-Value="Input.Username" Label="Tên đăng nhập" Variant="Variant.Outlined" InputType="@InputType.Telephone" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Smartphone" name="Input.Username" />
+                    <MudTextField @bind-Value="Input.Username" Label="Tên đăng nhập" Variant="Variant.Outlined" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.CoPresent" name="Input.Username" />
                     <ValidationMessage For="() => Input.Username" style="text-align:left" class="alert alert-info my-2 " />
                     <MudTextField @bind-Value="Input.Password" Label="Mật khẩu" Variant="Variant.Outlined" InputType="@PasswordInput" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon" OnAdornmentClick="ShowPassword" AdornmentAriaLabel="Hiện mật khẩu" name="Input.Password" />
                     <ValidationMessage For="() => Input.Password" style="text-align:left" class="alert alert-info my-2 " />
@@ -162,7 +162,7 @@
         }
         else
         {
-            errorMessage = "Số điện thoại hoặc mật khẩu không chính xác";
+            errorMessage = "Tên đăng nhập hoặc mật khẩu không chính xác";
         }
     }
 

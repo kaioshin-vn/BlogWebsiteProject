@@ -39,12 +39,12 @@
                             <ValidationMessage For="() => Input.FullName" style="text-align:left" class="alert alert-info my-2 " />
                             <MudTextField Class="mt-3" @bind-Value="Input.Username" Label="Tên đăng nhập" Variant="Variant.Outlined" InputType="@InputType.Text" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Person" AdornmentAriaLabel="Tên đăng nhập" name="Input.Username" />
                             <ValidationMessage For="() => Input.FullName" style="text-align:left" class="alert alert-info my-2 " />
-                            <MudTextField Class="mt-3" @bind-Value="Input.NumberPhone" Label="Số điện thoại" Variant="Variant.Outlined" InputType="@InputType.Telephone" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Smartphone" name="Input.NumberPhone" />
-                            <ValidationMessage For="() => Input.NumberPhone" style="text-align:left" class="alert alert-info my-2 " />
+@*                             <MudTextField Class="mt-3" @bind-Value="Input.NumberPhone" Label="Số điện thoại" Variant="Variant.Outlined" InputType="@InputType.Telephone" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Smartphone" name="Input.NumberPhone" />
+                            <ValidationMessage For="() => Input.NumberPhone" style="text-align:left" class="alert alert-info my-2 " /> *@
+                            <MudTextField Class="mt-3" @bind-Value="Input.Email" Label="Email" Variant="Variant.Outlined" InputType="@InputType.Email" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Email" AdornmentAriaLabel="Email" name="Input.Email" />
+                            <ValidationMessage For="() => Input.Email" style="text-align:left" class="alert alert-info my-2 " />
                         </div>
                         <div style="width : 300px;">
-                            <MudTextField Class="mt-3" @bind-Value="Input.Email" Label="Email" Variant="Variant.Outlined" InputType="@InputType.Text" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Email" AdornmentAriaLabel="Email" name="Input.Email" />
-                            <ValidationMessage For="() => Input.Email" style="text-align:left" class="alert alert-info my-2 " />
                             <MudTextField Class="mt-3" @bind-Value="Input.Password" Label="Mật khẩu" Variant="Variant.Outlined" InputType="@PasswordInput" OnAdornmentClick="Fix" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon" AdornmentAriaLabel="Hiện mật khẩu" name="Input.Password" />
                             <ValidationMessage For="() => Input.Password" style="text-align:left" class="alert alert-info my-2 " />
                             <MudTextField Class="mt-3" @bind-Value="Input.ConfirmPassword" Label="Nhập lại mật khẩu" Variant="Variant.Outlined" InputType="@PasswordInput" OnAdornmentClick="Fix" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon" AdornmentAriaLabel="Hiện mật khẩu" name="Input.ConfirmPassword" />
@@ -82,7 +82,7 @@
     }) ;
 
     // Lấy input element
-    const numberInput = document.querySelector('input[name="Input.NumberPhone"]');
+    // const numberInput = document.querySelector('input[name="Input.NumberPhone"]');
     const emailInput = document.querySelector('input[name="Input.Email"]');
     const nameInput = document.querySelector('input[name="Input.FullName"]');
     const usernameInput = document.querySelector('input[name="Input.Username"]');
@@ -101,18 +101,18 @@
             inputEmailWrapper.classList.remove('mud-shrink');
         }
     });
-    const numberInputWrapper = numberInput.closest('div.mud-input');
-    // Thêm sự kiện lắng nghe thay đổi của input
-    numberInputWrapper.addEventListener('input', () => {
-        // Kiểm tra nếu input không rỗng
-        if (numberInput.value.trim() !== '') {
-            // Thêm class vào thẻ div cha
-            numberInputWrapper.classList.add('mud-shrink');
-        } else {
-            // Loại bỏ class khỏi thẻ div cha
-            numberInputWrapper.classList.remove('mud-shrink');
-        }
-    });
+    // const numberInputWrapper = numberInput.closest('div.mud-input');
+    // // Thêm sự kiện lắng nghe thay đổi của input
+    // numberInputWrapper.addEventListener('input', () => {
+    //     // Kiểm tra nếu input không rỗng
+    //     if (numberInput.value.trim() !== '') {
+    //         // Thêm class vào thẻ div cha
+    //         numberInputWrapper.classList.add('mud-shrink');
+    //     } else {
+    //         // Loại bỏ class khỏi thẻ div cha
+    //         numberInputWrapper.classList.remove('mud-shrink');
+    //     }
+    // });
     const inputUserNameWrapper = usernameInput.closest('div.mud-input');
     // Thêm sự kiện lắng nghe thay đổi của input
     inputUserNameWrapper.addEventListener('input', () => {
@@ -237,13 +237,13 @@
 
     }
 
-    public async Task RegisterUser(EditContext editContext)
+    public async Task RegisterUser()
     {
         var user = CreateUser();
         user.Id = Guid.NewGuid();
         user.FullName = Input.FullName;
         user.UserName = Input.Username;
-        user.PhoneNumber = Input.NumberPhone;
+        // user.PhoneNumber = Input.NumberPhone;
         user.Img = @"\Img\avatar_default1.jpg";
         await UserStore.SetUserNameAsync(user, Input.Username, CancellationToken.None);
         var emailStore = GetEmailStore();
@@ -309,10 +309,10 @@
         [Display(Name = "Email")]
         public string Email { get; set; } = "";
 
-        [RegularExpression(@"^(0|\+84)(3|5|7|8|9)\d{8}$", ErrorMessage = "Hãy nhập số điện thoại hợp lệ")]
-        [Required(ErrorMessage = "Không được bỏ trống số điện thoại !")]
-        [Display(Name = "NumberPhone")]
-        public string NumberPhone { get; set; } = "";
+        // [RegularExpression(@"^(0|\+84)(3|5|7|8|9)\d{8}$", ErrorMessage = "Hãy nhập số điện thoại hợp lệ")]
+        // [Required(ErrorMessage = "Không được bỏ trống số điện thoại !")]
+        // [Display(Name = "NumberPhone")]
+        // public string NumberPhone { get; set; } = "";
 
         [Required(ErrorMessage = "Không được bỏ trống mật khẩu!")]
         [RegularExpression("^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$", ErrorMessage = "Mật khẩu phải có ít nhất ít nhất có 8 kí tự, gồm ít nhất 1 kí tự in hoa, 1 kí tự thường,1 chữ số và 1 kí tự đặc biệt")]

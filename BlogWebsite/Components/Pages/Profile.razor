@@ -14,14 +14,14 @@
             <MudAvatar Style="width: 160px; height: 160px; border: 4px solid white;" Class="mb-3 mb-md-0">
                 <MudImage Src="@(_avatarUrl ?? "/Img/avatar_default.jpg")"></MudImage>
             </MudAvatar>
-                <MudFileUpload T="IBrowserFile" FilesChanged="UploadAvatar" Accept="image/*">
-                    <ActivatorContent>
-                        <MudIconButton Icon="@Icons.Material.Filled.PhotoCamera"
-                                       Class="position-absolute mud-elevation-3"
-                                       Style="bottom: -70px; right: -5px; background-color: darkgrey; border-radius: 50%; padding: 8px;color:azure">
-                        </MudIconButton>
-                    </ActivatorContent>
-                </MudFileUpload>
+            <MudFileUpload T="IBrowserFile" FilesChanged="UploadAvatar" Accept="image/*">
+                <ActivatorContent>
+                    <MudIconButton Icon="@Icons.Material.Filled.PhotoCamera"
+                                   Class="position-absolute mud-elevation-3"
+                                   Style="bottom: -70px; right: -5px; background-color: darkgrey; border-radius: 50%; padding: 8px;color:azure">
+                    </MudIconButton>
+                </ActivatorContent>
+            </MudFileUpload>
             <div class="ms-2 text-start">
                 <MudText Typo="Typo.h4">@model.FullName</MudText>
                 <MudText Typo="Typo.body1" Class="mb-2">Người theo dõi: @model.CountFollow.ToString("N0", System.Globalization.CultureInfo.InvariantCulture)</MudText>
@@ -45,8 +45,14 @@
                         {
                             <MudListItem Icon="@Icons.Material.Filled.LocationOn" Text="@($"Địa chỉ: {model.Address}")" />
                         }
-                        <MudListItem Icon="@Icons.Material.Filled.Phone" Text="@($"Điện thoại: {model.PhoneNumber}")" />
-                        <MudListItem Icon="@Icons.Material.Filled.Email" Text="@($"Email: {model.Email}")" />
+                        @if (!string.IsNullOrEmpty(model.PhoneNumber))
+                        {
+                            <MudListItem Icon="@Icons.Material.Filled.Phone" Text="@($"Điện thoại: {model.PhoneNumber}")" />
+                        }
+                        @if (!string.IsNullOrEmpty(model.Email))
+                        {
+                            <MudListItem Icon="@Icons.Material.Filled.Email" Text="@($"Email: {model.Email}")" />
+                        }
                     </MudList>
                 </MudCardContent>
             </MudCard>
@@ -65,7 +71,7 @@
                             <MudTextField T="string" Label="Họ và tên" @bind-Value="model.FullName" For="@(() => model.FullName)" />
                             <MudTextField T="string" Label="Địa chỉ" @bind-Value="model.Address" For="@(() => model.Address)" />
                             <MudTextField T="string" Label="Số điện thoại" @bind-Value="model.PhoneNumber" For="@(() => model.PhoneNumber)" />
-                            <MudTextField T="string" Label="Email" @bind-Value="model.Email" For="@(() => model.Email)" />
+                            <MudTextField T="string" InputType="InputType.Email" Label="Email" @bind-Value="model.Email" For="@(() => model.Email)" />
                             <MudTextField T="string" Label="Giới thiệu" @bind-Value="model.Descript" For="@(() => model.Descript)" Lines="3" />
                         </MudForm>
                     </MudCardContent>
@@ -163,7 +169,7 @@
             if (!allowedExtensions.Contains(fileExtension))
             {
                 // Hiển thị thông báo lỗi hoặc xử lý khi định dạng không hợp lệ
-                Snackbar.Add("Định dạng file không hợp lệ!",Severity.Error);
+                Snackbar.Add("Định dạng file không hợp lệ!", Severity.Error);
                 return;
             }
             var fileName = Path.GetFileName(file.Name);
@@ -198,7 +204,7 @@
         public string? Descript { get; set; }
         public string? Img { get; set; }
         public string? FullName { get; set; }
-        public string? ImgCover { get; set; } 
+        public string? ImgCover { get; set; }
         public string? Address { get; set; }
         public string PhoneNumber { get; set; }
         public string Email { get; set; }

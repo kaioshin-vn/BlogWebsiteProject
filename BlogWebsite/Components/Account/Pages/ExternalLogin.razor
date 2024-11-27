@@ -26,21 +26,21 @@
 <MudOverlay Visible="isVisible" DarkBackground="true" Absolute="true">
     <EditForm Model="Input" OnValidSubmit="OnValidSubmitAsync" FormName="confirmation" method="post">
         <MudCard Class="pa-4" Style="width:500px;">
-                <MudText>Hãy điền tên đăng nhập của bạn</MudText>
-                <InputText @bind-Value="Input.Email" class="form-control" style="display:none;"/>
-                <MudTextField Class="mt-3" @bind-Value="Input.FullName" Label="Tên đăng nhập" Variant="MudBlazor.Variant.Outlined" InputType="@InputType.Text" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Person" AdornmentAriaLabel="Tên đăng nhập" name="Input.FullName" />
-                @if (message != null)
-                {
-                    <div style="text-align:left" class="alert alert-danger my-3">
-                        <p class=" px-2" style="color:red;">@message</p>
-                    </div>
-                }
-                <div class="d-flex mt-3">
-                    <MudButton Color="Color.Error" Variant="Variant.Filled">
-                        <a class="py-2 px-4" style="color:black;" href="/Account/Register">Hủy</a>
-                    </MudButton>
-                    <button class="py-2 ms-3 px-4" style="background-color:lightgreen;font:bolder;border-radius:6px;" type="submit">ĐĂNG KÝ</button>
+            <MudText>Hãy điền tên đăng nhập của bạn</MudText>
+            <InputText @bind-Value="Input.Email" class="form-control" style="display:none;" />
+            <MudTextField Class="mt-3" @bind-Value="Input.UserName" Label="Tên đăng nhập" Variant="MudBlazor.Variant.Outlined" InputType="@InputType.Text" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Person" AdornmentAriaLabel="Tên đăng nhập" name="Input.UserName" />
+            @if (message != null)
+            {
+                <div style="text-align:left" class="alert alert-danger my-3">
+                    <p class=" px-2" style="color:red;">@message</p>
                 </div>
+            }
+            <div class="d-flex mt-3">
+                <MudButton Color="Color.Error" Variant="Variant.Filled">
+                    <a class="py-2 px-4" style="color:black;" href="/Account/Register">Hủy</a>
+                </MudButton>
+                <button class="py-2 ms-3 px-4" style="background-color:lightgreen;font:bolder;border-radius:6px;" type="submit">ĐĂNG KÝ</button>
+            </div>
         </MudCard>
     </EditForm>
 </MudOverlay>
@@ -146,21 +146,20 @@
 
     private async Task OnValidSubmitAsync()
     {
-        if (Input.FullName == "")
+        if (Input.UserName == "")
         {
             message = "Không thể bỏ trống tên đăng nhập";
             return;
         }
         var emailStore = GetEmailStore();
         var user = CreateUser();
-
-        user.FullName = Input.FullName;
-        await UserStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
+        await UserStore.SetUserNameAsync(user, Input.UserName, CancellationToken.None);
         await emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
         if (externalLoginInfo.Principal.HasClaim(c => c.Type == "image"))
         {
             user.Img = externalLoginInfo.Principal.FindFirstValue("image") ?? "Default";
         }
+        user.FullName = externalLoginInfo.Principal.Identity.Name;
         var result = await UserManager.CreateAsync(user);
         if (result.Succeeded)
         {
@@ -221,6 +220,6 @@
         public string Email { get; set; } = "";
 
         [Required]
-        public string FullName { get; set; } = "";
+        public string UserName { get; set; } = "";
     }
 }
