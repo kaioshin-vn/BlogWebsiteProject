@@ -72,9 +72,20 @@ else
 					<div class="actions mt-8">
 
 						@{
-							@if (group.StateGroup == KindGroup.Public)
+							if (IsAdmin)
 							{
-								<!-- Nút tạo bài đăng -->
+								if (group.StateGroup == KindGroup.Public || group.StateGroup == KindGroup.Restricted || group.StateGroup == KindGroup.Private)
+								{
+									<!-- Nút tạo bài đăng -->
+									<MudTooltip Class="mx-1" Text="Thêm mới bài viết">
+										<MudFab Class="mx-1" StartIcon="@Icons.Material.Filled.Add" Size="Size.Medium"
+												Style="border:none;box-shadow:none;background-color:none;" Label="Tạo mới"
+												@onclick="NavigateToCreatePostPage" />
+									</MudTooltip>
+								}
+							}
+							if (group.StateGroup == KindGroup.Public && isJoined == true)
+							{
 								<MudTooltip Class="mx-1" Text="Thêm mới bài viết">
 									<MudFab Class="mx-1" StartIcon="@Icons.Material.Filled.Add" Size="Size.Medium"
 											Style="border:none;box-shadow:none;background-color:none;" Label="Tạo mới"
@@ -89,15 +100,6 @@ else
 											@onclick="NavigateToCreatePostPage" />
 								</MudTooltip>
 							}
-							else if (group.StateGroup == KindGroup.Private && isJoined == true)
-							{
-								<MudTooltip Class="mx-1" Text="Thêm mới bài viết">
-									<MudFab Class="mx-1" StartIcon="@Icons.Material.Filled.Add" Size="Size.Medium"
-											Style="border:none;box-shadow:none;background-color:none;" Label="Tạo mới"
-											@onclick="NavigateToCreatePostPage" />
-								</MudTooltip>
-							}
-
 						}
 
 						<!-- Icon thông báo (chỉ hiển thị khi đã tham gia) -->
@@ -167,25 +169,26 @@ else
 						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 2px; font-size:13px; color: #605d5d	">
 							Được tạo vào ngày @day tháng @month năm @year
 						</MudText>
+						
 						@if (group.StateGroup == KindGroup.Public)
 						{
 							<MudItem Class="d-flex align-items-center " Style="margin-left: 9px; margin-bottom: 6px;">
 								<MudIcon Icon="@Icons.Material.Filled.Public" Title="Public" Color="Color.Default" Style="font-size: 20px" />
-								<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 7px; font-size:13px; color: #605d5d	">@group.StateGroup</MudText>
+								<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 7px; font-size:13px; color: #605d5d	">@groupState</MudText>
 							</MudItem>
 						}
 						else if (group.StateGroup == KindGroup.Restricted)
 						{
 							<MudItem Class="d-flex align-items-center " Style="margin-left: 9px; margin-bottom: 6px;">
 								<MudIcon Icon="@Icons.Material.Outlined.RemoveRedEye" Title="RemoveRedEye" Color="Color.Default" Style="font-size: 20px" />
-								<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 7px; font-size:13px; color: #605d5d	">@group.StateGroup</MudText>
+								<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 7px; font-size:13px; color: #605d5d	">@groupState</MudText>
 							</MudItem>
 						}
 						else
 						{
 							<MudItem Class="d-flex align-items-center" Style="margin-left: 9px; margin-bottom: 6px;">
 								<MudIcon Icon="@Icons.Material.Outlined.Lock" Title="Lock" Color="Color.Default" Style="font-size: 20px" />
-								<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 7px; font-size:13px; color: #605d5d	">@group.StateGroup</MudText>
+								<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 7px; font-size:13px; color: #605d5d	">@groupState</MudText>
 							</MudItem>
 						}
 
@@ -237,6 +240,7 @@ else
 	List<PostIntroDTO> listIntroPost;
 	int memberCount = 0;
 	bool IsAdmin { get; set; }
+	string groupState;
 	protected override async Task OnInitializedAsync()
 	{
 		await GetAdmin();
@@ -262,9 +266,20 @@ else
 		{
 			// Tìm nhóm trong cơ sở dữ liệu dựa trên tên nhóm từ URL
 			group = await DbContext.Groups.FirstOrDefaultAsync(g => g.Name == Name);
-
 			if (group != null)
 			{
+				if (group.StateGroup == KindGroup.Public)
+				{
+					groupState = "Công khai";
+				}
+				else if (group.StateGroup == KindGroup.Restricted)
+				{
+					groupState = "Hạn chế";
+				}
+				else
+				{
+					groupState = "Riêng tư";
+				}
 				// Kiểm tra nếu người dùng hiện tại đã tham gia nhóm hay chưa
 				var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
 				var user = authState.User;
