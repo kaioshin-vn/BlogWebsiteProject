@@ -142,9 +142,9 @@ else
 					</PostIntro>
 				}
 			</div>
-			<div style="width:120px; height : 200px; position: sticky;top: 120px; border:none;" id="replaceHidden">
+			<div style="width:290px; position: sticky;top: 120px; border:none;" id="replaceHidden">
 				<div id="another_unique_identifier" style="height:614px;">
-					<div style="width:270px; background: #f4f8f5;border-radius:5px; margin-top: -16px">
+					<div style="width:270px; background: #f4f8f5;border-radius:10px; margin-top: -16px" class="pb-5 pt-3">
 						@{
 							var day = GroupInfo.DateTime.ToString("dd");
 							var month = GroupInfo.DateTime.ToString("MM");
@@ -152,19 +152,6 @@ else
 
 						}
 						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; font-weight:600;">@GroupInfo.Name</MudText>
-						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@GroupInfo.Description</MudText>
-
-						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@GroupInfo.Description</MudText>
-						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@GroupInfo.Description</MudText>
-						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@GroupInfo.Description</MudText>
-						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@GroupInfo.Description</MudText>
-						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@GroupInfo.Description</MudText>
-						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@GroupInfo.Description</MudText>
-						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@GroupInfo.Description</MudText>
-						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@GroupInfo.Description</MudText>
-						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@GroupInfo.Description</MudText>
-						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@GroupInfo.Description</MudText>
-						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@GroupInfo.Description</MudText>
 						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@GroupInfo.Description</MudText>
 						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 2px; font-size:13px; color: #605d5d	">
 							Được tạo vào ngày @day tháng @month năm @year
@@ -365,6 +352,7 @@ else
 			{
 				IsAdmin = (GroupInfo.PositionUser == Data.Enums.Position.Chief);
 			}
+			buttonText = isJoined ? "Đã tham gia" : "Tham gia";
 			memberCount = GroupInfo.MemberCount;
 		}
 	}
