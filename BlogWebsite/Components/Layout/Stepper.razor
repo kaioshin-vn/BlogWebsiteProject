@@ -277,9 +277,8 @@
 						{
 							@foreach (var topic in filteredTopics)
 							{
-								<MudListItem>
-									<MudButton Color="@GetButtonColor(topic.IdTopic)"
-											   OnClick="@(() => OnTopicSelected(topic.IdTopic))"
+								<MudListItem  OnClick="@(() => OnTopicSelected(topic.IdTopic))">
+									<MudButton Color="@GetButtonColor(topic.IdTopic)"											  
 											   Disabled="@(!IsTopicSelectable() || selectedTopics.Count >= 3 && !selectedTopics.Contains(topic.IdTopic))">
 										@topic.TopicName
 									</MudButton>
