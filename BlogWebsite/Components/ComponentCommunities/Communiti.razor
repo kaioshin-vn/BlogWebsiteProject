@@ -95,6 +95,35 @@
 					}
 				</MudText>
 			</MudTabPanel>
+
+			@if (isAdmin)
+			{
+				if (group != null)
+				{
+
+					<MudTabPanel Text="Thông tin cộng đồng">
+						<MudText>
+							<h3>Thông tin của Nhóm: @Name</h3>
+							<MudTextField @bind-Value="group.Name" Label="Tên cộng đồng" Variant="Variant.Text" Margin="Margin.Dense"></MudTextField>
+							<MudTextField @bind-Value="group.Description" Label="Mô tả cộng đồng" Variant="Variant.Text" Margin="Margin.Dense"></MudTextField>
+							<MudTextField @bind-Value="group.ImgCover" Label="Ảnh nhóm" Variant="Variant.Text" Margin="Margin.Dense"></MudTextField>
+							<MudTextField @bind-Value="group.ImgGroup" Label="Ảnh bìa" Variant="Variant.Text" Margin="Margin.Dense"></MudTextField>
+
+							<MudButton Class="mt-3" Variant="Variant.Filled" Color="Color.Success">
+								Cập nhật
+							</MudButton>
+
+							<MudButton Class="mt-3 ms-4" Variant="Variant.Filled" Color="Color.Error">
+								Quay lại
+							</MudButton>
+						</MudText>
+					</MudTabPanel>
+				}
+				else
+				{
+					<p>Không có thông tin của nhóm.</p>
+				}
+			}
 			@if (stateGroup)
 			{
 				<MudTabPanel Text="Duyệt bài">
@@ -188,18 +217,22 @@ else
 	[Parameter]
 	public string Name { get; set; }
 	List<MemberDTO> allMembers = new List<MemberDTO>();
+	private Group? group;
 	bool isChiefOrDeputy = false;
 	bool currentUserIsDeputy = false;
 	private bool stateGroup = false;
 	private Dictionary<Guid, bool> isActionDisabled = new Dictionary<Guid, bool>();
 	bool isLoaded;
+	bool isAdmin;
 	protected override async Task OnInitializedAsync()
 	{
 		if (!string.IsNullOrEmpty(Name))
 		{
+			group = await DbContext.Groups.FirstOrDefaultAsync(g => g.Name == Name);
 			await LoadMembers();
 			await CheckUser();
 			await CheckGroupState();
+			await IsAdminLoad();
 		}
 		foreach (var member in allMembers)
 		{
@@ -212,6 +245,7 @@ else
 
 	protected override async Task OnParametersSetAsync()
 	{
+		group = await DbContext.Groups.FirstOrDefaultAsync(g => g.Name == Name);
 		await LoadMembers();
 		await CheckGroupState();
 	}
@@ -247,6 +281,27 @@ else
 			Console.WriteLine("Không thể kiểm tra danh sách nhóm.");
 		}
 	}
+
+	private async Task IsAdminLoad()
+	{
+		var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+		var user = authState.User;
+		var userCurrent = UserManager.GetUserId(user);
+		var currentUserId = Guid.Parse(userCurrent);
+		var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+		var response = await httpClient.GetAsync($"api/group/is-admin/{Name}?userId={currentUserId}");
+
+		if (response.IsSuccessStatusCode)
+		{
+			isAdmin = await response.Content.ReadFromJsonAsync<bool>();
+			Console.WriteLine("Thông tin nhóm đã được tải thành công.");
+		}
+		else
+		{
+			Console.WriteLine("Không thể kiểm tra thông tin nhóm.");
+		}
+	}
+
 
 	private async Task<bool> IsActionDisabled(Guid targetUserId)
 	{

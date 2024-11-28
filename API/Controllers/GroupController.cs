@@ -127,46 +127,6 @@ namespace API.Controllers
 			return Ok(getAdmin != null);
 		}
 
-		[HttpGet("getInfoGroup/{groupName}")]
-		public async Task<ActionResult<bool>> GetGroupInfo(string groupName, [FromQuery] Guid userId)
-		{
-			if (string.IsNullOrEmpty(groupName))
-			{
-				return BadRequest();
-			}
-			// Tìm nhóm trong bảng Groups
-			var group = await _context.Groups.FirstOrDefaultAsync(g => g.Name == groupName);
-			if (group == null)
-			{
-				return NotFound("Không tìm thấy nhóm");
-			}
-			var idGroup = group.IdGroup;
-			var GrInfo = new GroupInfoDTO();
-			GrInfo.Id = group.IdGroup;
-			GrInfo.Name = groupName;
-			GrInfo.ImgGroup = group.ImgGroup;
-			GrInfo.ImgCover = group.ImgCover;
-			GrInfo.StateGroup = group.StateGroup;
-			GrInfo.Description = group.Description;
-			GrInfo.DateTime = group.DateTime;
-
-			var positionUser = await _context.MemberGroups
-				.FirstOrDefaultAsync(a => a.IdGroup == idGroup && a.IdMember == userId);
-			if (positionUser != null)
-			{
-				GrInfo.PositionUser = positionUser.Position;
-			}
-			else
-			{
-				GrInfo.PositionUser = null;
-			}
-
-			var memberCount = await _context.MemberGroups.CountAsync(a => a.IdGroup == group.IdGroup);
-			GrInfo.MemberCount = memberCount;
-			return Ok(GrInfo);
-		}
-
-
 		[HttpGet("is-member/{groupName}")]
 		public async Task<ActionResult<bool>> IsMember(string groupName, [FromQuery] Guid userId)
 		{
@@ -266,10 +226,6 @@ namespace API.Controllers
 
 			return groups;
 		}
-
-
-
-
 
 		[HttpGet("get-all-group-user")]
 		public async Task<List<Group>> GetAllGroup([FromQuery] Guid userId)
