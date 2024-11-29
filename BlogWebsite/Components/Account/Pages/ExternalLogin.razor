@@ -149,6 +149,7 @@
         try
         {
             using var httpClient = ClientFactory.CreateClient("MyHttpClient");
+            string higherResUrl = imageUrl.Replace("s96-c", "s1000-c");
             var response = await httpClient.GetAsync(imageUrl);
             if (response.IsSuccessStatusCode)
             {
