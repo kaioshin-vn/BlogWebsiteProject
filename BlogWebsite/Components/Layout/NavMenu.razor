@@ -51,6 +51,10 @@
 				</MudNavLink>
 			}
 		}
+		else if(userGroups == null)
+		{
+			<LoadingLocal></LoadingLocal>
+		}
 	</MudNavGroup>
 
 	<MudNavGroup Title="Cộng đồng" Expanded="false" Class="rounded-3 overflow-hidden ps-3" @onclick="ClickMe" Style="width:200px; padding-left: 0; ">
@@ -67,6 +71,10 @@
 					@group.Name
 				</MudNavLink>
 			}
+		}
+		else if (groups == null)
+		{
+			<LoadingLocal></LoadingLocal>
 		}
 	</MudNavGroup>
 
