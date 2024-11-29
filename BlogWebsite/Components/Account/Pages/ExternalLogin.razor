@@ -19,7 +19,8 @@
 @inject NavigationManager NavigationManager
 @inject IdentityRedirectManager RedirectManager
 @inject ILogger<ExternalLogin> Logger
-
+@inject IHttpClientFactory ClientFactory
+@inject IWebHostEnvironment _environment
 <PageTitle>Đăng ký tài khoản</PageTitle>
 
 
@@ -143,7 +144,34 @@
             Input.Email = externalLoginInfo.Principal.FindFirstValue(ClaimTypes.Email) ?? "";
         }
     }
+    private async Task<string> DownloadAndSaveImageAsync(string imageUrl, string userId)
+    {
+        try
+        {
+            using var httpClient = ClientFactory.CreateClient("MyHttpClient");
+            var response = await httpClient.GetAsync(imageUrl);
+            if (response.IsSuccessStatusCode)
+            {
+                var fileName = $"{userId}.png";
+                var filePath = Path.Combine(_environment.WebRootPath, "images", fileName);
 
+                Directory.CreateDirectory(Path.GetDirectoryName(filePath));
+
+                using var stream = await response.Content.ReadAsStreamAsync();
+                using var fileStream = new FileStream(filePath, FileMode.Create);
+                await stream.CopyToAsync(fileStream);
+
+                return $"/images/{fileName}";
+            }
+        }
+        catch (Exception ex)
+        {
+            // Log the exception
+            Console.WriteLine($"Error downloading image: {ex.Message}");
+        }
+
+        return "/Img/avatar_default.jpg";
+    }
     private async Task OnValidSubmitAsync()
     {
         if (Input.UserName == "")
@@ -157,7 +185,12 @@
         await emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
         if (externalLoginInfo.Principal.HasClaim(c => c.Type == "image"))
         {
-            user.Img = externalLoginInfo.Principal.FindFirstValue("image") ?? "Default";
+            var img = externalLoginInfo.Principal.FindFirstValue("image") ?? "/Img/avatar_default.jpg";
+            if (!string.IsNullOrEmpty(img))
+            {
+                var imagePath = await DownloadAndSaveImageAsync(img, Guid.NewGuid().ToString());
+                user.Img = imagePath;
+            }
         }
         user.FullName = externalLoginInfo.Principal.Identity.Name;
         var result = await UserManager.CreateAsync(user);
