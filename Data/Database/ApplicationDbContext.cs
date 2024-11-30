@@ -33,6 +33,7 @@ namespace BlogWebsite.Data
         public DbSet<MemberGroup> MemberGroups { get; set; }
         public DbSet<Topic> Topics { get; set; }
         public DbSet<Flower> Flower { get; set; }
+        public DbSet<SearchHistory> SearchHistories { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -145,7 +146,12 @@ namespace BlogWebsite.Data
                 .HasForeignKey(n => n.IdUser)
                 .OnDelete(DeleteBehavior.Restrict);
 
-
+            modelBuilder.Entity<SearchHistory>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Keyword).IsRequired();
+                entity.Property(e => e.SearchDate).IsRequired();
+            });
 
             foreach (var entityType in modelBuilder.Model.GetEntityTypes())
             {

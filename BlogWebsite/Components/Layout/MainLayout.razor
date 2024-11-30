@@ -3,6 +3,7 @@
 @using System.Security.Claims
 @using Microsoft.AspNetCore.Antiforgery
 @using Microsoft.AspNetCore.SignalR.Client
+@using Newtonsoft.Json
 
 @inherits LayoutComponentBase
 <MudThemeProvider Theme="@_theme" IsDarkMode="_isDarkMode" />
@@ -19,6 +20,12 @@
 @inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
 @inject IJSRuntime JS
 
+@if (lstPostUserTop == null)
+{
+    <Client.Components.ComponentCustom.LoadingLocal></Client.Components.ComponentCustom.LoadingLocal>
+}
+else
+{
 <style>
     a:hover {
         color: unset;
@@ -42,6 +49,12 @@
             border-width: 2px; /* Độ dày border khi hover */
             border-color: lightgray;
         }
+
+        .truncate-text {
+            white-space: nowrap; /* Không cho nội dung xuống dòng */
+            overflow: hidden; /* Ẩn phần nội dung bị tràn */
+            text-overflow: ellipsis; /* Hiển thị dấu '...' khi nội dung bị tràn */
+        }
 </style>
 <div class="page">
     <MudLayout>
@@ -53,8 +66,118 @@
                     </NavLink>
                 </div>
                 <div class="d-flex col-6">
-                    <MudTextField @bind-Value="Search" Placeholder="Tìm kiếm" Variant="Variant.Text" />
-                    <MudIconButton Icon="@Icons.Material.Filled.Search" Color="Color.Info" aria-label="github"></MudIconButton>
+                        <MudMenu AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter" Class="w-100" FullWidth >
+                        <ActivatorContent>
+                            <MudTextField @bind-Value="Search"
+                                          Placeholder="Tìm kiếm"
+                                          Variant="Variant.Text"
+                                          Adornment="Adornment.Start"
+                                          AdornmentIcon="@Icons.Material.Filled.Search"
+                                          Style="width: 100%"
+                                          @onclick="async ()=> await SearchKeyPress()"
+                                          OnKeyUp="@SearchKey" />
+                        </ActivatorContent>
+                        <ChildContent>
+                            @if (string.IsNullOrEmpty(Search))
+                            {
+                                <MudGrid>
+                                    <MudItem Class="pb-0 mb-0" xs="12">
+                                        <MudList T="string">
+                                            @foreach (var history in SearchHistory)
+                                            {
+                                                    <MudListItem Icon="@Icons.Material.Filled.History" >
+                                                        <div class="d-flex align-center justify-space-between">
+                                                            <MudText @onclick="@(() => SelectFromHistory(history))">@history</MudText>
+                                                            <MudIconButton Icon="@Icons.Material.Filled.Close"
+                                                                           Size="Size.Small"
+                                                                           OnClick="@(() => DeleteHistoryItemAndStayOpen(history))"/>
+                                                        </div>
+                                                    </MudListItem>
+                                            }
+                                        </MudList>
+                                        <hr />
+                                    </MudItem>
+                                    <MudItem Class="pt-0 mt-0" xs="12">
+                                        <MudItem Class="d-flex justify-content-sm-between">
+                                            <MudText Class="m-2">Bài Viết HOT</MudText>
+                                            <MudButton Href="/searchPost" Class="m-2">Xem Thêm</MudButton>
+                                        </MudItem>
+                                        <MudList T="string">
+                                            @foreach (var item in lstPostUserTop)
+                                            {
+                                                <MudListItem>
+                                                    <MudGrid Justify="Justify.SpaceBetween">
+                                                        <MudItem xs="6">
+                                                            <MudCardHeader Class="p-0 m-0">
+                                                                <MudAvatar>
+                                                                    <MudImage ObjectFit="ObjectFit.Cover" Src="@item.Avatar"></MudImage>
+                                                                </MudAvatar>
+                                                                <MudText Class="px-2">@item.UserName</MudText>
+                                                            </MudCardHeader>
+                                                            <MudCardContent Class="p-0 pt-1 m-0">
+                                                                <MudText Typo="Typo.h6" Class="truncate-text">@item.Title</MudText>
+                                                            </MudCardContent>
+                                                        </MudItem>
+                                                        <MudItem xs="6" Class="d-flex justify-content-end">
+                                                            @if (!string.IsNullOrEmpty(item.ImgFile) || !string.IsNullOrEmpty(item.VideoFile))
+                                                            {
+                                                                <MudImage Style="border-radius:20px" Src="@(string.IsNullOrEmpty(item.ImgFile) ? item.VideoFile : item.ImgFile)" ObjectFit="ObjectFit.Cover" Width="150" Height="100" />
+                                                            }
+                                                            else
+                                                            {
+                                                                <MudText></MudText>
+                                                            }
+                                                        </MudItem>
+                                                    </MudGrid>
+                                                </MudListItem>
+                                            }
+                                        </MudList>
+                                    </MudItem>
+                                    </MudGrid>
+                                }
+                                else if(searchResult?.Posts != null)
+                                {
+                                    <MudGrid>
+                                        <MudItem Class="pt-0 mt-0" xs="12">
+                                            <MudItem Class="d-flex justify-content-sm-between">
+                                                <MudText>">Bài viết</MudText>
+                                            </MudItem>
+                                            <MudList T="string">
+                                                @foreach (var post in searchResult.Posts)
+                                                {
+                                                    <MudListItem>
+                                                        <MudGrid Justify="Justify.SpaceBetween">
+                                                            <MudItem xs="6">
+                                                                <MudCardHeader Class="p-0 m-0">
+                                                                    <MudAvatar Size="Size.Small">
+                                                                        <MudImage ObjectFit="ObjectFit.Cover" Src="@post.Avatar"></MudImage>
+                                                                    </MudAvatar>
+                                                                    <MudText Class="px-2">@post.UserName</MudText>
+                                                                </MudCardHeader>
+                                                                <MudCardContent Class="p-0 pt-1 m-0">
+                                                                    <MudText Typo="Typo.h6" Class="truncate-text">@post.Title</MudText>
+                                                                </MudCardContent>
+                                                            </MudItem>
+                                                            <MudItem xs="6" Class="d-flex justify-content-end">
+                                                                @if (!string.IsNullOrEmpty(post.ImgFile) || !string.IsNullOrEmpty(post.VideoFile))
+                                                                {
+                                                                    <MudImage Style="border-radius:20px" Src="@(string.IsNullOrEmpty(post.ImgFile) ? post.VideoFile : post.ImgFile)" ObjectFit="ObjectFit.Cover" Width="150" Height="100" />
+                                                                }
+                                                                else
+                                                                {
+                                                                    <MudText></MudText>
+                                                                }
+                                                            </MudItem>
+                                                        </MudGrid>
+                                                    </MudListItem>
+                                                }
+                                            </MudList>
+                                        </MudItem>
+                                    </MudGrid>
+                                }
+                            </ChildContent>
+                    </MudMenu>
+                        <MudIconButton Icon="@Icons.Material.Filled.Search" @bind-Value="Search" @onclick="async ()=> await HandleSearch()" Color="Color.Info" aria-label="github"></MudIconButton>
                     <MudIconButton Class="mx-2" Icon="@(DarkLightModeButtonIcon)" Color="Color.Inherit" OnClick="@DarkModeToggle" />
                 </div>
                 <div class="col-3">
@@ -187,7 +310,7 @@
         });
     }
 </script>
-
+}
 @code {
 
     string Search;
@@ -202,6 +325,17 @@
     protected int NoticeCount = 13;
     public string Avatar;
     private ClaimsPrincipal user;
+
+    private bool isStatusHistory = false;
+
+    private bool ShowSearchResults = false;
+
+    private List<string> SearchHistory = new List<string>();
+    private const int MaxHistoryCount = 4;
+
+    private SearchResultWithPaginationDTO searchResult;
+
+
     protected override async Task OnInitializedAsync()
     {
         _theme = new()
@@ -250,6 +384,7 @@
             {
                 Avatar = currentUser.Img;
             }
+            await LoadSearchHistory();
         }
     }
 
@@ -308,4 +443,127 @@
     {
         Navigation.NavigateTo("/createPost");
     }
+
+    private List<PostIntroDTO> lstPostUserTop = new List<PostIntroDTO>();
+
+    private async Task SearchKeyPress()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        var idUserCurrent = UserManager.GetUserId(user);
+        var idUser = Guid.Parse(idUserCurrent);
+
+        var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+        var result = await httpClient.GetStringAsync($"/api/search/getListPostTop/{idUser}");
+
+        var resultConverted = JsonConvert.DeserializeObject<List<PostIntroDTO>>(result);
+        if (resultConverted != null)
+        {
+            lstPostUserTop = resultConverted;
+        }
+    }
+
+    // xử lý khi nhấn Enter
+    private async Task SearchKey(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await HandleSearch();
+        }
+        else if (e.Key != "Enter" || !string.IsNullOrEmpty(e.Key))
+        {
+            await SearchPosts(e.Key);
+        }
+    }
+
+    private async Task HandleSearch()
+    {
+        if (string.IsNullOrWhiteSpace(Search))
+            return;
+
+        try
+        {
+            // Chuyển hướng đến trang tìm kiếm với từ khóa
+            Navigation.NavigateTo($"/searchPost?keyword={Uri.EscapeDataString(Search)}");
+
+            // Cập nhật lại lịch sử tìm kiếm local
+            await LoadSearchHistory();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error searching: {ex.Message}");
+        }
+    }
+
+    // Tạo phương thức riêng để tìm kiếm bài viết
+    private async Task SearchPosts(string keyword)
+    {
+        var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+        var response = await httpClient.GetAsync($"/api/search/search-all?keyword={Uri.EscapeDataString(keyword)}");
+
+        if (response.IsSuccessStatusCode)
+        {
+            var content = await response.Content.ReadAsStringAsync();
+            searchResult = JsonConvert.DeserializeObject<SearchResultWithPaginationDTO>(content);
+            StateHasChanged();
+        }
+        else
+        {
+            Console.WriteLine("Error fetching posts: " + response.ReasonPhrase);
+        }
+    }
+
+    private async Task DeleteHistoryItemAndStayOpen(string keyword)
+    {
+        await DeleteHistoryItem(keyword);
+    }
+
+    private async Task DeleteHistoryItem(string keyword)
+    {
+        try
+        {
+            var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+            var response = await httpClient.DeleteAsync($"/api/search/remove-history-search?keyword={Uri.EscapeDataString(keyword)}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                // cập nhật lại lịch sử tìm kiếm local
+                await LoadSearchHistory();
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error deleting search history item: {ex.Message}");
+        }
+    }
+
+    // Load lịch sử tìm kiếm từ API
+    private async Task LoadSearchHistory()
+    {
+        try
+        {
+            var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+            var response = await httpClient.GetAsync("/api/search/get-search-history?take=5");
+
+            if (response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                SearchHistory = JsonConvert.DeserializeObject<List<string>>(content);
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading search history: {ex.Message}");
+        }
+    }
+
+    // Chọn từ khóa từ lịch sử
+    private async Task SelectFromHistory(string keyword)
+    {
+        Search = keyword;
+        await HandleSearch();
+    }
 }
+

@@ -164,6 +164,25 @@ namespace API.Controllers.UserController
             return await _context.Flower
                 .AnyAsync(f => f.IdFlower == IdUser && f.IdUser == followerId && f.IsFollowing);
         }
+
+        [HttpGet("getListUser")]
+        public async Task<ActionResult<List<UserDto>>> GetListUser()
+        {
+            var lstUser = await _userManager.Users.ToListAsync();
+            var userDtos = lstUser.Select(user => new UserDto
+            {
+                Id = user.Id.ToString(),
+                Descript = user.Descript,
+                Img = user.Img,
+                ImgCover = user.ImgCover,
+                Address = user.Address,
+                PhoneNumber = user.PhoneNumber,
+                Email = user.Email,
+                FullName = user.FullName,
+            }).ToList();
+            return Ok(userDtos);
+        }
+
     }
     public class FollowerDto
     {
