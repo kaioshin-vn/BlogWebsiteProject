@@ -5,6 +5,8 @@
 
 @inject IHttpClientFactory HttpClientFactory
 @inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserManager<ApplicationUser> UserManager
 
 <style>
     .result-container {
@@ -183,7 +185,13 @@ else
         try
         {
             var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
-            var response = await httpClient.GetAsync($"/api/search/search-all?keyword={Uri.EscapeDataString(searchKeyword)}&page={currentPage}&pageSize={pageSize}");
+
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+            var idUserCurrent = UserManager.GetUserId(user);
+            var idUser = Guid.Parse(idUserCurrent);
+
+            var response = await httpClient.GetAsync($"/api/search/search-all?keyword={Uri.EscapeDataString(searchKeyword)}&page={currentPage}&pageSize={pageSize}&idUser={idUser}");
 
             if (response.IsSuccessStatusCode)
             {
