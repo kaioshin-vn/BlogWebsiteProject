@@ -33,7 +33,7 @@ namespace API.Controllers
                 var introPostUser = await GetPostIntro(item);
                 lstPostUser.Add(introPostUser);
             }
-            var lstPostTop = lstPostUser.OrderByDescending(x => x.Like).Take(5).ToList();
+            var lstPostTop = lstPostUser.OrderByDescending(x => x.Like).Take(10).ToList();
             return lstPostTop;
         }
 
@@ -98,13 +98,13 @@ namespace API.Controllers
         }
 
         [HttpGet("search-all")]
-        public async Task<ActionResult<SearchResultWithPaginationDTO>> SearchAll(string keyword, int page = 1, int pageSize = 10)
+        public async Task<ActionResult<SearchResultWithPaginationDTO>> SearchAll(Guid idUser, string keyword, int page = 1, int pageSize = 10)
         {
             if (string.IsNullOrWhiteSpace(keyword))
                 return Ok(new SearchResultWithPaginationDTO());
 
             // Lưu keyword search
-            await SaveSearchHistory(keyword);
+            await SaveSearchHistory(keyword, idUser);
 
             // Chuẩn hóa từ khóa tìm kiếm
             var normalizedKeyword = keyword.ToLower().RemoveDiacritics();
@@ -211,13 +211,14 @@ namespace API.Controllers
             });
         }
 
-        private async Task SaveSearchHistory(string keyword)
+        private async Task SaveSearchHistory(string keyword, Guid idUser)
         {
             try
             {
                 var searchHistory = new SearchHistory
                 {
                     Id = Guid.NewGuid(),
+                    IdUser = idUser,
                     Keyword = keyword,
                     SearchDate = DateTime.Now
                 };
@@ -233,9 +234,10 @@ namespace API.Controllers
         }
 
         [HttpGet("get-search-history")]
-        public async Task<ActionResult<List<string>>> GetSearchHistory(int take = 5)
+        public async Task<ActionResult<List<string>>> GetSearchHistory(Guid idUser, int take = 5)
         {
             var history = await _context.SearchHistories
+                .Where(x => x.IdUser == idUser)
                 .OrderByDescending(x => x.SearchDate)
                 .Select(x => x.Keyword)
                 .Distinct()
@@ -246,14 +248,18 @@ namespace API.Controllers
         }
 
         [HttpDelete("remove-history-search")]
-        public async Task<IActionResult> DeleteHistorySearch(string keyword)
+        public async Task<IActionResult> DeleteHistorySearch(Guid idUser, string keyword)
         {
-            var hisrytoSearch = await _context.SearchHistories.FirstOrDefaultAsync(x => x.Keyword == keyword);
+            var hisrytoSearch = await _context.SearchHistories.Where(x => x.Keyword == keyword && x.IdUser == idUser).ToListAsync();
             if(hisrytoSearch == null)
             {
                 return BadRequest();
             }
-            _context.SearchHistories.Remove(hisrytoSearch);
+            foreach (var item in hisrytoSearch)
+            {
+                _context.SearchHistories.Remove(item);
+            }
+
             await _context.SaveChangesAsync();
             return Ok();
         }

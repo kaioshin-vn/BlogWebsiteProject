@@ -151,6 +151,9 @@ namespace BlogWebsite.Data
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.Keyword).IsRequired();
                 entity.Property(e => e.SearchDate).IsRequired();
+                entity.HasOne(n => n.ApplicationUser)
+                .WithMany(u => u.SearchHistories)
+                .HasForeignKey(n => n.IdUser);
             });
 
             foreach (var entityType in modelBuilder.Model.GetEntityTypes())
