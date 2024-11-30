@@ -1,0 +1,218 @@
+﻿@page "/searchPost"
+@using Client.Components.ComponentCustom
+@using Data.DTO
+@using Newtonsoft.Json
+
+@inject IHttpClientFactory HttpClientFactory
+@inject NavigationManager NavigationManager
+
+<style>
+    .result-container {
+        margin-top: 20px;
+    }
+    .custom-tabs .mud-tab {
+        text-transform: none;
+    }
+
+    .truncate-text {
+        white-space: nowrap; /* Không cho nội dung xuống dòng */
+        overflow: hidden; /* Ẩn phần nội dung bị tràn */
+        text-overflow: ellipsis; /* Hiển thị dấu '...' khi nội dung bị tràn */
+    }
+
+    .hover-underline:hover {
+        text-decoration: underline;
+    }
+
+</style>
+
+@if (searchResult == null)
+{
+    <LoadingLocal></LoadingLocal>
+}
+else
+{
+    <div class="result-container">
+        <MudTabs @bind-ActivePanelIndex="activeTab" Elevation="0" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6" Class="custom-tabs">
+            <MudDivider Style="border-width: 1px; border-color: black; margin-bottom:5px" />
+            <MudTabPanel Text="Bài viết">
+                <MudList T="string">
+                    @foreach (var post in searchResult.Posts)
+                    {
+                        <MudListItem Style="width:900px; border-radius:20px">
+                            <MudGrid Justify="Justify.SpaceBetween">
+                                <MudItem xs="9">
+                                    <MudCardHeader Class="p-0 m-0">
+                                        <MudAvatar Size="Size.Medium">
+                                            <MudImage ObjectFit="ObjectFit.Cover" Src="@post.Avatar"></MudImage>
+                                        </MudAvatar>
+                                       <MudItem Class="px-2">
+                                            <MudText Typo="Typo.body1" ><b class="hover-underline">@post.UserName</b></MudText>
+                                            <MudText Typo="Typo.body2"><span>@post.CreateDate</span></MudText>
+                                       </MudItem>
+                                    </MudCardHeader>
+                                    <MudCardContent Class="p-0 pt-1 m-0">
+                                        <MudText Typo="Typo.body1" Class="truncate-text" Style="font-size: 20px;"><b class="hover-underline">@post.Title</b></MudText>
+                                    </MudCardContent>
+                                    <MudItem>
+                                        <MudText Style=" font-size:12px; color:gray">@(string.IsNullOrEmpty(post.Like) ? 0 : post.Like.Count()) lượt thích · @post.CommentCount bình luận </MudText>
+                                    </MudItem>
+                                </MudItem>
+                                <MudItem xs="3" Class="d-flex justify-content-end">
+                                    @if (!string.IsNullOrEmpty(post.ImgFile) || !string.IsNullOrEmpty(post.VideoFile))
+                                    {
+                                        <MudImage Style="border-radius:20px" Src="@(string.IsNullOrEmpty(post.ImgFile) ? post.VideoFile : post.ImgFile)" ObjectFit="ObjectFit.Cover" Width="150" Height="100"></MudImage>
+                                    }
+                                    else
+                                    {
+                                        <MudText Style="width:150px; height:100px"></MudText>
+                                    }
+                                </MudItem>
+                            </MudGrid>
+                        </MudListItem>
+                        <hr style="width:900px" />
+                    }
+                </MudList>
+                    @if (searchResult.TotalPosts > 0)
+                    {
+                        <MudPagination Count="@((int)Math.Ceiling((decimal)searchResult.TotalPosts / pageSize))"
+                                       SelectedChanged="@(async (e) => {currentPage = e; await PerformSearch();})"
+                                       Class="pa-4 d-flex justify-center"
+                                       BoundaryCount="1" MiddleCount="3" />
+                    }
+                    else
+                    {
+                        <MudText Class="mt-2">Không tìm thấy bài viết nào</MudText>
+                    }
+            </MudTabPanel>
+
+            <MudTabPanel Text="Cộng đồng">
+                <MudList T="string">
+                    @foreach (var group in searchResult.Groups)
+                    {
+                        <MudListItem Style="width:900px; border-radius:20px">
+                            <MudGrid>
+                                <MudItem xs="12">
+                                    <div class="d-flex">
+                                        <MudAvatar Class="mr-2" Size="Size.Large">
+                                            <MudImage Src="@group.ImgGroup" />
+                                        </MudAvatar>
+                                        <div>
+                                            <MudText Typo="Typo.h6" Class="truncate-text"><b class="hover-underline">@group.Name</b></MudText>
+                                            <MudText Typo="Typo.body2" Class="truncate-text">@group.Description</MudText>
+                                            <MudText Typo="Typo.caption" Color="Color.Secondary">@group.MemberCount thành viên</MudText>
+                                        </div>
+                                    </div>
+                                </MudItem>
+                            </MudGrid>
+                        </MudListItem>
+                        <hr style="width:900px" />
+                    }
+                </MudList>
+                    @if (searchResult.TotalGroups > 0)
+                    {
+                        <MudPagination Count="@((int)Math.Ceiling((decimal)searchResult.TotalGroups / pageSize))"
+                                       @bind-Selected="currentPage"
+                                       Class="pa-4 d-flex justify-center" />
+                    }
+                    else
+                    {
+                        <MudText Class="mt-2">Không tìm thấy nhóm nào</MudText>
+                    }
+            </MudTabPanel>
+
+            <MudTabPanel Text="Người dùng">
+                    <MudList T="string"> 
+                        @foreach (var user in searchResult.Users)
+                        {
+                        <MudListItem Style="width:900px; border-radius:20px">
+                            <MudGrid>
+                                <MudItem xs="12">
+                                    <MudCardHeader Class="p-0 m-0">
+                                        <MudAvatar Size="Size.Medium">
+                                            <MudImage ObjectFit="ObjectFit.Cover" Src="@user.Img"></MudImage>
+                                        </MudAvatar>
+                                       <MudItem Class="px-2">
+                                            <MudText Typo="Typo.body1" Style="font-size: 20px; font-weight: bold;"><b class="hover-underline">@user.FullName</b></MudText>
+                                            <MudText  Style=" font-size:12px; color:gray">@user.CountFollow theo dõi</MudText>
+                                       </MudItem>
+                                    </MudCardHeader>
+                                    <MudText Style="padding-left:48px;" Typo="Typo.body2">@user.Descript</MudText>
+                                </MudItem>
+                            </MudGrid>
+                        </MudListItem>
+                        <hr style="width:900px" />
+                    }
+                    </MudList>
+                    @if (searchResult.TotalUsers > 0)
+                    {
+                        <MudPagination Count="@((int)Math.Ceiling((decimal)searchResult.TotalUsers / pageSize))"
+                                       @bind-Selected="currentPage"
+                                       Class="pa-4 d-flex justify-center" />
+                    }
+                    else
+                    {
+                        <MudText Class="mt-2">Không tìm thấy người dùng nào</MudText>
+                    }
+            </MudTabPanel>
+        </MudTabs>
+    </div>
+}
+
+@code {
+    private string searchKeyword = "";
+    private SearchResultWithPaginationDTO searchResult;
+    private int activeTab = 0;
+    private int currentPage = 1;
+    private int pageSize = 10;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var uri = new Uri(NavigationManager.Uri);
+        var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+
+        if (query["keyword"] != null)
+        {
+            searchKeyword = query["keyword"];
+            await PerformSearch();
+        }
+    }
+
+    private async Task PerformSearch()
+    {
+        try
+        {
+            var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+            var response = await httpClient.GetAsync($"/api/search/search-all?keyword={Uri.EscapeDataString(searchKeyword)}&page={currentPage}&pageSize={pageSize}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                searchResult = JsonConvert.DeserializeObject<SearchResultWithPaginationDTO>(content);
+
+                // Cập nhật URL với từ khóa tìm kiếm
+                NavigationManager.NavigateTo($"/searchPost?keyword={Uri.EscapeDataString(searchKeyword)}", false);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error searching: {ex.Message}");
+        }
+    }
+
+    // Theo dõi thay đổi tab
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender && !string.IsNullOrWhiteSpace(searchKeyword))
+        {
+            await PerformSearch();
+        }
+    }
+
+    // Theo dõi thay đổi trang
+    private async Task OnPageChanged(int page)
+    {
+        currentPage = page;
+        await PerformSearch();
+    }
+}
