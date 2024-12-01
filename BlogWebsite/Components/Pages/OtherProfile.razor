@@ -5,6 +5,7 @@
 @inject IHttpClientFactory ClientFactory
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager Navigation
+@inject IDialogService Dialog
 <MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
     <MudCard>
         <MudCardMedia Image="/Img/univer.png" Height="300" />
@@ -12,7 +13,7 @@
     <div class="d-flex justify-space-between align-center" style="margin-top: -26px;">
         <div class="d-flex align-center">
             <MudAvatar Style="width: 160px; height: 160px; border: 4px solid white;" Class="mb-3 mb-md-0">
-                <MudImage Src="@(_avatarUrl ?? "/Img/avatar_default.jpg")"></MudImage>
+                <MudImage @onclick="OpenAvatarViewer" Src="@(_avatarUrl ?? "/Img/avatar_default.jpg")" Style="cursor: pointer;" />
             </MudAvatar>
             <div class="ms-2 text-start">
                 <MudText Typo="Typo.h4">@model.FullName</MudText>
@@ -57,16 +58,19 @@
             </MudCard>
         </MudItem>
         <MudItem xs="12" md="8">
-            <MudCard>
-                <MudCardHeader>
-                    <CardHeaderContent>
-                        <MudText Typo="Typo.h6">Giới thiệu</MudText>
-                    </CardHeaderContent>
-                </MudCardHeader>
-                <MudCardContent>
-                    <MudText Typo="Typo.body1">@model.Descript</MudText>
-                </MudCardContent>
-            </MudCard>
+            @if (!string.IsNullOrEmpty(model.Descript))
+                {
+                    <MudCard>
+                        <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.h6">Giới thiệu</MudText>
+                        </CardHeaderContent>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        <MudText Typo="Typo.body1">@model.Descript</MudText>
+                    </MudCardContent>
+                </MudCard>
+                }
         </MudItem>
     </MudGrid>
 </MudContainer>
@@ -79,7 +83,15 @@
     private MudForm form;
     private string _avatarUrl;
     private bool IsCurrentUser = false;
+    private bool isAvatarViewerVisible = false;
 
+    private DialogOptions dialogOptions = new DialogOptions()
+        {
+            FullWidth = true,
+            MaxWidth = MaxWidth.Medium,
+            CloseOnEscapeKey = true,
+            NoHeader = false
+        };
     private PersonalInfoModel model = new PersonalInfoModel();
 
     protected override async Task OnInitializedAsync()
@@ -114,6 +126,14 @@
     }
     private bool _isFollowing = false;
 
+    private Task OpenAvatarViewer()
+    {
+        var parameters = new DialogParameters<AvatarViewerModal>
+        {
+            { x => x.ImageUrl, _avatarUrl ?? "/Img/avatar_default.jpg" },
+        };
+        return Dialog.ShowAsync<AvatarViewerModal>("Ảnh đại diện", parameters, dialogOptions);
+    }
     private async Task ToggleFollowUser()
     {
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();

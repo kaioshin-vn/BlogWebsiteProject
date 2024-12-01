@@ -51,9 +51,11 @@
 				</MudNavLink>
 			}
 		}
-		else if(userGroups == null)
+		else if (userGroups == null)
 		{
-			<LoadingLocal></LoadingLocal>
+			<div class="d-flex justify-content-center my-2">
+				<MudProgressCircular Color="Color.Success" Size="Size.Small" Indeterminate="true" />
+			</div>
 		}
 	</MudNavGroup>
 
@@ -74,7 +76,9 @@
 		}
 		else if (groups == null)
 		{
-			<LoadingLocal></LoadingLocal>
+			<div class="d-flex justify-content-center my-2">
+				<MudProgressCircular Color="Color.Success" Size="Size.Small" Indeterminate="true" />
+			</div>
 		}
 	</MudNavGroup>
 

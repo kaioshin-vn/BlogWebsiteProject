@@ -26,14 +26,13 @@
             {
                 <MudListItem>
                     <div class="d-flex align-center">
-                        <MudAvatar Class="mr-4">
-                            <MudImage Src="@follower.Img" Alt="AVT!"></MudImage>
-                        </MudAvatar>
-                        <div>
+                        <a href="/other-profile/@follower.Id" style="cursor:pointer">
+                            <MudAvatar Class="mr-4">
+                                <MudImage Src="@follower.Img" Alt="AVT!"></MudImage>
+                            </MudAvatar>
                             <MudText Typo="Typo.body1">@follower.FullName</MudText>
-                            <MudText Typo="Typo.body2" Color="Color.Secondary">@follower.FullName</MudText>
-                        </div>
-                        <MudSpacer />
+                        </a>
+                        <MudSpacer/> 
                         @if (follower.IsFollowing)
                         {
                             <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" OnClick="@(() =>  ToggleFollowUser(follower.Id, follower.IsFollowing))">

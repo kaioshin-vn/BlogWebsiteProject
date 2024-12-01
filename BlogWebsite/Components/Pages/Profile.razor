@@ -1,10 +1,9 @@
 ﻿@page "/profile"
 @using System.Security.Claims
 @inject ISnackbar Snackbar
-@inject IJSRuntime JSRuntime
 @inject IHttpClientFactory ClientFactory
 @inject AuthenticationStateProvider AuthenticationStateProvider
-
+@inject IDialogService Dialog
 <MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
     <MudCard>
         <MudCardMedia Image="/Img/univer.png" Height="300" />
@@ -12,7 +11,7 @@
     <div class="d-flex justify-space-between align-center" style="margin-top: -26px;">
         <div class="d-flex align-center">
             <MudAvatar Style="width: 160px; height: 160px; border: 4px solid white;" Class="mb-3 mb-md-0">
-                <MudImage Src="@(_avatarUrl ?? "/Img/avatar_default.jpg")"></MudImage>
+                <MudImage @onclick="OpenAvatarViewer" Src="@(_avatarUrl ?? "/Img/avatar_default.jpg")" Style="cursor: pointer;" />
             </MudAvatar>
             <MudFileUpload T="IBrowserFile" FilesChanged="UploadAvatar" Accept="image/*">
                 <ActivatorContent>
@@ -83,16 +82,19 @@
             }
             else
             {
-                <MudCard>
-                    <MudCardHeader>
-                        <CardHeaderContent>
-                            <MudText Typo="Typo.h6">Giới thiệu</MudText>
-                        </CardHeaderContent>
-                    </MudCardHeader>
-                    <MudCardContent>
-                        <MudText Typo="Typo.body1">@model.Descript</MudText>
-                    </MudCardContent>
-                </MudCard>
+                @if (!string.IsNullOrEmpty(model.Descript))
+                {
+                    <MudCard>
+                        <MudCardHeader>
+                            <CardHeaderContent>
+                                <MudText Typo="Typo.h6">Giới thiệu</MudText>
+                            </CardHeaderContent>
+                        </MudCardHeader>
+                        <MudCardContent>
+                            <MudText Typo="Typo.body1">@model.Descript</MudText>
+                        </MudCardContent>
+                    </MudCard>
+                }
             }
         </MudItem>
     </MudGrid>
@@ -106,8 +108,16 @@
     private MudForm form;
     private string _avatarUrl;
     private bool IsCurrentUser = false;
-
     private PersonalInfoModel model = new PersonalInfoModel();
+    private bool isAvatarViewerVisible = false;
+
+    private DialogOptions dialogOptions = new DialogOptions()
+    {
+        FullWidth = true,
+        MaxWidth = MaxWidth.Medium,
+        CloseOnEscapeKey = true,
+        NoHeader = false
+    };
 
     protected override async Task OnInitializedAsync()
     {
@@ -122,6 +132,7 @@
         await GetInfo(currentUserId);
         Id = currentUserId;
     }
+
     private async Task GetInfo(string id)
     {
         var client = ClientFactory.CreateClient("MyHttpClient");
@@ -138,6 +149,7 @@
             Snackbar.Add("Không thể tải thông tin người dùng.", Severity.Error);
         }
     }
+
     private async Task SaveChanges()
     {
         await form.Validate();
@@ -158,17 +170,16 @@
             }
         }
     }
+
     private async Task UploadAvatar(IBrowserFile file)
     {
         var client = ClientFactory.CreateClient("MyHttpClient");
         if (file != null && file.Size > 0)
         {
-            // Kiểm tra định dạng file
             var fileExtension = Path.GetExtension(file.Name).ToLower();
             var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
             if (!allowedExtensions.Contains(fileExtension))
             {
-                // Hiển thị thông báo lỗi hoặc xử lý khi định dạng không hợp lệ
                 Snackbar.Add("Định dạng file không hợp lệ!", Severity.Error);
                 return;
             }
@@ -180,7 +191,6 @@
             {
                 Directory.CreateDirectory(directoryPath);
             }
-            // Lưu file xuống disk
             using (var stream = new FileStream(filePath, FileMode.Create))
             {
                 await file.OpenReadStream().CopyToAsync(stream);
@@ -198,6 +208,15 @@
         {
             Snackbar.Add("Không thể cập nhật ảnh đại diện. Vui lòng thử lại.", Severity.Error);
         }
+    }
+
+    private Task OpenAvatarViewer()
+    {
+        var parameters = new DialogParameters<AvatarViewerModal>
+        {
+            { x => x.ImageUrl, _avatarUrl ?? "/Img/avatar_default.jpg" },
+        };
+        return Dialog.ShowAsync<AvatarViewerModal>("Ảnh đại diện",parameters, dialogOptions);
     }
     public class PersonalInfoModel
     {

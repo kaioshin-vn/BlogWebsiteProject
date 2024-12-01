@@ -13,7 +13,7 @@
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager Navigation
 @inject IHttpClientFactory HttpClientFactory
-@inject IJSRuntime JSRunTime
+@inject IJSRuntime JSRuntime
 @inject ISnackbar Snackbar
 <style>
 	.person-list {
@@ -78,7 +78,7 @@
 								}
 								<MudTd DataLabel="Thao tác" Style="padding-left: 0">
 									<MudIconButton Icon="@Icons.Material.Filled.Delete"
-												   OnClick="() => OnclickDelete(context.Id)"
+												   OnClick="() => ConfirmDelete(context.Id)"
 												   Disabled="isActionDisabled[context.Id]" />
 
 									<MudIconButton Icon="@Icons.Material.Filled.Create"
@@ -96,20 +96,45 @@
 				</MudText>
 			</MudTabPanel>
 
-			@if (isAdmin)
+			if (group != null)
 			{
-				if (group != null)
+				@if (isAdmin)
 				{
-
 					<MudTabPanel Text="Thông tin cộng đồng">
 						<MudText>
 							<h3>Thông tin của Nhóm: @Name</h3>
 							<MudTextField @bind-Value="group.Name" Label="Tên cộng đồng" Variant="Variant.Text" Margin="Margin.Dense"></MudTextField>
 							<MudTextField @bind-Value="group.Description" Label="Mô tả cộng đồng" Variant="Variant.Text" Margin="Margin.Dense"></MudTextField>
-							<MudTextField @bind-Value="group.ImgCover" Label="Ảnh nhóm" Variant="Variant.Text" Margin="Margin.Dense"></MudTextField>
-							<MudTextField @bind-Value="group.ImgGroup" Label="Ảnh bìa" Variant="Variant.Text" Margin="Margin.Dense"></MudTextField>
-
-							<MudButton Class="mt-3" Variant="Variant.Filled" Color="Color.Success">
+							<MudGrid Spacing="2">
+								<MudTextField xs="6" Class="ms-2" @bind-Value="group.ImgCover" Style="width:800px; overflow:hidden;text-overflow: ellipsis;" Label="Ảnh nhóm" Variant="Variant.Text" Margin="Margin.Dense"></MudTextField>
+								<MudItem xs="2" class="d-flex align-items-center justify-end" Style="padding:0 ">
+									<MudFileUpload T="IBrowserFile" AcceptedFileTypes="new string[] { \" image /jpeg\", \"image /png\", \"image /jpg\", \"image /webp\" }">
+										<ActivatorContent>
+											<MudFab StartIcon="@Icons.Material.Filled.Image"
+													Label="iconButtonLabel"
+													Style="height: 32px;" />
+										</ActivatorContent>
+									</MudFileUpload>
+								</MudItem>
+							</MudGrid>
+							<MudGrid Spacing="2" Style="transition: background-color 0.3s;">
+								<MudTextField xs="6" Class="ms-2" @bind-Value="group.ImgGroup" Style="overflow:hidden;text-overflow: ellipsis;" Label="Ảnh bìa" Variant="Variant.Text" Margin="Margin.Dense"></MudTextField>
+								<MudItem xs="2" class="d-flex align-items-center justify-end" Style="padding:0 ">
+									<MudFileUpload T="IBrowserFile" AcceptedFileTypes="new string[] { \" image /jpeg\", \"image /png\", \"image /jpg\", \"image /webp\" }">
+										<ActivatorContent>
+											<MudFab StartIcon="@Icons.Material.Filled.Image"
+													Label="iconButtonLabel"
+													Style="height: 32px;" />
+										</ActivatorContent>
+									</MudFileUpload>
+								</MudItem>
+							</MudGrid>
+							<MudSelect @bind-Value="group.StateGroup" Label="Trạng thái cộng đồng" AdornmentIcon="@Icons.Material.Filled.Fastfood" AdornmentColor="Color.Primary">
+								<MudSelectItem Value="Data.Enums.KindGroup.Public">Công khai</MudSelectItem>
+								<MudSelectItem Value="Data.Enums.KindGroup.Restricted">Hạn chế</MudSelectItem>
+								<MudSelectItem Value="Data.Enums.KindGroup.Private">Riêng tư</MudSelectItem>
+							</MudSelect>
+							<MudButton Class="mt-3" Variant="Variant.Filled" Color="Color.Success" OnClick="UpdateGroupClick">
 								Cập nhật
 							</MudButton>
 
@@ -119,38 +144,65 @@
 						</MudText>
 					</MudTabPanel>
 				}
-				else
-				{
-					<p>Không có thông tin của nhóm.</p>
-				}
+			}
+			else
+			{
+				<p>Không có thông tin của nhóm.</p>
 			}
 			@if (stateGroup)
 			{
 				<MudTabPanel Text="Duyệt bài">
 					<MudText>
-						<h3>Danh sách bài cần duyệt của Nhóm: @Name</h3>
+						<h3 class="ms-12">Danh sách bài cần duyệt </h3>
 
-						@if (allMembers != null && allMembers.Any())
-						{
-							<ul class="person-list">
-								<li class="header">
-									<span>Duyệt bài</span>
-								</li>
-								@foreach (var name in allMembers)
+						<div style="width:68% ; margin-top:-10px; margin-left: 50px ">
+							@if (listIntroPost != null && listIntroPost.Any())
+							{
+								@foreach (var item in listIntroPost)
 								{
-									<li>
-										<span>Duyệt bài</span>
-									</li>
+									<PostWaiState Avatar="@item.Avatar" Content="@item.Content"
+												  CreateDate="@item.CreateDate" IdPost="@item.Id"
+												  CommentCount="@item.CommentCount" Like="@item.Like"
+												  VideoFile="@item.VideoFile" ImgFile="@item.ImgFile"
+												  WatchDetailPost="GetPostGroup" UserName="@item.UserName" Title="@item.Title">
+									</PostWaiState>
 								}
-							</ul>
-						}
-						else
-						{
-							<p>Không có thành viên hoặc admin nào trong nhóm.</p>
-						}
+							}
+							else if (group.StateGroup == KindGroup.Private && isChiefOrDeputy == false)
+							{
+								<p style="margin-top: 200px; margin-left: 250px">Bạn phải tham gia nhóm mới xem được bài viết.</p>
+							}
+							else
+							{
+								<p style="margin-top: 200px; margin-left: 250px">Không có bài viết nào trong nhóm này.</p>
+							}
+						</div>
 					</MudText>
 				</MudTabPanel>
 			}
+			<MudTabPanel Text="Lịch sử đăng bài">
+				<MudText>
+					<h3>Danh sách Thành viên và Admin của Nhóm: @Name</h3>
+
+					<div style="width:68% ; margin-top:-10px; margin-left: 50px ">
+						@if (listIntroPostUser != null && listIntroPostUser.Any())
+						{
+							@foreach (var item in listIntroPostUser)
+							{
+								<PostIntro Avatar="@item.Avatar" Content="@item.Content"
+											  CreateDate="@item.CreateDate" IdPost="@item.Id"
+											  CommentCount="@item.CommentCount" Like="@item.Like"
+											  VideoFile="@item.VideoFile" ImgFile="@item.ImgFile" UserName="@item.UserName" Title="@item.Title">
+								</PostIntro>
+							}
+						}
+						else
+						{
+							<p style="margin-top: 200px; margin-left: 250px">Không có bài viết nào trong nhóm này.</p>
+						}
+					</div>
+				</MudText>
+			</MudTabPanel>
 		}
 		else
 		{
@@ -203,6 +255,29 @@
 					}
 				</MudText>
 			</MudTabPanel>
+			<MudTabPanel Text="Lịch sử đăng bài">
+				<MudText>
+					<h3>Danh sách Thành viên và Admin của Nhóm: @Name</h3>
+
+					<div style="width:68% ; margin-top:-10px; margin-left: 50px ">
+						@if (listIntroPostUser != null && listIntroPostUser.Any())
+						{
+							@foreach (var item in listIntroPostUser)
+							{
+								<PostIntro Avatar="@item.Avatar" Content="@item.Content"
+										   CreateDate="@item.CreateDate" IdPost="@item.Id"
+										   CommentCount="@item.CommentCount" Like="@item.Like"
+										   VideoFile="@item.VideoFile" ImgFile="@item.ImgFile" UserName="@item.UserName" Title="@item.Title">
+								</PostIntro>
+							}
+						}
+						else
+						{
+							<p style="margin-top: 200px; margin-left: 250px">Không có bài viết nào trong nhóm này.</p>
+						}
+					</div>
+				</MudText>
+			</MudTabPanel>
 		}
 	</MudTabs>
 }
@@ -224,6 +299,11 @@ else
 	private Dictionary<Guid, bool> isActionDisabled = new Dictionary<Guid, bool>();
 	bool isLoaded;
 	bool isAdmin;
+	private bool isJoined;
+	private List<PostIntroDTO> listIntroPost;
+	private List<PostIntroDTO> listIntroPostUser;
+
+
 	protected override async Task OnInitializedAsync()
 	{
 		if (!string.IsNullOrEmpty(Name))
@@ -233,6 +313,8 @@ else
 			await CheckUser();
 			await CheckGroupState();
 			await IsAdminLoad();
+			await GetPostGroup();
+			await GetPostGroupUser();
 		}
 		foreach (var member in allMembers)
 		{
@@ -241,6 +323,7 @@ else
 			isActionDisabled[member.Id] = isDisabled;
 		}
 		isLoaded = true;
+
 	}
 
 	protected override async Task OnParametersSetAsync()
@@ -248,6 +331,36 @@ else
 		group = await DbContext.Groups.FirstOrDefaultAsync(g => g.Name == Name);
 		await LoadMembers();
 		await CheckGroupState();
+		await IsAdminLoad(); 
+	}
+	private async Task UpdateGroupClick()
+	{
+		var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+		var response = await httpClient.PutAsJsonAsync($"api/group/update-group-info/?groupName={Name}", group);
+		if (response.IsSuccessStatusCode)
+		{
+			Console.WriteLine("Update thành công");
+			Snackbar.Add("Cập nhật thành công.", Severity.Success);
+		}
+		else
+		{
+			Console.WriteLine("Update thất bại");
+		}
+	}
+
+	private async Task GetMember()
+	{
+		var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+		var user = authState.User;
+		var userCurrent = UserManager.GetUserId(user);
+		var currentUserId = Guid.Parse(userCurrent);
+		var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+		var response = await httpClient.GetAsync($"api/group/is-member/{Name}?userId={currentUserId}");
+		if (response.IsSuccessStatusCode)
+		{
+			// Gán kết quả trả về vào biến isJoined
+			isJoined = await response.Content.ReadFromJsonAsync<bool>();
+		}
 	}
 
 	private async Task CheckGroupState()
@@ -294,11 +407,11 @@ else
 		if (response.IsSuccessStatusCode)
 		{
 			isAdmin = await response.Content.ReadFromJsonAsync<bool>();
-			Console.WriteLine("Thông tin nhóm đã được tải thành công.");
+			Console.WriteLine("Thông tin admin đã được tải thành công.");
 		}
 		else
 		{
-			Console.WriteLine("Không thể kiểm tra thông tin nhóm.");
+			Console.WriteLine("Không thể kiểm tra thông tin admin.");
 		}
 	}
 
@@ -325,6 +438,16 @@ else
 			isChiefOrDeputy = allMembers.Any(a => a.Id == userCurrent.Id && (
 				a.Position == Data.Enums.Position.Chief ||
 				a.Position == Data.Enums.Position.Deputy));
+		}
+	}
+	private async Task ConfirmDelete(Guid id)
+	{
+		// Hiển thị hộp thoại xác nhận
+		bool confirmed = await JSRuntime.InvokeAsync<bool>("confirm", "Bạn có chắc chắn muốn xóa không?");
+		if (confirmed)
+		{
+			// Nếu người dùng nhấn "OK", thực hiện xóa
+			await OnclickDelete(id);
 		}
 	}
 
@@ -393,6 +516,55 @@ else
 		Console.WriteLine($"id đây: {id}");
 		Navigation.NavigateTo($"/groups/{(Name)}/{id}");
 	}
+
+
+
+
+	private async Task GetPostGroup()
+	{
+		var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+		var user = authState.User;
+		var userCurrent = UserManager.GetUserId(user);
+		var currentUserId = Guid.Parse(userCurrent);
+		var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+
+		var response = await httpClient.GetAsync($"api/Post/getListPostWaiState?groupName={Name}&userId={currentUserId}");
+		if (response.IsSuccessStatusCode)
+		{
+			listIntroPost = await response.Content.ReadFromJsonAsync<List<PostIntroDTO>>();
+			StateHasChanged();
+		}
+		else
+		{
+			Console.WriteLine("Không thể kiểm tra trạng thái nhóm.");
+		}
+	}
+
+	private async Task GetPostGroupUser()
+	{
+		var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+		var user = authState.User;
+		var userCurrent = UserManager.GetUserId(user);
+		var currentUserId = Guid.Parse(userCurrent);
+		Console.WriteLine($"namdg: {Name}");
+		Console.WriteLine($"cunetddg: {currentUserId}");
+		var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+
+		var response = await httpClient.GetAsync($"api/Post/getListPostIntroGroupForUser?groupName={Name}&userId={currentUserId}");
+		Console.WriteLine($"Request URL: api/Post/getListPostIntroGroupUser?groupName={Name}&userId={currentUserId}");
+
+		if (response.IsSuccessStatusCode)
+		{
+			listIntroPostUser = await response.Content.ReadFromJsonAsync<List<PostIntroDTO>>();
+			Console.WriteLine("Kiểm tra trạng thái danh sách thành công.");
+			StateHasChanged();
+		}
+		else
+		{
+			Console.WriteLine("Không thể kiểm tra trạng thái danh sách.");
+		}
+	}
+
 
 }
 

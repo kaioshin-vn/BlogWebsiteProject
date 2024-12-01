@@ -22,7 +22,7 @@
 	}
 
 	.contain {
-		max-width: 100%;
+		max-width: 90%;
 	}
 
 
@@ -72,29 +72,12 @@ else
 						</div>
 						<div class="actions mt-8">
 
-							@{
-								if (IsAdmin)
+						@{
+							if (IsAdminOrChief)
+							{
+								if (group.StateGroup == KindGroup.Public || group.StateGroup == KindGroup.Restricted || group.StateGroup == KindGroup.Private)
 								{
-									if (group.StateGroup == KindGroup.Public || group.StateGroup == KindGroup.Restricted || group.StateGroup == KindGroup.Private)
-									{
-										<!-- Nút tạo bài đăng -->
-										<MudTooltip Class="mx-1" Text="Thêm mới bài viết">
-											<MudFab Class="mx-1" StartIcon="@Icons.Material.Filled.Add" Size="Size.Medium"
-													Style="border:none;box-shadow:none;background-color:none;" Label="Tạo mới"
-													@onclick="NavigateToCreatePostPage" />
-										</MudTooltip>
-									}
-								}
-								if (group.StateGroup == KindGroup.Public && isJoined == true)
-								{
-									<MudTooltip Class="mx-1" Text="Thêm mới bài viết">
-										<MudFab Class="mx-1" StartIcon="@Icons.Material.Filled.Add" Size="Size.Medium"
-												Style="border:none;box-shadow:none;background-color:none;" Label="Tạo mới"
-												@onclick="NavigateToCreatePostPage" />
-									</MudTooltip>
-								}
-								else if (group.StateGroup == KindGroup.Restricted && isJoined == true)
-								{
+									<!-- Nút tạo bài đăng -->
 									<MudTooltip Class="mx-1" Text="Thêm mới bài viết">
 										<MudFab Class="mx-1" StartIcon="@Icons.Material.Filled.Add" Size="Size.Medium"
 												Style="border:none;box-shadow:none;background-color:none;" Label="Tạo mới"
@@ -102,106 +85,122 @@ else
 									</MudTooltip>
 								}
 							}
-
-							<!-- Icon thông báo (chỉ hiển thị khi đã tham gia) -->
-							@if (isJoined)
+							if (group.StateGroup == KindGroup.Public && isJoined == true)
 							{
-								<MudIconButton Style="overflow:visible;">
-									<MudBadge Color="Color.Tertiary" Overlap="true" Class="">
-										<MudIcon Icon="@Icons.Material.Filled.Notifications">
-										</MudIcon>
-									</MudBadge>
-								</MudIconButton>
+								<MudTooltip Class="mx-1" Text="Thêm mới bài viết">
+									<MudFab Class="mx-1" StartIcon="@Icons.Material.Filled.Add" Size="Size.Medium"
+											Style="border:none;box-shadow:none;background-color:none;" Label="Tạo mới"
+											@onclick="NavigateToCreatePostPage" />
+								</MudTooltip>
 							}
-							@{
-								if (IsAdmin == true)
-								{
-									<MudButton Variant="Variant.Filled" Color="Color.Secondary" @onclick="ClickMod">Công cụ mod</MudButton>
-								}
-								else
-								{
-									<!-- Nút trạng thái tham gia -->
-									<MudButton Variant="Variant.Outlined" Color="Color.Secondary" Style="border-radius: 24px;"
-											   @onclick="() => ToggleJoinStatus(group.IdGroup)">
-										@buttonText
-									</MudButton>
-								}
-							}
-						</div>
-					</div>
-				</div>
-			</MudItem>
-
-			<div class="d-flex justify-content-between">
-				<div class="ms-4" style="width:68% ; margin-top:-52px;">
-					@foreach (var item in listIntroPost)
-					{
-						<PostIntro Avatar="@item.Avatar" Content="@item.Content"
-								   CreateDate="@item.CreateDate" IdPost="@item.Id"
-								   CommentCount="@item.CommentCount" Like="@item.Like"
-								   VideoFile="@item.VideoFile" ImgFile="@item.ImgFile" UserName="@item.UserName" Title="@item.Title">
-						</PostIntro>
-					}
-				</div>
-				<div style="width:27%; height : 200px; position: sticky;top: 120px; border:none;" id="replaceHidden">
-					<div id="another_unique_identifier" style="height:614px;">
-						<div style="width:270px; background: #f4f8f5;border-radius:5px; margin-top: -16px">
-							@{
-								var day = group.DateTime.ToString("dd");
-								var month = group.DateTime.ToString("MM");
-								var year = group.DateTime.ToString("yyyy");
-
-							}
-							<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; font-weight:600;">@group.Name</MudText>
-							<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
-
-							<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
-							<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
-							<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
-							<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
-							<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
-							<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
-							<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
-							<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
-							<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
-							<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
-							<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
-							<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
-							<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 2px; font-size:13px; color: #605d5d	">
-								Được tạo vào ngày @day tháng @month năm @year
-							</MudText>
-
-							@if (group.StateGroup == KindGroup.Public)
+							else if (group.StateGroup == KindGroup.Restricted && isJoined == true)
 							{
-								<MudItem Class="d-flex align-items-center " Style="margin-left: 9px; margin-bottom: 6px;">
-									<MudIcon Icon="@Icons.Material.Filled.Public" Title="Public" Color="Color.Default" Style="font-size: 20px" />
-									<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 7px; font-size:13px; color: #605d5d	">@groupState</MudText>
-								</MudItem>
+								<MudTooltip Class="mx-1" Text="Thêm mới bài viết">
+									<MudFab Class="mx-1" StartIcon="@Icons.Material.Filled.Add" Size="Size.Medium"
+											Style="border:none;box-shadow:none;background-color:none;" Label="Tạo mới"
+											@onclick="NavigateToCreatePostPage" />
+								</MudTooltip>
 							}
-							else if (group.StateGroup == KindGroup.Restricted)
+						}
+
+						<!-- Icon thông báo (chỉ hiển thị khi đã tham gia) -->
+						@if (isJoined)
+						{
+							<MudIconButton Style="overflow:visible;">
+								<MudBadge Color="Color.Tertiary" Overlap="true" Class="">
+									<MudIcon Icon="@Icons.Material.Filled.Notifications">
+									</MudIcon>
+								</MudBadge>
+							</MudIconButton>
+						}
+						@{
+							if (IsAdmin == true)
 							{
-								<MudItem Class="d-flex align-items-center " Style="margin-left: 9px; margin-bottom: 6px;">
-									<MudIcon Icon="@Icons.Material.Outlined.RemoveRedEye" Title="RemoveRedEye" Color="Color.Default" Style="font-size: 20px" />
-									<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 7px; font-size:13px; color: #605d5d	">@groupState</MudText>
-								</MudItem>
+								<MudButton Variant="Variant.Filled" Color="Color.Secondary" @onclick="ClickMod">Công cụ mod</MudButton>
 							}
 							else
 							{
-								<MudItem Class="d-flex align-items-center" Style="margin-left: 9px; margin-bottom: 6px;">
-									<MudIcon Icon="@Icons.Material.Outlined.Lock" Title="Lock" Color="Color.Default" Style="font-size: 20px" />
-									<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 7px; font-size:13px; color: #605d5d	">@groupState</MudText>
-								</MudItem>
+								<!-- Nút trạng thái tham gia -->
+								<MudButton Variant="Variant.Outlined" Color="Color.Secondary" Style="border-radius: 24px;"
+										   @onclick="() => ToggleJoinStatus(group.IdGroup)">
+									@buttonText
+								</MudButton>
 							}
+						}
+					</div>
+				</div>
+			</div>
+		</MudItem>
 
-							<MudItem>
-								<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; font-size:13px; color: #605d5d">
-									<span class="spt">@memberCount</span> Thành viên
-								</MudText>
-								<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; font-size:13px; color: #605d5d">
-									tên nhóm <span style="color: red;">@Name</span>
-								</MudText>
+		<div class="d-flex justify-content-between">
+			<div class="ms-4" style="width:68% ; margin-top:-52px;">
+				@foreach (var item in listIntroPost)
+				{
+					<PostIntro Avatar="@item.Avatar" Content="@item.Content"
+							   CreateDate="@item.CreateDate" IdPost="@item.Id"
+							   CommentCount="@item.CommentCount" Like="@item.Like"
+							   VideoFile="@item.VideoFile" ImgFile="@item.ImgFile" UserName="@item.UserName" Title="@item.Title">
+					</PostIntro>
+				}
+			</div>
+			<div style="width:27%; height : 200px; position: sticky;top: 120px; border:none;" id="replaceHidden">
+				<div id="another_unique_identifier" style="height:614px;">
+					<div style="width:270px; background: #f4f8f5;border-radius:5px; margin-top: -16px">
+						@{
+							var day = group.DateTime.ToString("dd");
+							var month = group.DateTime.ToString("MM");
+							var year = group.DateTime.ToString("yyyy");
+
+						}
+						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; font-weight:600;">@group.Name</MudText>
+						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
+
+						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
+						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
+						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
+						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
+						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
+						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
+						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
+						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
+						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
+						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
+						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
+						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
+						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 2px; font-size:13px; color: #605d5d	">
+							Được tạo vào ngày @day tháng @month năm @year
+						</MudText>
+						
+						@if (group.StateGroup == KindGroup.Public)
+						{
+							<MudItem Class="d-flex align-items-center " Style="margin-left: 9px; margin-bottom: 6px;">
+								<MudIcon Icon="@Icons.Material.Filled.Public" Title="Public" Color="Color.Default" Style="font-size: 20px" />
+								<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 7px; font-size:13px; color: #605d5d	">@groupState</MudText>
 							</MudItem>
-						</div>
+						}
+						else if (group.StateGroup == KindGroup.Restricted)
+						{
+							<MudItem Class="d-flex align-items-center " Style="margin-left: 9px; margin-bottom: 6px;">
+								<MudIcon Icon="@Icons.Material.Outlined.RemoveRedEye" Title="RemoveRedEye" Color="Color.Default" Style="font-size: 20px" />
+								<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 7px; font-size:13px; color: #605d5d	">@groupState</MudText>
+							</MudItem>
+						}
+						else
+						{
+							<MudItem Class="d-flex align-items-center" Style="margin-left: 9px; margin-bottom: 6px;">
+								<MudIcon Icon="@Icons.Material.Outlined.Lock" Title="Lock" Color="Color.Default" Style="font-size: 20px" />
+								<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 7px; font-size:13px; color: #605d5d	">@groupState</MudText>
+							</MudItem>
+						}
+
+						<MudItem>
+							<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; font-size:13px; color: #605d5d">
+								<span class="spt">@memberCount</span> Thành viên
+							</MudText>
+							<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; font-size:13px; color: #605d5d">
+								tên nhóm <span style="color: red;">@Name</span>
+							</MudText>
+						</MudItem>
 					</div>
 				</div>
 			</div>
@@ -239,27 +238,15 @@ else
 	private Group? group;
 	private bool isJoined;  // Biến lưu trạng thái tham gia
 	private string buttonText = "Tham gia"; // Thay đổi nội dung của nút dựa trên trạng thái
-	List<PostIntroDTO> listIntroPost;
+	private List<PostIntroDTO> listIntroPost;
 	int memberCount = 0;
-	bool IsAdmin { get; set; }
+	bool IsAdminOrChief { get; set; }
 	string groupState;
+
 	protected override async Task OnInitializedAsync()
 	{
-		await GetAdmin();
-		var _httpClient = HttpClientFactory.CreateClient("MyHttpClient");
-
-		var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-		var user = authState.User;
-		var idUserCurrent = UserManager.GetUserId(user);
-		var idUser = Guid.Parse(idUserCurrent);
-
-		var result = await _httpClient.GetStringAsync($"/GetListPostIntro/{idUser}");
-
-		var resultConverted = JsonConvert.DeserializeObject<List<PostIntroDTO>>(result);
-		if (resultConverted != null)
-		{
-			listIntroPost = resultConverted;
-		}
+		await GetAdminOrChief();
+		await GetPostGroup();
 	}
 
 	protected override async Task OnParametersSetAsync()
@@ -290,9 +277,31 @@ else
 				await GetMember();
 				buttonText = isJoined ? "Đã tham gia" : "Tham gia";
 				await GetMemberCount();
-				await GetAdmin();
+				await GetAdminOrChief();
 				StateHasChanged();
 			}
+			await GetPostGroup();
+		}
+	}
+
+	private async Task GetPostGroup()
+	{
+		var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+		var user = authState.User;
+		var userCurrent = UserManager.GetUserId(user);
+		var currentUserId = Guid.Parse(userCurrent);
+		Console.WriteLine($"namdg: {Name}");
+		Console.WriteLine($"cunetddg: {currentUserId}");
+		var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+
+		var response = await httpClient.GetAsync($"api/Post/getListPostIntroGroup/?userId={currentUserId}&groupName={Name}");
+		if (response.IsSuccessStatusCode)
+		{
+			listIntroPost = await response.Content.ReadFromJsonAsync<List<PostIntroDTO>>();
+		}
+		else
+		{
+			Console.WriteLine("Không thể kiểm tra trạng thái nhóm.");
 		}
 	}
 
@@ -312,18 +321,18 @@ else
 		}
 	}
 
-	private async Task GetAdmin()
+	private async Task GetAdminOrChief()
 	{
 		var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
 		var user = authState.User;
 		var userCurrent = UserManager.GetUserId(user);
 		var currentUserId = Guid.Parse(userCurrent);
 		var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
-		var response = await httpClient.GetAsync($"api/group/is-admin/{Name}?userId={currentUserId}");
+		var response = await httpClient.GetAsync($"api/group/is-adminOrChief/{Name}?userId={currentUserId}");
 		if (response.IsSuccessStatusCode)
 		{
-			// Gán kết quả trả về vào biến isAdmin
-			IsAdmin = await response.Content.ReadFromJsonAsync<bool>();
+			// Gán kết quả trả về vào biến adminOrChief
+			IsAdminOrChief = await response.Content.ReadFromJsonAsync<bool>();
 		}
 	}
 
@@ -386,4 +395,18 @@ else
 		var href = $"/groups/{Uri.EscapeDataString(Name)}/mod";
 		Navigation.NavigateTo(href);
 	}
+
+	private void ViewGroupList()
+	{
+		var href = $"/groups/{Uri.EscapeDataString(Name)}/mod";
+		Navigation.NavigateTo(href);
+	}
+	private void ViewPostHistory()
+	{
+		var href = $"/groups/{Uri.EscapeDataString(Name)}/mod";
+		Navigation.NavigateTo(href);
+	}
+
+
+
 }

@@ -19,16 +19,16 @@
 @inject NavigationManager NavigationManager
 @inject IdentityRedirectManager RedirectManager
 @inject ILogger<ExternalLogin> Logger
-
-<PageTitle>Đăng ký tài khoản</PageTitle>
-
+@inject IHttpClientFactory ClientFactory
+@inject IWebHostEnvironment _environment
+<PageTitle>Đăng ký tài khoản</PageTitle>
 
 <MudOverlay Visible="isVisible" DarkBackground="true" Absolute="true">
     <EditForm Model="Input" OnValidSubmit="OnValidSubmitAsync" FormName="confirmation" method="post">
         <MudCard Class="pa-4" Style="width:500px;">
-            <MudText>Hãy điền tên đăng nhập của bạn</MudText>
+            <MudText>Hãy điền tên đăng nhập của bạn</MudText>
             <InputText @bind-Value="Input.Email" class="form-control" style="display:none;" />
-            <MudTextField Class="mt-3" @bind-Value="Input.UserName" Label="Tên đăng nhập" Variant="MudBlazor.Variant.Outlined" InputType="@InputType.Text" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Person" AdornmentAriaLabel="Tên đăng nhập" name="Input.UserName" />
+            <MudTextField Class="mt-3" @bind-Value="Input.UserName" Label="Tên đăng nhập" Variant="MudBlazor.Variant.Outlined" InputType="@InputType.Text" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Person" AdornmentAriaLabel="Tên đăng nhập" name="Input.UserName" />
             @if (message != null)
             {
                 <div style="text-align:left" class="alert alert-danger my-3">
@@ -37,26 +37,21 @@
             }
             <div class="d-flex mt-3">
                 <MudButton Color="Color.Error" Variant="Variant.Filled">
-                    <a class="py-2 px-4" style="color:black;" href="/Account/Register">Hủy</a>
+                    <a class="py-2 px-4" style="color:black;" href="/Account/Register">Hủy</a>
                 </MudButton>
-                <button class="py-2 ms-3 px-4" style="background-color:lightgreen;font:bolder;border-radius:6px;" type="submit">ĐĂNG KÝ</button>
+                <button class="py-2 ms-3 px-4" style="background-color:lightgreen;font:bolder;border-radius:6px;" type="submit">ĐĂNG KÝ</button>
             </div>
         </MudCard>
     </EditForm>
 </MudOverlay>
 
 <script>
-
     const nameInput = document.querySelector('input[name="Input.FullName"]');
     const inputNameWrapper = nameInput.closest('div.mud-input');
-    // Thêm sự kiện lắng nghe thay đổi của input
     inputNameWrapper.addEventListener('input', () => {
-        // Kiểm tra nếu input không rỗng
         if (nameInput.value.trim() !== '') {
-            // Thêm class vào thẻ div cha
             inputNameWrapper.classList.add('mud-shrink');
         } else {
-            // Loại bỏ class khỏi thẻ div cha
             inputNameWrapper.classList.remove('mud-shrink');
         }
     });
@@ -109,15 +104,12 @@
                 return;
             }
 
-            // We should only reach this page via the login callback, so redirect back to
-            // the login page if we get here some other way.
             RedirectManager.RedirectTo("Account/Login");
         }
     }
 
     private async Task OnLoginCallbackAsync()
     {
-        // Sign in the user with this external login provider if the user already has a login.
         var result = await SignInManager.ExternalLoginSignInAsync(
             externalLoginInfo.LoginProvider,
             externalLoginInfo.ProviderKey,
@@ -131,33 +123,81 @@
                 externalLoginInfo.Principal.Identity?.Name,
                 externalLoginInfo.LoginProvider);
             RedirectManager.RedirectTo(ReturnUrl);
+            return;
         }
         else if (result.IsLockedOut)
         {
             RedirectManager.RedirectTo("Account/Lockout");
+            return;
         }
 
-        // If the user does not have an account, then ask the user to create an account.
+        // Check if the email from external login is already registered
         if (externalLoginInfo.Principal.HasClaim(c => c.Type == ClaimTypes.Email))
         {
             Input.Email = externalLoginInfo.Principal.FindFirstValue(ClaimTypes.Email) ?? "";
+            var user = await UserManager.FindByEmailAsync(Input.Email);
+            if (user != null)
+            {
+                // Email exists, log in the user
+                await SignInManager.SignInAsync(user, isPersistent: false);
+                RedirectManager.RedirectTo(ReturnUrl);
+                return;
+            }
         }
+
+        // If we reach here, we need to register the user
+        isVisible = true;
+    }
+
+    private async Task<string> DownloadAndSaveImageAsync(string imageUrl, string userId)
+    {
+        try
+        {
+            using var httpClient = ClientFactory.CreateClient("MyHttpClient");
+            string higherResUrl = imageUrl.Replace("s96-c", "s1000-c");
+            var response = await httpClient.GetAsync(imageUrl);
+            if (response.IsSuccessStatusCode)
+            {
+                var fileName = $"{userId}.png";
+                var filePath = Path.Combine(_environment.WebRootPath, "images", fileName);
+
+                Directory.CreateDirectory(Path.GetDirectoryName(filePath));
+
+                using var stream = await response.Content.ReadAsStreamAsync();
+                using var fileStream = new FileStream(filePath, FileMode.Create);
+                await stream.CopyToAsync(fileStream);
+
+                return $"/images/{fileName}";
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error downloading image: {ex.Message}");
+        }
+
+        return "/Img/avatar_default.jpg";
     }
 
     private async Task OnValidSubmitAsync()
     {
-        if (Input.UserName == "")
+        if (string.IsNullOrEmpty(Input.UserName))
         {
-            message = "Không thể bỏ trống tên đăng nhập";
+            message = "Không thể bỏ trống tên đăng nhập";
             return;
         }
+
         var emailStore = GetEmailStore();
         var user = CreateUser();
         await UserStore.SetUserNameAsync(user, Input.UserName, CancellationToken.None);
         await emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
         if (externalLoginInfo.Principal.HasClaim(c => c.Type == "image"))
         {
-            user.Img = externalLoginInfo.Principal.FindFirstValue("image") ?? "Default";
+            var img = externalLoginInfo.Principal.FindFirstValue("image") ?? "/Img/avatar_default.jpg";
+            if (!string.IsNullOrEmpty(img))
+            {
+                var imagePath = await DownloadAndSaveImageAsync(img, Guid.NewGuid().ToString());
+                user.Img = imagePath;
+            }
         }
         user.FullName = externalLoginInfo.Principal.Identity.Name;
         var result = await UserManager.CreateAsync(user);
@@ -177,7 +217,6 @@
                     new Dictionary<string, object?> { ["userId"] = userId, ["code"] = code });
                 await EmailSender.SendConfirmationLinkAsync(user, Input.Email, HtmlEncoder.Default.Encode(callbackUrl));
 
-                // If account confirmation is required, we need to show the link if we don't have a real email sender
                 if (UserManager.Options.SignIn.RequireConfirmedAccount)
                 {
                     RedirectManager.RedirectTo("Account/RegisterConfirmation", new() { ["email"] = Input.Email });
