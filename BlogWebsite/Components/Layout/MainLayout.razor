@@ -68,14 +68,15 @@ else
                 <div class="d-flex col-6">
                         <MudMenu AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter" Class="w-100" FullWidth >
                         <ActivatorContent>
-                            <MudTextField @bind-Value="Search"
-                                          Placeholder="Tìm kiếm"
-                                          Variant="Variant.Text"
-                                          Adornment="Adornment.Start"
-                                          AdornmentIcon="@Icons.Material.Filled.Search"
-                                          Style="width: 100%"
-                                          @onclick="async ()=> await SearchKeyPress()"
-                                          OnKeyUp="@SearchKey" />
+                                    <MudTextField @bind-Value="Search"
+                                                  Placeholder="Tìm kiếm"
+                                                  Variant="Variant.Text"
+                                                  Adornment="Adornment.Start"
+                                                  AdornmentIcon="@Icons.Material.Filled.Search"
+                                                  Style="width: 100%"
+                                                  @onclick="async ()=> await SearchKeyPress()"
+                                                  OnKeyUp="@(async (e)=> await SearchKey(e))"
+                                                  Immediate/>
                         </ActivatorContent>
                         <ChildContent>
                             @if (string.IsNullOrEmpty(Search))
@@ -90,7 +91,7 @@ else
                                                             <MudText @onclick="@(() => SelectFromHistory(history))">@history</MudText>
                                                             <MudIconButton Icon="@Icons.Material.Filled.Close"
                                                                            Size="Size.Small"
-                                                                           OnClick="@(() => DeleteHistoryItemAndStayOpen(history))"/>
+                                                                           OnClick="@(() => DeleteHistoryItem(history))" />
                                                         </div>
                                                     </MudListItem>
                                             }
@@ -102,7 +103,7 @@ else
                                             <MudText Class="m-2">Bài Viết HOT</MudText>
                                             <MudButton Href="/searchPost" Class="m-2">Xem Thêm</MudButton>
                                         </MudItem>
-                                        <MudList T="string">
+                                            <MudList T="string" Style="overflow:scroll; max-height:400px">
                                             @foreach (var item in lstPostUserTop)
                                             {
                                                 <MudListItem>
@@ -165,7 +166,7 @@ else
                                                                 }
                                                                 else
                                                                 {
-                                                                    <MudText></MudText>
+                                                                    <MudText Style="width:150px; height:100px"></MudText>
                                                                 }
                                                             </MudItem>
                                                         </MudGrid>
@@ -470,7 +471,7 @@ else
         {
             await HandleSearch();
         }
-        else if (e.Key != "Enter" || !string.IsNullOrEmpty(e.Key))
+        else if (e.Key != "Enter" && !string.IsNullOrEmpty(e.Key))
         {
             await SearchPosts(e.Key);
         }
@@ -483,11 +484,8 @@ else
 
         try
         {
-            // Chuyển hướng đến trang tìm kiếm với từ khóa
-            Navigation.NavigateTo($"/searchPost?keyword={Uri.EscapeDataString(Search)}");
-
-            // Cập nhật lại lịch sử tìm kiếm local
-            await LoadSearchHistory();
+            // Chuyển hướng đến trang tìm kiếm với keyword
+            Navigation.NavigateTo($"/searchPost?keyword={Uri.EscapeDataString(Search)}", forceLoad:true);
         }
         catch (Exception ex)
         {
@@ -513,23 +511,24 @@ else
         }
     }
 
-    private async Task DeleteHistoryItemAndStayOpen(string keyword)
-    {
-        await DeleteHistoryItem(keyword);
-    }
 
     private async Task DeleteHistoryItem(string keyword)
     {
         try
         {
             var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
-            var response = await httpClient.DeleteAsync($"/api/search/remove-history-search?keyword={Uri.EscapeDataString(keyword)}");
+
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+            var idUserCurrent = UserManager.GetUserId(user);
+            var idUser = Guid.Parse(idUserCurrent);
+
+            var response = await httpClient.DeleteAsync($"/api/search/remove-history-search?keyword={Uri.EscapeDataString(keyword)}&idUser={idUser}");
 
             if (response.IsSuccessStatusCode)
             {
                 // cập nhật lại lịch sử tìm kiếm local
                 await LoadSearchHistory();
-                StateHasChanged();
             }
         }
         catch (Exception ex)
@@ -544,7 +543,13 @@ else
         try
         {
             var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
-            var response = await httpClient.GetAsync("/api/search/get-search-history?take=5");
+
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+            var idUserCurrent = UserManager.GetUserId(user);
+            var idUser = Guid.Parse(idUserCurrent);
+
+            var response = await httpClient.GetAsync($"/api/search/get-search-history?take=5&idUser={idUser}");
 
             if (response.IsSuccessStatusCode)
             {

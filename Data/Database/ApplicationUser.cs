@@ -28,5 +28,6 @@ namespace BlogWebsite.Data
         public ICollection<Notice> NoticesSent { get; set; }
         public ICollection<Notice> NoticesReceived { get; set; }
         public ICollection<MemberGroup> MemberGroups { get; set; }
+        public ICollection<SearchHistory> SearchHistories { get; set; }
     }
 }
