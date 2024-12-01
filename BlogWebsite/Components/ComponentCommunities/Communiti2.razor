@@ -49,34 +49,52 @@
 }
 else
 {
-	<div class="contain" style="width: 90%; margin: 0 auto;">
-		<MudItem>
-			@{
-				var imgSrc = string.IsNullOrEmpty(group.ImgCover) ? "/img/icon.jpg" : group.ImgCover;
-				var bannerSrc = string.IsNullOrEmpty(group.ImgGroup) ? "/img/univer.png" : group.ImgGroup;
-			}
-			<!-- Banner Group -->
-			<div>
+	<div style="width: calc(100% - 160px);" class="">
+		<div>
+			<MudItem>
+				@{
+					var imgSrc = string.IsNullOrEmpty(group.ImgCover) ? "/img/icon.jpg" : group.ImgCover;
+					var bannerSrc = string.IsNullOrEmpty(group.ImgGroup) ? "/img/univer.png" : group.ImgGroup;
+				}
+				<!-- Banner Group -->
 				<div>
-					<img src="@bannerSrc" alt="Community Banner"
-						 style="width: 100%; height: 150px; object-fit: cover; border-radius: 12px;" />
-				</div>
-
-				<!-- Thẻ chứa ảnh đại diện nhóm và tên nhóm chồng lên ảnh banner -->
-				<div class="d-flex justify-content-between align-items-center px-3" style=" position: relative; left: 5px; z-index: 1; top: -26px;">
-					<div class="d-flex align-items-center">
-						<!-- Ảnh đại diện nhóm -->
-						<MudImage Src="@imgSrc" Alt="Group Avatar" Class="avatar" Style="width:80px; height:80px; border-radius:50%;border: 2px solid #fff" />
-						<MudText Variant="Variant.h6" Class="group-name mt-12" Style="margin-left: 10px; font-weight:600; font-size: 26px">@group.Name</MudText>
+					<div>
+						<img src="@bannerSrc" alt="Community Banner"
+							 style="width: 100%; height: 150px; object-fit: cover; border-radius: 12px;" />
 					</div>
-					<div class="actions mt-8">
 
-						@{
-							if (IsAdmin)
-							{
-								if (group.StateGroup == KindGroup.Public || group.StateGroup == KindGroup.Restricted || group.StateGroup == KindGroup.Private)
+					<!-- Thẻ chứa ảnh đại diện nhóm và tên nhóm chồng lên ảnh banner -->
+					<div class="d-flex justify-content-between align-items-center px-3" style=" position: relative; left: 5px; z-index: 1; top: -26px;">
+						<div class="d-flex align-items-center">
+							<!-- Ảnh đại diện nhóm -->
+							<MudImage Src="@imgSrc" Alt="Group Avatar" Class="avatar" Style="width:80px; height:80px; border-radius:50%;border: 2px solid #fff" />
+							<MudText Variant="Variant.h6" Class="group-name mt-12" Style="margin-left: 10px; font-weight:600; font-size: 26px">@group.Name</MudText>
+						</div>
+						<div class="actions mt-8">
+
+							@{
+								if (IsAdmin)
 								{
-									<!-- Nút tạo bài đăng -->
+									if (group.StateGroup == KindGroup.Public || group.StateGroup == KindGroup.Restricted || group.StateGroup == KindGroup.Private)
+									{
+										<!-- Nút tạo bài đăng -->
+										<MudTooltip Class="mx-1" Text="Thêm mới bài viết">
+											<MudFab Class="mx-1" StartIcon="@Icons.Material.Filled.Add" Size="Size.Medium"
+													Style="border:none;box-shadow:none;background-color:none;" Label="Tạo mới"
+													@onclick="NavigateToCreatePostPage" />
+										</MudTooltip>
+									}
+								}
+								if (group.StateGroup == KindGroup.Public && isJoined == true)
+								{
+									<MudTooltip Class="mx-1" Text="Thêm mới bài viết">
+										<MudFab Class="mx-1" StartIcon="@Icons.Material.Filled.Add" Size="Size.Medium"
+												Style="border:none;box-shadow:none;background-color:none;" Label="Tạo mới"
+												@onclick="NavigateToCreatePostPage" />
+									</MudTooltip>
+								}
+								else if (group.StateGroup == KindGroup.Restricted && isJoined == true)
+								{
 									<MudTooltip Class="mx-1" Text="Thêm mới bài viết">
 										<MudFab Class="mx-1" StartIcon="@Icons.Material.Filled.Add" Size="Size.Medium"
 												Style="border:none;box-shadow:none;background-color:none;" Label="Tạo mới"
@@ -84,122 +102,106 @@ else
 									</MudTooltip>
 								}
 							}
-							if (group.StateGroup == KindGroup.Public && isJoined == true)
-							{
-								<MudTooltip Class="mx-1" Text="Thêm mới bài viết">
-									<MudFab Class="mx-1" StartIcon="@Icons.Material.Filled.Add" Size="Size.Medium"
-											Style="border:none;box-shadow:none;background-color:none;" Label="Tạo mới"
-											@onclick="NavigateToCreatePostPage" />
-								</MudTooltip>
-							}
-							else if (group.StateGroup == KindGroup.Restricted && isJoined == true)
-							{
-								<MudTooltip Class="mx-1" Text="Thêm mới bài viết">
-									<MudFab Class="mx-1" StartIcon="@Icons.Material.Filled.Add" Size="Size.Medium"
-											Style="border:none;box-shadow:none;background-color:none;" Label="Tạo mới"
-											@onclick="NavigateToCreatePostPage" />
-								</MudTooltip>
-							}
-						}
 
-						<!-- Icon thông báo (chỉ hiển thị khi đã tham gia) -->
-						@if (isJoined)
-						{
-							<MudIconButton Style="overflow:visible;">
-								<MudBadge Color="Color.Tertiary" Overlap="true" Class="">
-									<MudIcon Icon="@Icons.Material.Filled.Notifications">
-									</MudIcon>
-								</MudBadge>
-							</MudIconButton>
-						}
-						@{
-							if (IsAdmin == true)
+							<!-- Icon thông báo (chỉ hiển thị khi đã tham gia) -->
+							@if (isJoined)
 							{
-								<MudButton Variant="Variant.Filled" Color="Color.Secondary" @onclick="ClickMod">Công cụ mod</MudButton>
+								<MudIconButton Style="overflow:visible;">
+									<MudBadge Color="Color.Tertiary" Overlap="true" Class="">
+										<MudIcon Icon="@Icons.Material.Filled.Notifications">
+										</MudIcon>
+									</MudBadge>
+								</MudIconButton>
+							}
+							@{
+								if (IsAdmin == true)
+								{
+									<MudButton Variant="Variant.Filled" Color="Color.Secondary" @onclick="ClickMod">Công cụ mod</MudButton>
+								}
+								else
+								{
+									<!-- Nút trạng thái tham gia -->
+									<MudButton Variant="Variant.Outlined" Color="Color.Secondary" Style="border-radius: 24px;"
+											   @onclick="() => ToggleJoinStatus(group.IdGroup)">
+										@buttonText
+									</MudButton>
+								}
+							}
+						</div>
+					</div>
+				</div>
+			</MudItem>
+
+			<div class="d-flex justify-content-between">
+				<div class="ms-4" style="width:68% ; margin-top:-52px;">
+					@foreach (var item in listIntroPost)
+					{
+						<PostIntro Avatar="@item.Avatar" Content="@item.Content"
+								   CreateDate="@item.CreateDate" IdPost="@item.Id"
+								   CommentCount="@item.CommentCount" Like="@item.Like"
+								   VideoFile="@item.VideoFile" ImgFile="@item.ImgFile" UserName="@item.UserName" Title="@item.Title">
+						</PostIntro>
+					}
+				</div>
+				<div style="width:27%; height : 200px; position: sticky;top: 120px; border:none;" id="replaceHidden">
+					<div id="another_unique_identifier" style="height:614px;">
+						<div style="width:270px; background: #f4f8f5;border-radius:5px; margin-top: -16px">
+							@{
+								var day = group.DateTime.ToString("dd");
+								var month = group.DateTime.ToString("MM");
+								var year = group.DateTime.ToString("yyyy");
+
+							}
+							<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; font-weight:600;">@group.Name</MudText>
+							<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
+
+							<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
+							<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
+							<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
+							<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
+							<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
+							<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
+							<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
+							<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
+							<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
+							<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
+							<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
+							<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
+							<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 2px; font-size:13px; color: #605d5d	">
+								Được tạo vào ngày @day tháng @month năm @year
+							</MudText>
+
+							@if (group.StateGroup == KindGroup.Public)
+							{
+								<MudItem Class="d-flex align-items-center " Style="margin-left: 9px; margin-bottom: 6px;">
+									<MudIcon Icon="@Icons.Material.Filled.Public" Title="Public" Color="Color.Default" Style="font-size: 20px" />
+									<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 7px; font-size:13px; color: #605d5d	">@groupState</MudText>
+								</MudItem>
+							}
+							else if (group.StateGroup == KindGroup.Restricted)
+							{
+								<MudItem Class="d-flex align-items-center " Style="margin-left: 9px; margin-bottom: 6px;">
+									<MudIcon Icon="@Icons.Material.Outlined.RemoveRedEye" Title="RemoveRedEye" Color="Color.Default" Style="font-size: 20px" />
+									<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 7px; font-size:13px; color: #605d5d	">@groupState</MudText>
+								</MudItem>
 							}
 							else
 							{
-								<!-- Nút trạng thái tham gia -->
-								<MudButton Variant="Variant.Outlined" Color="Color.Secondary" Style="border-radius: 24px;"
-										   @onclick="() => ToggleJoinStatus(group.IdGroup)">
-									@buttonText
-								</MudButton>
+								<MudItem Class="d-flex align-items-center" Style="margin-left: 9px; margin-bottom: 6px;">
+									<MudIcon Icon="@Icons.Material.Outlined.Lock" Title="Lock" Color="Color.Default" Style="font-size: 20px" />
+									<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 7px; font-size:13px; color: #605d5d	">@groupState</MudText>
+								</MudItem>
 							}
-						}
-					</div>
-				</div>
-			</div>
-		</MudItem>
 
-		<div class="d-flex justify-content-between">
-			<div class="ms-4" style="width:68% ; margin-top:-52px;">
-				@foreach (var item in listIntroPost)
-				{
-					<PostIntro Avatar="@item.Avatar" Content="@item.Content"
-							   CreateDate="@item.CreateDate" IdPost="@item.Id"
-							   CommentCount="@item.CommentCount" Like="@item.Like"
-							   VideoFile="@item.VideoFile" ImgFile="@item.ImgFile" UserName="@item.UserName" Title="@item.Title">
-					</PostIntro>
-				}
-			</div>
-			<div style="width:27%; height : 200px; position: sticky;top: 120px; border:none;" id="replaceHidden">
-				<div id="another_unique_identifier" style="height:614px;">
-					<div style="width:270px; background: #f4f8f5;border-radius:5px; margin-top: -16px">
-						@{
-							var day = group.DateTime.ToString("dd");
-							var month = group.DateTime.ToString("MM");
-							var year = group.DateTime.ToString("yyyy");
-
-						}
-						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; font-weight:600;">@group.Name</MudText>
-						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
-
-						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
-						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
-						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
-						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
-						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
-						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
-						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
-						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
-						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
-						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
-						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
-						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
-						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 2px; font-size:13px; color: #605d5d	">
-							Được tạo vào ngày @day tháng @month năm @year
-						</MudText>
-						
-						@if (group.StateGroup == KindGroup.Public)
-						{
-							<MudItem Class="d-flex align-items-center " Style="margin-left: 9px; margin-bottom: 6px;">
-								<MudIcon Icon="@Icons.Material.Filled.Public" Title="Public" Color="Color.Default" Style="font-size: 20px" />
-								<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 7px; font-size:13px; color: #605d5d	">@groupState</MudText>
+							<MudItem>
+								<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; font-size:13px; color: #605d5d">
+									<span class="spt">@memberCount</span> Thành viên
+								</MudText>
+								<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; font-size:13px; color: #605d5d">
+									tên nhóm <span style="color: red;">@Name</span>
+								</MudText>
 							</MudItem>
-						}
-						else if (group.StateGroup == KindGroup.Restricted)
-						{
-							<MudItem Class="d-flex align-items-center " Style="margin-left: 9px; margin-bottom: 6px;">
-								<MudIcon Icon="@Icons.Material.Outlined.RemoveRedEye" Title="RemoveRedEye" Color="Color.Default" Style="font-size: 20px" />
-								<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 7px; font-size:13px; color: #605d5d	">@groupState</MudText>
-							</MudItem>
-						}
-						else
-						{
-							<MudItem Class="d-flex align-items-center" Style="margin-left: 9px; margin-bottom: 6px;">
-								<MudIcon Icon="@Icons.Material.Outlined.Lock" Title="Lock" Color="Color.Default" Style="font-size: 20px" />
-								<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 7px; font-size:13px; color: #605d5d	">@groupState</MudText>
-							</MudItem>
-						}
-
-						<MudItem>
-							<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; font-size:13px; color: #605d5d">
-								<span class="spt">@memberCount</span> Thành viên
-							</MudText>
-							<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; font-size:13px; color: #605d5d">
-								tên nhóm <span style="color: red;">@Name</span>
-							</MudText>
-						</MudItem>
+						</div>
 					</div>
 				</div>
 			</div>

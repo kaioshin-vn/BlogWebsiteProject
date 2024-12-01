@@ -35,7 +35,7 @@ namespace API.Controllers.CommentController
             }).ToList();
             foreach (var item in listCmt)
             {
-                item.ReplyCount = _context.ReplyResponses.Where(a => a.IdResponse == item.Id).Count();
+                item.ReplyCount = _context.ReplyResponses.Where(a => a.IdResponse == item.Id && a.IsDeleted == false).Count();
             }
             
             return listCmt;
@@ -95,9 +95,46 @@ namespace API.Controllers.CommentController
             cmtDTO.CreateDate = cmt.CreateDate;
             cmtDTO.Content = cmt.Content;
             cmtDTO.Like = cmt.Likes;
-            cmtDTO.ReplyCount = _context.ReplyResponses.Where(a => a.IdResponse == cmt.Id).Count();
+            cmtDTO.ReplyCount = _context.ReplyResponses.Where(a => a.IdResponse == cmt.Id && a.IsDeleted == false).Count();
             cmtDTO.Id = cmt.Id;
+            cmtDTO.IdUser = cmt.IdUser;
             return cmtDTO;
+        }
+
+        [HttpPut("/commment/updateComment/{idCmt}")]
+        public async Task UpdateCommentDetail(Guid idCmt, [FromBody] string Content)
+        {
+            var cmt = await _context.Responses.FirstOrDefaultAsync(a => a.Id == idCmt);
+            if (cmt != null)
+            {
+                cmt.Content = Content;
+                _context.Responses.Update(cmt);
+                _context.Update(cmt);
+                _context.SaveChanges();
+                Ok();
+            }
+            else
+            {
+                NotFound();
+            }
+        }
+
+        [HttpDelete("/commment/deleteCmt/{idCmt}/{idUser}")]
+        public async Task DeleteComment(Guid idCmt, Guid idUser)
+        {
+            var cmt = await _context.Responses.FirstOrDefaultAsync(a => a.Id == idCmt && a.IdUser == idUser);
+            if (cmt != null)
+            {
+                cmt.IsDeleted = true;
+                _context.Responses.Update(cmt);
+                _context.Update(cmt);
+                _context.SaveChanges();
+                Ok();
+            }
+            else
+            {
+                NotFound();
+            }
         }
 
         // POST: CommentController/Create

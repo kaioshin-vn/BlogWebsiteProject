@@ -2,6 +2,7 @@
 @using Client.Components.ComponentCustom
 @using Data.DTO.EntitiDTO
 @using System.Net.Http.Headers
+@using HtmlAgilityPack
 @using Newtonsoft.Json
 @using Newtonsoft.Json.Linq
 @using System.Globalization;
@@ -12,6 +13,7 @@
 @inject NavigationManager Navigation
 @inject UserManager<ApplicationUser> UserManager
 @inject ISnackbar Snackbar
+@inject IDialogService DialogService
 
 <style>
     html {
@@ -86,93 +88,145 @@
 }
 else
 {
-
-    <div class="d-flex align-items-start  ms-3 my-4">
-        <div>
-            <MudAvatar Style="height:32px;width:32px;" Class="hover-border">
-                <MudImage Height="25" Src="@this.Avatar"></MudImage>
-            </MudAvatar>
-        </div>
-
-        <div class="flex-grow-1 ms-3">
-            <div class="d-flex align-items-end">
-                <MudText Typo="Typo.body1"><b class="hover-underline">@this.UserName</b></MudText>
-                <span style="color:darkgray;" class="hover-underline mx-3">@this.Date</span>
-            </div>
-
+    if (!isDeleted)
+    {
+        <div class="d-flex align-items-start  ms-3 my-4">
             <div>
-                @if (Content != null && Content != "")
+                <MudAvatar Style="height:32px;width:32px;" Class="hover-border">
+                    <MudImage Height="25" Src="@this.Avatar"></MudImage>
+                </MudAvatar>
+            </div>
+
+
+            <div class="flex-grow-1 ms-3">
+                <div class="d-flex align-items-end">
+                    <MudText Typo="Typo.body1"><b class="hover-underline">@this.UserName</b></MudText>
+                    <span style="color:darkgray;" class="hover-underline mx-3">@this.Date</span>
+                </div>
+                @if (!isUpdate)
                 {
-                    <MudCardContent Class="my-1 p-0">
-                        <div class="content_by_user">
-                            @ContentHtml
+                    <div>
+                        @if (Content != null && Content != "")
+                        {
+                            <MudCardContent Class="my-1 p-0">
+                                <div class="content_by_user">
+                                    @ContentHtml
+                                </div>
+                            </MudCardContent>
+                        }
+                    </div>
+                    <div class="d-flex align-items-center mt-2 ms-3">
+                        <div @onclick="LikeClick" class="hover">
+                            <MudIconButton Style="padding:10px;" @onclick="LikeClick" Disabled="@(!isUserLike)" Icon="@Icons.Material.Filled.Favorite" Color="Color.Secondary" />
                         </div>
-                    </MudCardContent>
-                }
-            </div>
-            <div class="d-flex align-items-center mt-2 ms-3">
-                <div @onclick="LikeClick" class="hover">
-                    <MudIconButton Style="padding:10px;" @onclick="LikeClick" Disabled="@(!isUserLike)" Icon="@Icons.Material.Filled.Favorite" Color="Color.Secondary" />
-                </div>
-                <MudText Class="">@LikeText</MudText>
-                <div class="p-2 hover-background d-flex align-items-end ms-4" style="border-radius:8px;" @onclick="ShowComment">
-                    <MudIcon Class="p-0" Icon="@Icons.Material.Filled.Reply" Disabled="true" />
-                    <span class=""> Phản hồi</span>
-                </div>
-            </div>
-            @if (isAddCmt)
-            {
-                <AddReplyComment HideComment="HideComment" UserAddComment="UserAddNewComment" IdUserComment="@IdUserComment" IdCmt="@IdCmt" UserName="@this.UserName"></AddReplyComment>
-            }
-            @if (ReplyCount > 0)
-            {
-                <div class="d-flex my-1">
-                    <div class="px-3 py-2 hover-backgroundblue d-flex align-items-end" style="color:deepskyblue;border-radius:14px;" @onclick="ToggleSeeReply">
-                        @if (isLoadReply)
-                        {
-                            <MudIcon Icon="@Icons.Material.Filled.KeyboardArrowDown" Class="p-0" Disabled="true" />
-                        }
-                        else
-                        {
-                            <MudIcon Icon="@Icons.Material.Filled.KeyboardArrowUp" Class="p-0" Disabled="true" />
-                        }
-                        <span>
-                            <b>@ReplyCount trả lời</b>
-                        </span>
+                        <MudText Class="">@LikeText</MudText>
+                        <div class="p-2 hover-background d-flex align-items-end ms-4" style="border-radius:8px;" @onclick="ShowComment">
+                            <MudIcon Class="p-0" Icon="@Icons.Material.Filled.Reply" Disabled="true" />
+                            <span class=""> Phản hồi</span>
+                        </div>
                     </div>
-                </div>
-            }
-            @if (ListReplyCommentUserNew.Count != 0)
-            {
-                foreach (var item in ListReplyCommentUserNew)
+                    @if (isAddCmt)
+                    {
+                        <AddReplyComment HideComment="HideComment" UserAddComment="UserAddNewComment" IdUserComment="@IdUserComment" IdCmt="@IdCmt" UserName="@this.UserName"></AddReplyComment>
+                    }
+                    @if (ReplyCount > 0)
+                    {
+                        <div class="d-flex my-1">
+                            <div class="px-3 py-2 hover-backgroundblue d-flex align-items-end" style="color:deepskyblue;border-radius:14px;" @onclick="ToggleSeeReply">
+                                @if (isLoadReply)
+                                {
+                                    <MudIcon Icon="@Icons.Material.Filled.KeyboardArrowDown" Class="p-0" Disabled="true" />
+                                }
+                                else
+                                {
+                                    <MudIcon Icon="@Icons.Material.Filled.KeyboardArrowUp" Class="p-0" Disabled="true" />
+                                }
+                                <span>
+                                    <b>@ReplyCount trả lời</b>
+                                </span>
+                            </div>
+                        </div>
+                    }
+                    @if (ListReplyCommentUserNew.Count != 0)
+                    {
+                        foreach (var item in ListReplyCommentUserNew)
+                        {
+                            <div style="width:100%;">
+                                <ReplyDetail Avatar="@item.Avatar" Content="@item.Content" IdReply="@item.Id"
+                                             CreateDate="@item.CreateDate" IdPost="@item.Id" IdCmt="@this.IdCmt"
+                                             Like="@item.Like" IdUserComment="@item.IdUser" IdMention="@item.Mention"
+                                             UserName="@item.UserName" UserMentionName="@item.UserNameMention">
+                                </ReplyDetail>
+                            </div>
+                        }
+                    }
+
+                    @if (isFirstLoadReply)
+                    {
+                        <div style="width:100%; display: @(isLoadReply?"block":"none");">
+                            <ListReply IdCmt="@IdCmt"></ListReply>
+                        </div>
+                    }
+                }
+                else
                 {
-                    <div style="width:100%;">
-                        <ReplyDetail Avatar="@item.Avatar" Content="@item.Content" IdReply="@item.Id"
-                                     CreateDate="@item.CreateDate" IdPost="@item.Id" IdCmt="@this.IdCmt"
-                                     Like="@item.Like" IdUserComment="@item.IdUser" IdMention="@item.Mention"
-                                     UserName="@item.UserName" UserMentionName="@item.UserNameMention">
-                        </ReplyDetail>
+                    <div style="border:1px solid  rgb(206, 206, 206); border-radius:12px;" class="p-2 my-2">
+                        <Radzen.Blazor.RadzenHtmlEditor @bind-Value="@ContentUpdate" Execute="@OnExecute" style="min-height:80px; height: auto;max-width:675px;border:none ;overflow:hidden;" UploadUrl="minimalApi/uploadImage">
+                            <Radzen.Blazor.RadzenHtmlEditorUndo Title="Trước" />
+                            <Radzen.Blazor.RadzenHtmlEditorRedo Title="Sau" />
+                            <Radzen.Blazor.RadzenHtmlEditorSeparator />
+                            <Radzen.Blazor.RadzenHtmlEditorBold Title="In đậm" />
+                            <Radzen.Blazor.RadzenHtmlEditorItalic Title="In nghiêng" />
+                            <Radzen.Blazor.RadzenHtmlEditorUnderline Title="Gạch chân" />
+                            <Radzen.Blazor.RadzenHtmlEditorStrikeThrough Title="Xuyên qua" />
+                            <Radzen.Blazor.RadzenHtmlEditorSeparator />
+                            <Radzen.Blazor.RadzenHtmlEditorAlignLeft Title="Căn trái" />
+                            <Radzen.Blazor.RadzenHtmlEditorAlignCenter Title="Căn giữa" />
+                            <Radzen.Blazor.RadzenHtmlEditorAlignRight Title="Căn phải" />
+                            @* <RadzenHtmlEditorJustify Title="Căn đều" /> *@
+                            <Radzen.Blazor.RadzenHtmlEditorSeparator />
+                            <Radzen.Blazor.RadzenHtmlEditorIndent Title="Thụt lề" />
+                            <Radzen.Blazor.RadzenHtmlEditorOutdent Title="Nhô lề" />
+                            @* <RadzenHtmlEditorUnorderedList Title="Danh sách" /> *@
+                            <Radzen.Blazor.RadzenHtmlEditorOrderedList Title="Danh sách sắp xếp" />
+                            <Radzen.Blazor.RadzenHtmlEditorSeparator />
+                            @* <Radzen.Blazor.RadzenHtmlEditorColor Title="Màu chữ" />
+                <Radzen.Blazor.RadzenHtmlEditorBackground Title="Màu nền" />
+                <Radzen.Blazor.RadzenHtmlEditorRemoveFormat Title="Bỏ định dạng" />
+                <Radzen.Blazor.RadzenHtmlEditorSeparator /> *@
+                            @* <RadzenHtmlEditorSubscript Title="Chữ phía dưới" />
+                <RadzenHtmlEditorSuperscript Title="Chữ phía trên" /> *@
+                            @* <RadzenHtmlEditorSeparator /> *@
+                            <Radzen.Blazor.RadzenHtmlEditorLink Title="Thêm link" CancelText="Hủy" LinkText="Hiển thị" OpenInNewWindowText="Mở trong cửa số mới" UrlText="Đường dẫn" />
+                            <Radzen.Blazor.RadzenHtmlEditorUnlink Title="Bỏ đường dẫn" />
+                            <Radzen.Blazor.RadzenHtmlEditorImage Title="Thêm ảnh" ShowHeight="false" ShowWidth="false" ShowAlt="false" UploadChooseText="Tải ảnh lên" AltText="Tên ảnh" CancelText="Hủy" SelectText="Chọn ảnh tải lên" UrlText="Nếu không có sẵn ảnh trên máy, hãy nhập đường dẫn ảnh trên web" HeightText="Chiều cao" WidthText="Chiều rộng" />
+                            <Radzen.Blazor.RadzenHtmlEditorSeparator />
+                            @* <Radzen.Blazor.RadzenHtmlEditorFontName Title="Phông chữ" Placeholder="Phông chữ" />
+                <Radzen.Blazor.RadzenHtmlEditorFontSize Title="Kích thước" Placeholder="Cỡ chữ" /> *@
+                            @* <RadzenHtmlEditorFormatBlock Title="Cỡ chữ" Placeholder="Cỡ chữ" NormalText="Thông thường" Heading1Text="Loại 1" Heading2Text="Loại 2" Heading3Text="Loại 3" Heading4Text="Loại 4" Heading5Text="Loại 5" Heading6Text="Loại 6" /> *@
+                            @* <Radzen.Blazor.RadzenHtmlEditorSeparator /> *@
+                            <Radzen.Blazor.RadzenHtmlEditorCustomTool CommandName="AddCode" Icon="code" Title="Code" />
+                        </Radzen.Blazor.RadzenHtmlEditor>
+
+                        <div class="d-flex justify-content-end mb-2">
+                            <MudButton Variant="Variant.Filled" OnClick="HideUpdatetAction" Size="Size.Small" Class="mx-3">Hủy</MudButton>
+                            <MudButton Variant="Variant.Filled" Color="Color.Tertiary" Size="Size.Small" OnClick="UpdateComment">Chỉnh sửa</MudButton>
+                        </div>
                     </div>
                 }
-            }
+            </div>
 
-            @if (isFirstLoadReply)
-            {
-                <div style="width:100%; display: @(isLoadReply?"block":"none");">
-                    <ListReply IdCmt="@IdCmt"></ListReply>
-                </div>
-            }
+
+            <MudMenu Icon="@Icons.Material.Filled.MoreHoriz" Style="align-self:unset;" ActivationEvent="@MouseEvent.MouseOver" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter" Color="Color.Default" AriaLabel="Open user menu">
+                @if (IdUser == IdUserComment)
+                {
+                    <MudMenuItem @onclick="ShowUpdateComment">Chỉnh sửa</MudMenuItem>
+                    <MudMenuItem OnClick="DeleteComment">Xóa bình luận</MudMenuItem>
+                }
+                <MudMenuItem>Báo cáo</MudMenuItem>
+            </MudMenu>
         </div>
-
-        <MudMenu Icon="@Icons.Material.Filled.MoreHoriz" Style="align-self:unset;" ActivationEvent="@MouseEvent.MouseOver" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter" Color="Color.Default" AriaLabel="Open user menu">
-            @if (IdUser == IdUserComment)
-            {
-                <a href="/updatePost/@IdPost"><MudMenuItem>Chỉnh sửa</MudMenuItem></a>
-                <MudMenuItem OnClick="DeleteCmt">Xóa bình luận</MudMenuItem>
-            }
-            <MudMenuItem>Báo cáo</MudMenuItem>
-        </MudMenu>
-    </div>
+    }
 }
 
 @code {
@@ -195,6 +249,8 @@ else
     [Parameter]
     public DateTime? CreateDate { get; set; }
 
+    bool isUpdate { get; set; }
+
     bool isLoadReply { get; set; }
 
     bool isAddCmt { get; set; }
@@ -202,6 +258,10 @@ else
     bool isUserLike;
 
     bool isFirstLoadReply;
+
+    string ContentUpdate;
+
+    bool isDeleted;
 
     bool Loaded { get; set; }
     string LikeText { get; set; }
@@ -350,9 +410,93 @@ else
         StateHasChanged();
     }
 
-    async Task DeleteCmt ()
+
+    void ShowUpdateComment()
     {
-        
+        isUpdate = true;
+        ContentUpdate = Content;
+        StateHasChanged();
     }
+
+    async Task OnExecute(Radzen.HtmlEditorExecuteEventArgs args)
+    {
+        if (args.CommandName == "AddCode")
+        {
+            await AddCode(args.Editor);
+        }
+    }
+
+    async Task AddCode(Radzen.Blazor.RadzenHtmlEditor editor)
+    {
+        await editor.ExecuteCommandAsync(Radzen.HtmlEditorCommands.InsertHtml, "<br></br>");
+        await editor.ExecuteCommandAsync(Radzen.HtmlEditorCommands.InsertHtml, $@"<div style=""background-color:beige;border-radius:5px;"" class=""m-3 pt-3 ps-3 codeContainer""><pre><code>&nbsp;</code></pre></div> <br/>");
+    }
+
+    void HideUpdatetAction()
+    {
+        isUpdate = false;
+        StateHasChanged();
+    }
+
+    async Task UpdateComment()
+    {
+        if (string.IsNullOrEmpty(ContentUpdate))
+        {
+            Snackbar.Add("Không thể bỏ trống bình luận", Severity.Error);
+            return;
+        }
+        if (!HasContent(ContentUpdate))
+        {
+            Snackbar.Add("Không thể bỏ trống bình luận", Severity.Error);
+            return;
+        }
+
+        var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+        var result = await httpClient.PutAsJsonAsync($"/commment/updateComment/{IdCmt}", ContentUpdate);
+        if (result.IsSuccessStatusCode)
+        {
+            Snackbar.Add("Cập nhật bình luận thành công", Severity.Success);
+            Content = ContentUpdate ;
+            ContentHtml = (MarkupString)Content;
+            isUpdate = false;
+            StateHasChanged();
+        }
+    }
+
+    bool HasContent(string htmlString)
+    {
+        var doc = new HtmlDocument();
+        doc.LoadHtml(htmlString);
+
+        // Kiểm tra nội dung văn bản
+        return !string.IsNullOrWhiteSpace(doc.DocumentNode.InnerText);
+    }
+
+    async Task DeleteComment()
+    {
+        var parameters = new DialogParameters<Dialog>();
+        parameters.Add(x => x.ContentText, "Xác nhận bạn muốn xóa bình luận này, sẽ xóa vĩnh viễn và không thể khôi phục?");
+        parameters.Add(x => x.ButtonText, "Xóa");
+        parameters.Add(x => x.Color, Color.Error);
+
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+        var result = await DialogService.Show<Dialog>("Xác nhận", parameters, options).Result;
+        if (result.Data != null)
+        {
+            if ((bool)result.Data)
+            {
+                var _httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+                var response = await _httpClient.DeleteAsync($"/commment/deleteCmt/{IdCmt}/{IdUser}");
+                if (response.IsSuccessStatusCode)
+                {
+                    Snackbar.Add("Đã xóa bình luận", Severity.Info);
+                    isDeleted = true;
+                    StateHasChanged();
+                }
+            }
+        }
+    }
+
 }
 

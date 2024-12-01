@@ -387,6 +387,9 @@ namespace Data.Migrations
                     b.Property<Guid>("IdPost")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<DateTime?>("CreateDate")
+                        .HasColumnType("datetime2");
+
                     b.HasKey("IdSave", "IdPost");
 
                     b.HasIndex("IdPost");
@@ -512,11 +515,13 @@ namespace Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("FirstImage")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<Guid>("IdUser")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("SaveName")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
@@ -550,16 +555,11 @@ namespace Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("GroupIdGroup")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<string>("TopicName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("IdTopic");
-
-                    b.HasIndex("GroupIdGroup");
 
                     b.ToTable("Topics");
                 });
@@ -918,7 +918,7 @@ namespace Data.Migrations
             modelBuilder.Entity("Data.Database.Table.GroupTopic", b =>
                 {
                     b.HasOne("Data.Database.Table.Group", "Group")
-                        .WithMany()
+                        .WithMany("GroupTopics")
                         .HasForeignKey("IdGroup")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -1126,13 +1126,6 @@ namespace Data.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Data.Database.Table.Topic", b =>
-                {
-                    b.HasOne("Data.Database.Table.Group", null)
-                        .WithMany("Topics")
-                        .HasForeignKey("GroupIdGroup");
-                });
-
             modelBuilder.Entity("Data.Tables.Exam", b =>
                 {
                     b.HasOne("BlogWebsite.Data.ApplicationUser", "User")
@@ -1269,9 +1262,9 @@ namespace Data.Migrations
 
             modelBuilder.Entity("Data.Database.Table.Group", b =>
                 {
-                    b.Navigation("MemberGroups");
+                    b.Navigation("GroupTopics");
 
-                    b.Navigation("Topics");
+                    b.Navigation("MemberGroups");
                 });
 
             modelBuilder.Entity("Data.Database.Table.Post", b =>

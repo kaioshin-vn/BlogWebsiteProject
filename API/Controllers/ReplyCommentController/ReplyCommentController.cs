@@ -103,5 +103,41 @@ namespace API.Controllers.ReplyCommentController
             return cmtDTO;
         }
 
+        [HttpPut("/commment/updateReplyComment/{idCmt}")]
+        public async Task UpdateCommentDetail(Guid idCmt, [FromBody] string Content)
+        {
+            var cmt = await _context.ReplyResponses.FirstOrDefaultAsync(a => a.Id == idCmt);
+            if (cmt != null)
+            {
+                cmt.Content = Content;
+                _context.ReplyResponses.Update(cmt);
+                _context.Update(cmt);
+                _context.SaveChanges();
+                Ok();
+            }
+            else
+            {
+                NotFound();
+            }
+        }
+
+        [HttpDelete("/commment/deleteReplyCmt/{idCmt}/{idUser}")]
+        public async Task DeleteComment(Guid idCmt, Guid idUser)
+        {
+            var cmt = await _context.ReplyResponses.FirstOrDefaultAsync(a => a.Id == idCmt && a.IdUser == idUser);
+            if (cmt != null)
+            {
+                cmt.IsDeleted = true;
+                _context.ReplyResponses.Update(cmt);
+                _context.Update(cmt);
+                _context.SaveChanges();
+                Ok();
+            }
+            else
+            {
+                NotFound();
+            }
+        }
+
     }
 }

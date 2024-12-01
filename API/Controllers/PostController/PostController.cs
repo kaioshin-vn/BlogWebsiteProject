@@ -203,7 +203,7 @@ namespace API.Controllers.PostController
             {
                 var group = await _context.Groups.FirstOrDefaultAsync(a => a.IdGroup == groupPost.IdGroup);
                 UserName = group.Name;
-                Avatar = group.ImgGroup;
+                Avatar = group.ImgGroup==null? "/img/icon.jpg" : group.ImgGroup;
             }
             else
             {
@@ -211,9 +211,9 @@ namespace API.Controllers.PostController
                 UserName = user.FullName;
                 Avatar = user.Img;
             }
-            var commment = _context.Responses.Where(a => a.IdPost == post.Id);
+            var commment = _context.Responses.Where(a => a.IdPost == post.Id && a.IsDeleted == false);
             var replyCount = 0;
-            var replyComment = _context.ReplyResponses.Where(a => commment.Any(b => b.Id == a.IdResponse));
+            var replyComment = _context.ReplyResponses.Where(a => commment.Any(b => b.Id == a.IdResponse && a.IsDeleted == false));
 
             var tagNames = new List<string>();
             var listTag = _context.PostTags

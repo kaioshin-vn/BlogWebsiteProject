@@ -424,7 +424,7 @@ else
                 var response = await _httpClient.PostAsJsonAsync($"/deletePost/{IdPost}", IdUser);
                 if (response.IsSuccessStatusCode)
                 {
-                    Snackbar.Add("Cập nhật bài viết thành công", Severity.Info);
+                    Snackbar.Add("Đã xóa bài viết", Severity.Info);
                     Navigation.NavigateTo("");
                 }
             }

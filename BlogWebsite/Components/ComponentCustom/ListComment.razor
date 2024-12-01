@@ -33,7 +33,7 @@ else
             @foreach (var item in ListNewComment)
             {
                 <CommentDetail Avatar="@item.Avatar" Content="@item.Content"
-                               CreateDate="@item.CreateDate" IdPost="@item.Id" 
+                               CreateDate="@item.CreateDate" IdPost="@item.Id" IdCmt="@item.Id"
                                ReplyCount="@item.ReplyCount" Like="@item.Like" IdUserComment="@item.IdUser"
                                UserName="@item.UserName">
                 </CommentDetail>
