@@ -87,12 +87,14 @@ else
                                             @foreach (var history in SearchHistory)
                                             {
                                                     <MudListItem Icon="@Icons.Material.Filled.History" >
-                                                        <div class="d-flex align-center justify-space-between">
-                                                            <MudText @onclick="@(() => SelectFromHistory(history))">@history</MudText>
-                                                            <MudIconButton Icon="@Icons.Material.Filled.Close"
-                                                                           Size="Size.Small"
-                                                                           OnClick="@(() => DeleteHistoryItem(history))" />
-                                                        </div>
+                                                        <MudGrid Justify="Justify.SpaceBetween">
+                                                            <MudItem xs="10" @onclick="@(async ()=> await SelectFromHistory(history))">
+                                                                <MudText>@history</MudText>
+                                                            </MudItem>
+                                                            <MudItem xs="2" Class="d-flex justify-content-end">
+                                                                <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" OnClick="@(() => DeleteHistoryItem(history))" />
+                                                            </MudItem>
+                                                        </MudGrid>
                                                     </MudListItem>
                                             }
                                         </MudList>
@@ -103,47 +105,54 @@ else
                                             <MudText Class="m-2">Bài Viết HOT</MudText>
                                             <MudButton Href="/searchPost" Class="m-2">Xem Thêm</MudButton>
                                         </MudItem>
-                                            <MudList T="string" Style="overflow:scroll; max-height:400px">
-                                            @foreach (var item in lstPostUserTop)
+                                        <MudDivider Style="border-color:black; border-width:1px" />
+                                        <MudList T="string" Style="overflow:scroll; max-height:370px">
+                                            @foreach (var post in lstPostUserTop)
                                             {
                                                 <MudListItem>
                                                     <MudGrid Justify="Justify.SpaceBetween">
                                                         <MudItem xs="6">
                                                             <MudCardHeader Class="p-0 m-0">
                                                                 <MudAvatar>
-                                                                    <MudImage ObjectFit="ObjectFit.Cover" Src="@item.Avatar"></MudImage>
+                                                                    <MudImage ObjectFit="ObjectFit.Cover" Src="@post.Avatar"></MudImage>
                                                                 </MudAvatar>
-                                                                <MudText Class="px-2">@item.UserName</MudText>
+                                                                <MudText Class="px-2">@post.UserName</MudText>
                                                             </MudCardHeader>
                                                             <MudCardContent Class="p-0 pt-1 m-0">
-                                                                <MudText Typo="Typo.h6" Class="truncate-text">@item.Title</MudText>
+                                                                <MudText Typo="Typo.h6" Class="truncate-text">@post.Title</MudText>
                                                             </MudCardContent>
+                                                                @if (!string.IsNullOrEmpty(post.Like))
+                                                                {
+                                                                    string[] likeCount = post.Like.Split(',');
+                                                                    int toltalLike = likeCount.Distinct().Count();
+                                                                    <MudText Style=" font-size:12px; color:gray">@(string.IsNullOrEmpty(Convert.ToString(toltalLike)) ? 0 : toltalLike) lượt thích · @post.CommentCount bình luận </MudText>
+                                                                }
                                                         </MudItem>
                                                         <MudItem xs="6" Class="d-flex justify-content-end">
-                                                            @if (!string.IsNullOrEmpty(item.ImgFile) || !string.IsNullOrEmpty(item.VideoFile))
+                                                            @if (!string.IsNullOrEmpty(post.ImgFile) || !string.IsNullOrEmpty(post.VideoFile))
                                                             {
-                                                                <MudImage Style="border-radius:20px" Src="@(string.IsNullOrEmpty(item.ImgFile) ? item.VideoFile : item.ImgFile)" ObjectFit="ObjectFit.Cover" Width="150" Height="100" />
+                                                                <MudImage Style="border-radius:20px" Src="@(string.IsNullOrEmpty(post.ImgFile) ? post.VideoFile : post.ImgFile)" ObjectFit="ObjectFit.Cover" Width="150" Height="100" />
                                                             }
                                                             else
                                                             {
-                                                                <MudText></MudText>
+                                                                    <MudText Style="width:150px; height:100px"></MudText>
                                                             }
                                                         </MudItem>
                                                     </MudGrid>
                                                 </MudListItem>
+                                                    <MudDivider Style="border-color:gray; border-width:1px" />
                                             }
                                         </MudList>
                                     </MudItem>
-                                    </MudGrid>
+                                </MudGrid>
                                 }
                                 else if(searchResult?.Posts != null)
                                 {
                                     <MudGrid>
-                                        <MudItem Class="pt-0 mt-0" xs="12">
-                                            <MudItem Class="d-flex justify-content-sm-between">
-                                                <MudText>">Bài viết</MudText>
-                                            </MudItem>
-                                            <MudList T="string">
+                                        <MudItem xs="12">
+                                            <MudText Class="p-2" Typo="Typo.body1" >Bài viết</MudText>
+                                            <MudDivider Style="border-color:black; border-width:1px" />
+                                            <MudList T="string" Style="overflow:scroll; max-height:650px">
                                                 @foreach (var post in searchResult.Posts)
                                                 {
                                                     <MudListItem>
@@ -158,6 +167,12 @@ else
                                                                 <MudCardContent Class="p-0 pt-1 m-0">
                                                                     <MudText Typo="Typo.h6" Class="truncate-text">@post.Title</MudText>
                                                                 </MudCardContent>
+                                                                @if (!string.IsNullOrEmpty(post.Like))
+                                                                {
+                                                                    string[] likeCount = post.Like.Split(',');
+                                                                    int toltalLike = likeCount.Distinct().Count();
+                                                                    <MudText Style=" font-size:12px; color:gray">@(string.IsNullOrEmpty(Convert.ToString(toltalLike)) ? 0 : toltalLike) lượt thích · @post.CommentCount bình luận </MudText>
+                                                                }
                                                             </MudItem>
                                                             <MudItem xs="6" Class="d-flex justify-content-end">
                                                                 @if (!string.IsNullOrEmpty(post.ImgFile) || !string.IsNullOrEmpty(post.VideoFile))
@@ -171,6 +186,7 @@ else
                                                             </MudItem>
                                                         </MudGrid>
                                                     </MudListItem>
+                                                    <MudDivider Style="border-color:gray; border-width:1px" />
                                                 }
                                             </MudList>
                                         </MudItem>
@@ -178,7 +194,7 @@ else
                                 }
                             </ChildContent>
                     </MudMenu>
-                        <MudIconButton Icon="@Icons.Material.Filled.Search" @bind-Value="Search" @onclick="async ()=> await HandleSearch()" Color="Color.Info" aria-label="github"></MudIconButton>
+                    <MudIconButton Icon="@Icons.Material.Filled.Search" @bind-Value="Search" @onclick="async ()=> await HandleSearch()" Color="Color.Info" aria-label="github"></MudIconButton>
                     <MudIconButton Class="mx-2" Icon="@(DarkLightModeButtonIcon)" Color="Color.Inherit" OnClick="@DarkModeToggle" />
                 </div>
                 <div class="col-3">

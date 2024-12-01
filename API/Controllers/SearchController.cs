@@ -220,7 +220,7 @@ namespace API.Controllers
                     Id = Guid.NewGuid(),
                     IdUser = idUser,
                     Keyword = keyword,
-                    SearchDate = DateTime.Now
+                    SearchDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, DateTime.Now.Hour, DateTime.Now.Minute, DateTime.Now.Second)
                 };
 
                 _context.SearchHistories.Add(searchHistory);
