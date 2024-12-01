@@ -1,0 +1,21 @@
+﻿<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">Xem ảnh đại diện</MudText>
+    </TitleContent>
+<DialogContent>
+    <div class="d-flex items-center justify-center h-full">
+        <MudImage Src="@ImageUrl" Alt="Avatar" Class="rounded-lg w-100" Style="max-width: 100%; max-height: 80vh;" ObjectFit="ObjectFit.Contain" />
+    </div>
+</DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" Color="Color.Primary">Đóng</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private MudDialogInstance MudDialog { get; set; }
+    private void Cancel() => MudDialog.Cancel();
+    [Parameter]
+    public string ImageUrl { get; set; }
+}

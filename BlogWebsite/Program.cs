@@ -129,6 +129,7 @@ builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSe
 builder.Services.AddScoped<VnPayService>();
 builder.Services.AddRadzenComponents();
 builder.Services.AddControllers();
+builder.Services.AddMemoryCache();
 
 var app = builder.Build();
 // Configure the HTTP request pipeline.
