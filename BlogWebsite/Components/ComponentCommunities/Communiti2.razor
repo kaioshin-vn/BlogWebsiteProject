@@ -22,7 +22,7 @@
 	}
 
 	.contain {
-		max-width: 100%;
+		max-width: 90%;
 	}
 
 
@@ -72,7 +72,7 @@ else
 					<div class="actions mt-8">
 
 						@{
-							if (IsAdmin)
+							if (IsAdminOrChief)
 							{
 								if (group.StateGroup == KindGroup.Public || group.StateGroup == KindGroup.Restricted || group.StateGroup == KindGroup.Private)
 								{
@@ -113,7 +113,7 @@ else
 							</MudIconButton>
 						}
 						@{
-							if (IsAdmin == true)
+							if (IsAdminOrChief == true)
 							{
 								<MudButton Variant="Variant.Filled" Color="Color.Secondary" @onclick="ClickMod">Công cụ mod</MudButton>
 							}
@@ -126,6 +126,17 @@ else
 								</MudButton>
 							}
 						}
+						@if (isJoined)
+						{
+							<MudMenu Icon="@Icons.Material.Filled.MoreHoriz"
+									 AnchorOrigin="Origin.BottomCenter"
+									 TransformOrigin="Origin.TopCenter"
+									 Color="Color.Default"
+									 AriaLabel="Open user menu">
+								<MudMenuItem OnClick="ViewGroupList">Xem danh sách nhóm</MudMenuItem>
+								<MudMenuItem OnClick="ViewPostHistory">Xem lịch sử đăng bài</MudMenuItem>
+							</MudMenu>
+						}
 					</div>
 				</div>
 			</div>
@@ -133,16 +144,34 @@ else
 
 		<div class="d-flex justify-content-between">
 			<div class="ms-4" style="width:68% ; margin-top:-52px;">
-				@foreach (var item in listIntroPost)
+				@if (listIntroPost != null && listIntroPost.Any())
 				{
-					<PostIntro Avatar="@item.Avatar" Content="@item.Content"
-							   CreateDate="@item.CreateDate" IdPost="@item.Id"
-							   CommentCount="@item.CommentCount" Like="@item.Like"
-							   VideoFile="@item.VideoFile" ImgFile="@item.ImgFile" UserName="@item.UserName" Title="@item.Title">
-					</PostIntro>
+					if (group.StateGroup == KindGroup.Private && IsAdminOrChief == false && isJoined == false)
+					{
+						<p style="margin-top: 200px; margin-left: 250px">Bạn phải tham gia nhóm mới xem được bài viết.</p>
+					}
+					else if (group.StateGroup == KindGroup.Public || group.StateGroup == KindGroup.Restricted || group.StateGroup == KindGroup.Private)
+					{
+						@foreach (var item in listIntroPost)
+						{
+							<PostIntro Avatar="@item.Avatar" Content="@item.Content"
+									   CreateDate="@item.CreateDate" IdPost="@item.Id"
+									   CommentCount="@item.CommentCount" Like="@item.Like"
+									   VideoFile="@item.VideoFile" ImgFile="@item.ImgFile" UserName="@item.UserName" Title="@item.Title">
+							</PostIntro>
+						}
+					}
+				}
+				else if (group.StateGroup == KindGroup.Private && IsAdminOrChief == false && isJoined == false)
+				{
+					<p style="margin-top: 200px; margin-left: 250px">Bạn phải tham gia nhóm mới xem được bài viết.</p>
+				}
+				else
+				{
+					<p style="margin-top: 200px; margin-left: 250px">Không có bài viết nào trong nhóm này.</p>
 				}
 			</div>
-			<div style="width:27%; height : 200px; position: sticky;top: 120px; border:none;" id="replaceHidden">
+			<div style="width:27%; height : 200px; position: sticky;top: 120px; border:none; " id="replaceHidden">
 				<div id="another_unique_identifier" style="height:614px;">
 					<div style="width:270px; background: #f4f8f5;border-radius:5px; margin-top: -16px">
 						@{
@@ -153,23 +182,10 @@ else
 						}
 						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; font-weight:600;">@group.Name</MudText>
 						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
-
-						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
-						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
-						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
-						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
-						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
-						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
-						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
-						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
-						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
-						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
-						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
-						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 6px; font-size:14px; color: #867a7a">@group.Description</MudText>
 						<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; margin-bottom: 2px; font-size:13px; color: #605d5d	">
 							Được tạo vào ngày @day tháng @month năm @year
 						</MudText>
-						
+
 						@if (group.StateGroup == KindGroup.Public)
 						{
 							<MudItem Class="d-flex align-items-center " Style="margin-left: 9px; margin-bottom: 6px;">
@@ -195,9 +211,6 @@ else
 						<MudItem>
 							<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; font-size:13px; color: #605d5d">
 								<span class="spt">@memberCount</span> Thành viên
-							</MudText>
-							<MudText Variant="Variant.h6" Class="group-name" Style="margin-left: 10px; font-size:13px; color: #605d5d">
-								tên nhóm <span style="color: red;">@Name</span>
 							</MudText>
 						</MudItem>
 					</div>
@@ -237,27 +250,15 @@ else
 	private Group? group;
 	private bool isJoined;  // Biến lưu trạng thái tham gia
 	private string buttonText = "Tham gia"; // Thay đổi nội dung của nút dựa trên trạng thái
-	List<PostIntroDTO> listIntroPost;
+	private List<PostIntroDTO> listIntroPost;
 	int memberCount = 0;
-	bool IsAdmin { get; set; }
+	bool IsAdminOrChief { get; set; }
 	string groupState;
+
 	protected override async Task OnInitializedAsync()
 	{
-		await GetAdmin();
-		var _httpClient = HttpClientFactory.CreateClient("MyHttpClient");
-
-		var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-		var user = authState.User;
-		var idUserCurrent = UserManager.GetUserId(user);
-		var idUser = Guid.Parse(idUserCurrent);
-
-		var result = await _httpClient.GetStringAsync($"/GetListPostIntro/{idUser}");
-
-		var resultConverted = JsonConvert.DeserializeObject<List<PostIntroDTO>>(result);
-		if (resultConverted != null)
-		{
-			listIntroPost = resultConverted;
-		}
+		await GetAdminOrChief();
+		await GetPostGroup();
 	}
 
 	protected override async Task OnParametersSetAsync()
@@ -288,9 +289,31 @@ else
 				await GetMember();
 				buttonText = isJoined ? "Đã tham gia" : "Tham gia";
 				await GetMemberCount();
-				await GetAdmin();
+				await GetAdminOrChief();
 				StateHasChanged();
 			}
+			await GetPostGroup();
+		}
+	}
+
+	private async Task GetPostGroup()
+	{
+		var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+		var user = authState.User;
+		var userCurrent = UserManager.GetUserId(user);
+		var currentUserId = Guid.Parse(userCurrent);
+		Console.WriteLine($"namdg: {Name}");
+		Console.WriteLine($"cunetddg: {currentUserId}");
+		var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+
+		var response = await httpClient.GetAsync($"api/Post/getListPostIntroGroup/?userId={currentUserId}&groupName={Name}");
+		if (response.IsSuccessStatusCode)
+		{
+			listIntroPost = await response.Content.ReadFromJsonAsync<List<PostIntroDTO>>();
+		}
+		else
+		{
+			Console.WriteLine("Không thể kiểm tra trạng thái nhóm.");
 		}
 	}
 
@@ -310,18 +333,18 @@ else
 		}
 	}
 
-	private async Task GetAdmin()
+	private async Task GetAdminOrChief()
 	{
 		var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
 		var user = authState.User;
 		var userCurrent = UserManager.GetUserId(user);
 		var currentUserId = Guid.Parse(userCurrent);
 		var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
-		var response = await httpClient.GetAsync($"api/group/is-admin/{Name}?userId={currentUserId}");
+		var response = await httpClient.GetAsync($"api/group/is-adminOrChief/{Name}?userId={currentUserId}");
 		if (response.IsSuccessStatusCode)
 		{
-			// Gán kết quả trả về vào biến isAdmin
-			IsAdmin = await response.Content.ReadFromJsonAsync<bool>();
+			// Gán kết quả trả về vào biến adminOrChief
+			IsAdminOrChief = await response.Content.ReadFromJsonAsync<bool>();
 		}
 	}
 
@@ -384,4 +407,18 @@ else
 		var href = $"/groups/{Uri.EscapeDataString(Name)}/mod";
 		Navigation.NavigateTo(href);
 	}
+
+	private void ViewGroupList()
+	{
+		var href = $"/groups/{Uri.EscapeDataString(Name)}/mod";
+		Navigation.NavigateTo(href);
+	}
+	private void ViewPostHistory()
+	{
+		var href = $"/groups/{Uri.EscapeDataString(Name)}/mod";
+		Navigation.NavigateTo(href);
+	}
+
+
+
 }

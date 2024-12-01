@@ -210,6 +210,8 @@ else
 
     bool isUpPost = false;
 
+    bool isMember;
+
     PostDTO Post = new PostDTO();
 
     override protected async Task OnInitializedAsync()
@@ -294,6 +296,7 @@ else
 
     public async Task CreatePostSubmit()
     {
+        await IsMember();
         if (Post.Title == null || Post.Title.Trim() == "")
         {
             Snackbar.Add("Hãy nhập tiêu đề bài viết", Severity.Info);
@@ -369,14 +372,43 @@ else
                 PostTag.IdTag = idTag;
                 await _httpClient.PostAsJsonAsync($"/addNewPostTag", PostTag);
             }
-            var result = await _httpClient.PostAsJsonAsync($"/UserUpPostOnGroup/{IdGroupUserChoose}", idPost);
+            var result = await _httpClient.PostAsJsonAsync($"/UserUpPostOnGroup/{IdGroupUserChoose}?userId={idUser}", idPost);
             if (result.IsSuccessStatusCode)
             {
                 isUpPost = false;
                 Snackbar.Add("Thêm bài viết thành công", Severity.Success);
+                if (isMember)
+                {
+                    // Tạo bài viết thành công, điều hướng đến trang tạo bài
+                    Navigation.NavigateTo("/groups/modsdsd");
+                }
+                else
+                {
+                    // Nếu không phải thành viên nhóm Private, điều hướng đến trang lỗi hoặc thông báo
+                    Navigation.NavigateTo("/listPost");
+                }
             }
 
 
+        }
+    }
+    private async Task IsMember()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        var userCurrent = UserManager.GetUserId(user);
+        var currentUserId = Guid.Parse(userCurrent);
+        var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+        var response = await httpClient.GetAsync($"api/group/is-member-creatPost/{IdGroup}/?userId={currentUserId}");
+
+        if (response.IsSuccessStatusCode)
+        {
+            isMember = await response.Content.ReadFromJsonAsync<bool>();
+            Console.WriteLine("Thông tin member đã được tải thành công.");
+        }
+        else
+        {
+            Console.WriteLine("Không thể kiểm tra thông tin member.");
         }
     }
 
