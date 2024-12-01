@@ -57,7 +57,12 @@ else
                                         <MudText Typo="Typo.body1" Class="truncate-text" Style="font-size: 20px;"><b class="hover-underline">@post.Title</b></MudText>
                                     </MudCardContent>
                                     <MudItem>
-                                        <MudText Style=" font-size:12px; color:gray">@(string.IsNullOrEmpty(post.Like) ? 0 : post.Like.Count()) lượt thích · @post.CommentCount bình luận </MudText>
+                                        @if (!string.IsNullOrEmpty(post.Like))
+                                        {
+                                            string[] likeCount = post.Like.Split(',');
+                                            int toltalLike = likeCount.Distinct().Count();
+                                            <MudText Style=" font-size:12px; color:gray">@(string.IsNullOrEmpty(Convert.ToString(toltalLike)) ? 0 : toltalLike) lượt thích · @post.CommentCount bình luận </MudText>
+                                        }
                                     </MudItem>
                                 </MudItem>
                                 <MudItem xs="3" Class="d-flex justify-content-end">
