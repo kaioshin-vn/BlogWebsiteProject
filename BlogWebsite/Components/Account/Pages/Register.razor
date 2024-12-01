@@ -239,6 +239,12 @@
 
     public async Task RegisterUser()
     {
+        var existingUser = await UserManager.FindByEmailAsync(Input.Email);
+        if (existingUser != null)
+        {
+            Message = "Email này đã được đăng ký. Vui lòng sử dụng email khác.";
+            return;
+        }
         var user = CreateUser();
         user.Id = Guid.NewGuid();
         user.FullName = Input.FullName;
