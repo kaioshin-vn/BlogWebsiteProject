@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20241127160844_f")]
+    [Migration("20241201180937_f")]
     partial class f
     {
         /// <inheritdoc />
@@ -532,6 +532,29 @@ namespace Data.Migrations
                     b.HasIndex("IdUser");
 
                     b.ToTable("Saves");
+                });
+
+            modelBuilder.Entity("Data.Database.Table.SearchHistory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdUser")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Keyword")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("SearchDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IdUser");
+
+                    b.ToTable("SearchHistories");
                 });
 
             modelBuilder.Entity("Data.Database.Table.Tag", b =>
@@ -1129,6 +1152,17 @@ namespace Data.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Data.Database.Table.SearchHistory", b =>
+                {
+                    b.HasOne("BlogWebsite.Data.ApplicationUser", "ApplicationUser")
+                        .WithMany("SearchHistories")
+                        .HasForeignKey("IdUser")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ApplicationUser");
+                });
+
             modelBuilder.Entity("Data.Tables.Exam", b =>
                 {
                     b.HasOne("BlogWebsite.Data.ApplicationUser", "User")
@@ -1261,6 +1295,8 @@ namespace Data.Migrations
                     b.Navigation("Responses");
 
                     b.Navigation("Saves");
+
+                    b.Navigation("SearchHistories");
                 });
 
             modelBuilder.Entity("Data.Database.Table.Group", b =>

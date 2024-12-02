@@ -17,10 +17,10 @@ namespace API.Controllers
             _context = context;
         }
 
-        [HttpGet("get_savepost")]
-        public async Task<IActionResult> GetCategoryPost()
+        [HttpGet("get_savepost/{idUser}")]
+        public async Task<IActionResult> GetCategoryPost(Guid idUser)
         {
-            return Ok(await _context.Saves.ToListAsync());
+            return Ok(await _context.Saves.Where(a => a.IdUser == idUser).ToListAsync());
         }
 
         [HttpGet("getFirstImageSave/{idSave}")]

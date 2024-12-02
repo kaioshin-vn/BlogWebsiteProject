@@ -55,14 +55,6 @@ else
                     </MudListItem>
                 }
             </MudList>
-            <MudItem>
-                <MudButton Class="w-100 justify-content-start">
-                    <MudAvatar>
-                        <MudIcon Icon="@Icons.Material.Filled.MoreHoriz" />
-                    </MudAvatar>
-                    <MudText Class="px-2">Xem thêm</MudText>
-                </MudButton>
-            </MudItem>
             <MudItem Class="p-2">
                 <MudButton OnClick="OpenDialog" Variant="Variant.Outlined" Color="Color.Info" Class="w-100 rounded-3">
                     <MudIcon Icon="@Icons.Material.Filled.Add" />
@@ -123,8 +115,12 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        var idUserCurrent = UserManager.GetUserId(user);
+        var idUser = Guid.Parse(idUserCurrent);
         var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
-        lstPostSave = await httpClient.GetFromJsonAsync<List<SaveDTO>>("/api/save/get_savepost");
+        lstPostSave = await httpClient.GetFromJsonAsync<List<SaveDTO>>($"/api/save/get_savepost/{idUser}");
     }
 
     private async Task GetPostInSave(Guid id)
@@ -164,7 +160,7 @@ else
         var result = await httpClient.DeleteAsync($"/api/PostSave/deleteSaveColection/{idSave}");
         if (result.IsSuccessStatusCode)
         {
-            lstPostSave = await httpClient.GetFromJsonAsync<List<SaveDTO>>("/api/save/get_savepost");
+            lstPostSave = await httpClient.GetFromJsonAsync<List<SaveDTO>>($"/api/save/get_savepost/{userId}");
             Snackbar.Add("Xoá bộ sưu tập thành công!", Severity.Success);
         }
         else

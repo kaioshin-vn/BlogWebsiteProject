@@ -69,7 +69,22 @@ namespace API.Controllers.PostController
 			return listIntroPost;
 		}
 
-		[HttpGet("getListPostWaiState")]
+        [HttpGet("/GetListPostUser/{idUser}")]
+        public async Task<List<PostIntroDTO>> GetListPostUser(Guid idUser)
+        {
+            var listPost = await _context.Posts.Where(a => a.IdUser == idUser && a.IsDeleted == false).ToListAsync();
+
+            var listIntroPost = new List<PostIntroDTO>();
+            foreach (var item in listPost)
+            {
+                var introPost = await GetPostIntro(item);
+                listIntroPost.Add(introPost);
+            }
+            return listIntroPost;
+        }
+
+
+        [HttpGet("getListPostWaiState")]
 		public async Task<ActionResult<List<PostIntroDTO>>> GetListPostWaiState([FromQuery] string groupName, [FromQuery] Guid? userId)
 		{
 			var group = await _context.Groups.FirstOrDefaultAsync(a => a.Name == groupName);

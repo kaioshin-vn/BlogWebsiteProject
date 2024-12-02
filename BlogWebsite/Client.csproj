@@ -54,7 +54,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Components\Pages\User\" />
     <Folder Include="wwwroot\UploadVideo\" />
   </ItemGroup>
 

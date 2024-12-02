@@ -1,9 +1,11 @@
-﻿@page "/profile"
+﻿@page "/profileUser/{IdUser:guid}"
 @using System.Security.Claims
 @inject ISnackbar Snackbar
 @inject IHttpClientFactory ClientFactory
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IDialogService Dialog
+@inject UserManager<ApplicationUser> UserManager
+
 <MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
     <MudCard>
         <MudCardMedia Image="/Img/univer.png" Height="300" />
@@ -30,9 +32,20 @@
             <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="@(() => _editMode = true)" />
         </div>
     </div>
-    <MudGrid Class="mt-4">
+    <MudGrid Class="my-4">
         <MudItem xs="12" md="4">
             <MudCard>
+                @if (!string.IsNullOrEmpty(model.Descript))
+                {
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.h6">Giới thiệu</MudText>
+                        </CardHeaderContent>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        <MudText Typo="Typo.body1">@model.Descript</MudText>
+                    </MudCardContent>
+                }
                 <MudCardHeader>
                     <CardHeaderContent>
                         <MudText Typo="Typo.h6">Thông tin cá nhân</MudText>
@@ -75,32 +88,19 @@
                         </MudForm>
                     </MudCardContent>
                     <MudCardActions>
-                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@SaveChanges">Lưu thay đổi</MudButton>
+                        <MudButton Variant="Variant.Filled" Class="mx-3" Color="Color.Primary" OnClick="@SaveChanges">Lưu thay đổi</MudButton>
                         <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="@(() => _editMode = false)">Hủy</MudButton>
                     </MudCardActions>
                 </MudCard>
-            }
-            else
-            {
-                @if (!string.IsNullOrEmpty(model.Descript))
-                {
-                    <MudCard>
-                        <MudCardHeader>
-                            <CardHeaderContent>
-                                <MudText Typo="Typo.h6">Giới thiệu</MudText>
-                            </CardHeaderContent>
-                        </MudCardHeader>
-                        <MudCardContent>
-                            <MudText Typo="Typo.body1">@model.Descript</MudText>
-                        </MudCardContent>
-                    </MudCard>
-                }
             }
         </MudItem>
     </MudGrid>
 </MudContainer>
 
 @code {
+    [Parameter]
+    public Guid IdUser { get; set; }
+
     public string Id { get; set; }
     private bool _editMode = false;
     private bool success;
@@ -110,6 +110,8 @@
     private bool IsCurrentUser = false;
     private PersonalInfoModel model = new PersonalInfoModel();
     private bool isAvatarViewerVisible = false;
+
+    List<PostIntroDTO> listIntroPost;
 
     private DialogOptions dialogOptions = new DialogOptions()
     {
@@ -126,17 +128,13 @@
 
     private async Task LoadUserData()
     {
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        var user = authState.User;
-        var currentUserId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        await GetInfo(currentUserId);
-        Id = currentUserId;
+        await GetInfo(IdUser);
     }
 
-    private async Task GetInfo(string id)
+    private async Task GetInfo(Guid id)
     {
         var client = ClientFactory.CreateClient("MyHttpClient");
-        var response = await client.GetAsync($"api/users/{id}");
+        var response = await client.GetAsync($"/api/getUserById/{id}");
         if (response.IsSuccessStatusCode)
         {
             model = await response.Content.ReadFromJsonAsync<PersonalInfoModel>();

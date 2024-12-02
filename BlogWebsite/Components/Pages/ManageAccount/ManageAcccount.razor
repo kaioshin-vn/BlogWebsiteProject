@@ -1,0 +1,192 @@
+﻿@page "/ManageAccount"
+
+
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
+@using System.Text.RegularExpressions
+@using System.ComponentModel.DataAnnotations
+@using Newtonsoft.Json
+
+@attribute [Authorize(Roles = "Admin")]
+
+@inject NavigationManager Navigation
+@inject IDialogService DialogService
+@inject IHttpClientFactory HttpClientFactory
+@inject ISnackbar Snackbar
+
+@inject UserManager<ApplicationUser> UserManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+
+@if (!LoadingSucces)
+{
+    <Client.Components.ComponentCustom.LoadingLocal></Client.Components.ComponentCustom.LoadingLocal>
+}
+else
+{
+
+    <MudContainer Class="mb-5" MaxWidth="MaxWidth.Large">
+        @if (ListUser.Count == 0)
+        {
+            <Client.Components.ComponentCustom.LoadingLocal></Client.Components.ComponentCustom.LoadingLocal>
+        }
+        else
+        {
+            <MudSimpleTable Class="my-10" Elevation="3" Style="overflow-x: auto;">
+                <thead>
+                    <tr>
+                        <th>Email</th>
+                        <th>Vai trò</th>
+                        <th>Chức năng</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var row in ListUser)
+                    {
+                        <tr>
+                            <td>@row.Email</td>
+                            @if (row.ListRole.Count == 0)
+                            {
+                                <td>Null</td>
+                            }
+                            else
+                            {
+                                <td>@String.Join(", ", row.ListRole)</td>
+                            }
+
+                            <td>
+                                @if (row.Open)
+                                {
+                                    <MudPaper Elevation="3" Class="p-4 d-flex justify-content-between align-items-end">
+                                        @if (listRole.Count == 0)
+                                        {
+                                            <MudAlert Class="mt-5" Severity="Severity.Info" Variant="Variant.Filled">Hệ thống chưa có quyền nào</MudAlert>
+                                        }
+                                        else
+                                        {
+                                            <div>
+                                                @foreach (var item in listRole)
+                                                {
+                                                    var checkd = false;
+                                                    if (row.ListIdRole.Any(a => a == item.Id))
+                                                    {
+                                                        checkd = true;
+                                                    }
+                                                    <MudCheckBox @onclick="() => CheckBoxHanlde(row.Id , item.Id)" Class="d-block" Value="checkd" Color="Color.Success">@item.Name</MudCheckBox>
+                                                }
+                                            </div>
+                                            <MudButton OnClick="() => SaveChange(row.Id)" Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.Save" Color="Color.Success">Lưu</MudButton>
+                                        }
+                                        <MudButton OnClick="() => ToggleDrawer(row)" Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.CancelPresentation" Color="Color.Error">Hủy</MudButton>
+                                    </MudPaper>
+                                }
+                                else
+                                {
+                                    <MudButton OnClick="() => GetAllRoleUser(row.Id)" Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.ArrowCircleUp" Color="Color.Tertiary">Thay đổi quyền</MudButton>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </MudSimpleTable>
+        }
+    </MudContainer>
+}
+
+
+
+@code {
+    List<UserTrans> ListUser;
+    bool Open;
+    bool LoadingSucces = false;
+    List<IdentityRole<Guid>> listRole;
+    List<Guid> ListIdRoleUser = new List<Guid>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUser();
+        LoadingSucces = true;
+    }
+
+    void CheckBoxHanlde(Guid idUser, Guid id)
+    {
+        var user = ListUser.FirstOrDefault(a => a.Id == idUser);
+        if (user.ListIdRole.Any(a => a == id))
+        {
+            user.ListIdRole.Remove(id);
+        }
+        else
+        {
+            user.ListIdRole.Add(id);
+        }
+    }
+
+    async Task LoadUser()
+    {
+        var _http = HttpClientFactory.CreateClient("MyHttpClient");
+        var data = await _http.GetStringAsync($"/GetListUser");
+
+        var listUser = JsonConvert.DeserializeObject<List<ApplicationUser>>(data);
+
+        ListUser = new List<UserTrans>();
+        foreach (var item in listUser)
+        {
+            var user = new UserTrans();
+            user.Id = item.Id;
+            user.Email = item.UserName;
+            data = await _http.GetStringAsync($"/GetRoleUser/{item.Id}");
+            user.ListRole = JsonConvert.DeserializeObject<List<string>>(data);
+            data = await _http.GetStringAsync($"/GetIdRoleUser/{item.Id}");
+            user.ListIdRole = JsonConvert.DeserializeObject<List<Guid>>(data);
+            ListUser.Add(user);
+        }
+    }
+
+    async Task SaveChange(Guid id)
+    {
+        var _http = HttpClientFactory.CreateClient("MyHttpClient");
+        var user = ListUser.FirstOrDefault(a => a.Id == id);
+        if (user != null)
+        {
+            await ToggleDrawer(user);
+            var data = await _http.PostAsJsonAsync($"/UpdateUser/{id}", user.ListIdRole);
+            if (data.IsSuccessStatusCode)
+            {
+                Snackbar.Add("Cập nhật quyền tài khoản thành công", Severity.Info);
+                await LoadUser();
+            }
+        }
+    }
+
+    async Task GetAllRoleUser(Guid id)
+    {
+        var _http = HttpClientFactory.CreateClient("MyHttpClient");
+
+        var data = await _http.GetStringAsync($"/GetIdRoleUser/{id}");
+
+        var user = ListUser.FirstOrDefault(a => a.Id == id);
+
+        if (user != null)
+        {
+            user.ListIdRole = JsonConvert.DeserializeObject<List<Guid>>(data);
+
+            data = await _http.GetStringAsync($"/GetListRole");
+            listRole = JsonConvert.DeserializeObject<List<IdentityRole<Guid>>>(data);
+            await ToggleDrawer(user);
+        }
+    }
+
+    async Task ToggleDrawer(UserTrans user)
+    {
+        user.Open = !user.Open;
+    }
+
+    internal class UserTrans
+    {
+        public Guid Id;
+        public string Email;
+        public List<string?> ListRole;
+        public List<Guid> ListIdRole;
+        public bool Open;
+    }
+}

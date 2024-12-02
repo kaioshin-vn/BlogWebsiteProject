@@ -92,15 +92,19 @@ else
     {
         <div class="d-flex align-items-start  ms-3 my-4">
             <div>
-                <MudAvatar Style="height:32px;width:32px;" Class="hover-border">
-                    <MudImage Height="25" Src="@this.Avatar"></MudImage>
-                </MudAvatar>
+                <a href="/other-profile/@IdUserComment">
+                    <MudAvatar Style="height:32px;width:32px;" Class="hover-border">
+                        <MudImage Height="25" Src="@this.Avatar"></MudImage>
+                    </MudAvatar>
+                </a>
             </div>
 
 
             <div class="flex-grow-1 ms-3">
                 <div class="d-flex align-items-end">
-                    <MudText Typo="Typo.body1"><b class="hover-underline">@this.UserName</b></MudText>
+                            <a href="/other-profile/@IdUserComment">
+                        <MudText Typo="Typo.body1"><b class="hover-underline">@this.UserName</b></MudText>
+                    </a>
                     <span style="color:darkgray;" class="hover-underline mx-3">@this.Date</span>
                 </div>
                 @if (!isUpdate)
@@ -456,7 +460,7 @@ else
         if (result.IsSuccessStatusCode)
         {
             Snackbar.Add("Cập nhật bình luận thành công", Severity.Success);
-            Content = ContentUpdate ;
+            Content = ContentUpdate;
             ContentHtml = (MarkupString)Content;
             isUpdate = false;
             StateHasChanged();

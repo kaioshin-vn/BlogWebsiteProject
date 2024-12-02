@@ -14,7 +14,7 @@
 
 
 <style>
-  
+
     .hover:hover {
         color: forestgreen;
         transform: translateY(-4px);
@@ -38,7 +38,7 @@
         transition: transform 0.3s ease;
     }
 
-    
+
     .hover-underline:hover {
         text-decoration: underline;
     }
@@ -72,13 +72,17 @@ else
     <MudCard Style="margin-top:52px;" Elevation="3" class="hover-post" @onclick="() => DetailPost(IdPost)">
         <MudCardHeader>
             <CardHeaderAvatar>
-                <MudAvatar Class="hover-border">
-                    <MudImage Src="@this.Avatar"></MudImage>
-                </MudAvatar>
+                <a href="/other-profile/@IdUserPost">
+                    <MudAvatar Class="hover-border">
+                        <MudImage Src="@this.Avatar"></MudImage>
+                    </MudAvatar>
+                </a>
             </CardHeaderAvatar>
 
             <CardHeaderContent>
-                <MudText Typo="Typo.body1"><b class="hover-underline">@this.UserName</b></MudText>
+                    <a href="/other-profile/@IdUserPost">
+                    <MudText Typo="Typo.body1"><b class="hover-underline">@this.UserName</b></MudText>
+                </a>
                 <MudText Typo="Typo.body2"><span class="hover-underline">@this.Date</span></MudText>
             </CardHeaderContent>
 
@@ -89,7 +93,7 @@ else
                         <a href="/updatePost/@IdPost"><MudMenuItem>Chỉnh sửa</MudMenuItem></a>
                         <MudMenuItem OnClick="DeletePost">Xóa bài viết</MudMenuItem>
                     }
-                        <MudMenuItem>Báo cáo</MudMenuItem>
+                    <MudMenuItem>Báo cáo</MudMenuItem>
                 </MudMenu>
             </CardHeaderActions>
         </MudCardHeader>
@@ -140,7 +144,7 @@ else
             }
         }
 
-        
+
 
         <hr class="mx-3 my-0" />
 
@@ -153,11 +157,11 @@ else
             </MudItem>
             <MudItem xs="6" Class="p-0" sm="6">
                 <MudButton Variant="Variant.Text" OnClick="() => DeclineClick(IdPost)" Style="width:75%;padding:0px;">
-                    <MudIconButton  Style="padding:10px;" Icon="@Icons.Material.Filled.Close" Color="Color.Error" />
+                    <MudIconButton Style="padding:10px;" Icon="@Icons.Material.Filled.Close" Color="Color.Error" />
                     <MudText>Từ chối</MudText>
                 </MudButton>
             </MudItem>
-           
+
         </MudGrid>
 
     </MudCard>
@@ -264,7 +268,7 @@ else
             Date = "Vừa xong";
         }
 
-        if (VideoFile != null && VideoFile != "" )
+        if (VideoFile != null && VideoFile != "")
         {
             SrcVideo = VideoFile.Split("|")[0];
         }
@@ -290,12 +294,12 @@ else
     async Task AccepClick(Guid postId)
     {
         var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
-        var response = await httpClient.PutAsync($"/updatePostWaistate/{postId}",null );
+        var response = await httpClient.PutAsync($"/updatePostWaistate/{postId}", null);
         if (response.IsSuccessStatusCode)
         {
             if (WatchDetailPost.HasDelegate)
             {
-              await WatchDetailPost.InvokeAsync();
+                await WatchDetailPost.InvokeAsync();
             }
             Console.WriteLine("update thành công");
             StateHasChanged();

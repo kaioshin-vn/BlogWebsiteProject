@@ -1,0 +1,194 @@
+﻿@page "/ManageAuthor"
+
+
+@using Client.Components.ComponentCustom
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
+@using System.Text.RegularExpressions
+@using System.ComponentModel.DataAnnotations
+@using Newtonsoft.Json
+
+@attribute [Authorize(Roles = "Admin")]
+
+@inject NavigationManager Navigation
+@inject IDialogService DialogService
+@inject IHttpClientFactory HttpClientFactory
+@inject ISnackbar Snackbar
+
+@inject UserManager<ApplicationUser> UserManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+
+@if (!LoadingSucces)
+{
+    <Loading></Loading>
+}
+else
+{
+    <MudContainer MaxWidth="MaxWidth.Large">
+        @if (!isAdd)
+        {
+            <MudPaper Class="d-flex justify-end my-4" Elevation="0">
+                <MudTooltip Text="Thêm mới">
+                    <MudFab @onclick="ToggleAdd" EndIcon="@Icons.Material.Filled.Add" Color="Color.Secondary" />
+                </MudTooltip>
+            </MudPaper>
+        }
+        else
+        {
+            <MudForm Class="mb-4" @ref="Form">
+                <MudTextField @bind-Value="NewRole" Required RequiredError="Không được bỏ trống" Label="Vai trò" Variant="Variant.Text"></MudTextField>
+            </MudForm>
+            <MudButton Class="ms-3" Variant="Variant.Filled" OnClick="AddHandle" EndIcon="@Icons.Material.Filled.Send" Color="Color.Primary">Tạo mới</MudButton>
+            <MudButton Variant="Variant.Filled" OnClick="ToggleAdd" EndIcon="@Icons.Material.Filled.Cancel" Color="Color.Error">Hủy</MudButton>
+        }
+        @if (isUpdate)
+        {
+            <MudForm Class="mb-4" @ref="Form">
+                <MudTextField @bind-Value="RoleChange" Label="Vai trò" Variant="Variant.Text"></MudTextField>
+            </MudForm>
+            <MudButton Class="ms-3" Variant="Variant.Filled" OnClick="UpdateHanlde" EndIcon="@Icons.Material.Filled.Save" Color="Color.Success">Lưu</MudButton>
+            <MudButton Variant="Variant.Filled" OnClick="ToggleUpdate" EndIcon="@Icons.Material.Filled.Cancel" Color="Color.Error">Hủy</MudButton>
+        }
+    </MudContainer>
+
+    <MudContainer Class="mb-5 mt-5" MaxWidth="MaxWidth.Large">
+        @if (ListRole.Count == 0)
+        {
+            <MudAlert Style="width : 550px;" Class="mt-4" Severity="Severity.Info" Variant="Variant.Filled">Chưa có vai trò nào!</MudAlert>
+        }
+        else
+        {
+            <MudSimpleTable Class="my-10" Elevation="3" Style="overflow-x: auto;">
+                <thead>
+                    <tr>
+                        <th>Id</th>
+                        <th>Vai trò</th>
+                        <th>Chức năng</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var row in ListRole)
+                    {
+                        <tr>
+                            <td>@row.Id</td>
+                            <td>@row.Name</td>
+                            <td>
+                                <MudButton OnClick="() => Update(row.Id)" Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.Update" Color="Color.Tertiary">Sửa</MudButton>
+                                <MudButton OnClick="() => Delete(row.Id)" Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.CancelPresentation" Color="Color.Error">Xóa</MudButton>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </MudSimpleTable>
+        }
+    </MudContainer>
+}
+
+
+
+@code {
+    List<IdentityRole<Guid>> ListRole;
+    bool Open;
+    bool LoadingSucces = false;
+    bool isUpdate = false;
+    bool isAdd = false;
+    string RoleChange;
+    IdentityRole<Guid> roleUpdate;
+    string NewRole;
+    MudForm Form;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadRole();
+        LoadingSucces = true;
+    }
+
+
+    async Task GetAllRoleUser(Guid id)
+    {
+
+    }
+
+    async Task LoadRole()
+    {
+        var _http = HttpClientFactory.CreateClient("MyHttpClient");
+        var data = await _http.GetStringAsync($"/GetListRole");
+        ListRole = JsonConvert.DeserializeObject<List<IdentityRole<Guid>>>(data);
+    }
+
+    async Task AddHandle()
+    {
+        await Form.Validate();
+        if (!Form.IsValid)
+        {
+            return;
+        }
+        var _http = HttpClientFactory.CreateClient("MyHttpClient");
+        var data = await _http.PostAsJsonAsync($"/AddRole", NewRole);
+        Snackbar.Add("Thêm quyền thành công", Severity.Success);
+        isAdd = false;
+        await LoadRole();
+    }
+    async Task UpdateHanlde()
+    {
+        await Form.Validate();
+        if (!Form.IsValid)
+        {
+            return;
+        }
+        roleUpdate.Name = RoleChange;
+        var _http = HttpClientFactory.CreateClient("MyHttpClient");
+        var data = await _http.PatchAsJsonAsync($"/UpdateRole", roleUpdate);
+        Snackbar.Add("Cập nhật tên quyền thành công", Severity.Info);
+        isUpdate = false;
+        await LoadRole();
+    }
+
+
+    async Task Delete(Guid id)
+    {
+        var parameters = new DialogParameters<Dialog>();
+        parameters.Add(x => x.ContentText, "Xác nhận bạn muốn xóa?");
+        parameters.Add(x => x.ButtonText, "Xóa");
+        parameters.Add(x => x.Color, Color.Error);
+
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+        var result = await DialogService.Show<Dialog>("Xác nhận", parameters, options).Result;
+        if (result.Data != null)
+        {
+            var _http = HttpClientFactory.CreateClient("MyHttpClient");
+            var data = await _http.DeleteAsync($"/DeleteRole/{id}");
+            Snackbar.Add("Xóa thành công", Severity.Success);
+            await LoadRole();
+        }
+    }
+
+    void Update(Guid id)
+    {
+        roleUpdate = ListRole.FirstOrDefault(a => a.Id == id);
+        RoleChange = roleUpdate.Name;
+        ToggleUpdate();
+        isUpdate = true;
+    }
+
+    void ToggleUpdate()
+    {
+        isUpdate = !isUpdate;
+        if (isUpdate)
+        {
+            isAdd = false;
+        }
+    }
+
+    void ToggleAdd()
+    {
+        isAdd = !isAdd;
+        if (isAdd)
+        {
+            isUpdate = false;
+        }
+    }
+
+}

@@ -1,7 +1,10 @@
-﻿@using ASM_PH35423.StaticClass
+﻿@page "/postDetail/{IdPost:guid}"
+
+@using ASM_PH35423.StaticClass
 @using Client.Components.ComponentCustom
 @using Data.DTO.EntitiDTO
 @using System.Net.Http.Headers
+@using Newtonsoft.Json
 @using Newtonsoft.Json.Linq
 @using System.Globalization;
 
@@ -93,22 +96,17 @@
 }
 else
 {
-    <MudFab StartIcon="@Icons.Material.Filled.ArrowBack" Label=" " OnClick="Back" DropShadow="false" />
 
     <div>
         <MudCardHeader>
             <CardHeaderAvatar>
-                <a href="/other-profile/@IdUserPost">
-                    <MudAvatar Class="hover-border">
-                        <MudImage Src="@this.Avatar"></MudImage>
-                    </MudAvatar>
-                </a>
+                <MudAvatar Class="hover-border">
+                    <MudImage Src="@this.Avatar"></MudImage>
+                </MudAvatar>
             </CardHeaderAvatar>
 
             <CardHeaderContent>
-                    <a href="/other-profile/@IdUserPost">
-                    <MudText Typo="Typo.body1"><b class="hover-underline">@this.UserName</b></MudText>
-                </a>
+                <MudText Typo="Typo.body1"><b class="hover-underline">@this.UserName</b></MudText>
                 <MudText Typo="Typo.body2"><span class="hover-underline">@this.Date</span></MudText>
             </CardHeaderContent>
 
@@ -213,30 +211,27 @@ else
 @code {
     [Parameter]
     public Guid IdPost { get; set; }
-    [Parameter]
+
     public Guid IdUserPost { get; set; }
-    [Parameter]
+
     public string UserName { get; set; }
-    [Parameter]
+
     public string Avatar { get; set; }
-    [Parameter]
+
     public string Title { get; set; }
-    [Parameter]
+
     public string? Content { get; set; }
-    [Parameter]
+
     public string? VideoFile { get; set; }
-    [Parameter]
+
     public string Like { get; set; }
-    [Parameter]
+
     public int CommentCount { get; set; }
-    [Parameter]
+
     public DateTime? CreateDate { get; set; }
 
-    [Parameter]
     public List<string>? TagNames { get; set; }
 
-    [Parameter]
-    public EventCallback GoBack { get; set; }
 
     ListComment ListCommentComponent { get; set; }
 
@@ -255,6 +250,21 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        var _httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+        var result = await _httpClient.GetStringAsync($"/post/getPost/{IdPost}");
+        var postIntro = JsonConvert.DeserializeObject<PostIntroDTO>(result);
+        Title = postIntro.Title;
+        IdUserPost = postIntro.IdUser;
+        UserName = postIntro.UserName;
+        Avatar = postIntro.Avatar;
+        Content = postIntro.Content;
+        VideoFile = postIntro.VideoFile;
+        Like = postIntro.Like;
+        CommentCount = postIntro.CommentCount;
+        CreateDate = postIntro.CreateDate;
+        TagNames = postIntro.ListTag;
+
+
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
 
@@ -380,14 +390,6 @@ else
         Snackbar.Add("Đã sao chép đường dẫn bài viết vào bộ nhớ", Severity.Success);
     }
 
-    private async Task Back()
-    {
-        if (GoBack.HasDelegate)
-        {
-            await GoBack.InvokeAsync();
-        }
-    }
-
     async Task UserAddNewComment(PostCommentDTO commentDTO)
     {
         ListCommentComponent.AddNewComment(commentDTO);
@@ -414,7 +416,7 @@ else
                     Snackbar.Add("Cập nhật bài viết thành công", Severity.Info);
                     Navigation.NavigateTo("");
                 }
-            }
+            } 
         }
     }
 }

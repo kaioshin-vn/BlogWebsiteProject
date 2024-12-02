@@ -87,14 +87,18 @@ else
     {
         <div class="d-flex align-items-start ms-3 my-4">
             <div>
-                <MudAvatar Style="height:32px;width:32px;" Class="hover-border">
-                    <MudImage Height="25" Src="@this.Avatar"></MudImage>
-                </MudAvatar>
+                        <a href="/other-profile/@IdUserComment">
+                    <MudAvatar Style="height:32px;width:32px;" Class="hover-border">
+                        <MudImage Height="25" Src="@this.Avatar"></MudImage>
+                    </MudAvatar>
+                </a>
             </div>
 
             <div class="flex-grow-1 ms-3">
                 <div class="d-flex align-items-end">
-                    <MudText Typo="Typo.body1"><b class="hover-underline">@this.UserName</b></MudText>
+                    <a href="/other-profile/@IdUserComment">
+                        <MudText Typo="Typo.body1"><b class="hover-underline">@this.UserName</b></MudText>
+                    </a>
                     <span style="color:darkgray;" class="hover-underline mx-3">@this.Date</span>
                 </div>
 
@@ -218,7 +222,7 @@ else
 
     bool isUpdate;
     bool isDeleted;
-    string ContentUpdate ;
+    string ContentUpdate;
 
     bool Loaded { get; set; }
     string LikeText { get; set; }
@@ -326,7 +330,7 @@ else
 
     private async Task CopyCurrentUrl()
     {
-        var currentUrl = Navigation.Uri; 
+        var currentUrl = Navigation.Uri;
         await JSRunTime.InvokeVoidAsync("copyToClipboard", currentUrl);
         Snackbar.Add("Đã sao chép đường dẫn bài viết vào bộ nhớ", Severity.Success);
     }

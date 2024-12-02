@@ -45,6 +45,29 @@ namespace API.Controllers.UserController
                 CountFollow = _context.Flower.Where(c => c.IdUser == Guid.Parse(id) && c.IsFollowing == true).Count(),
             };
         }
+
+        [HttpGet("/api/getUserById/{IdUser}")]
+        public async Task<ActionResult<UserProfileDto>> GetUserById(Guid IdUser)
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(a => a.Id ==  IdUser);
+            if (user == null)
+            {
+                return null;
+            }
+            return new UserProfileDto
+            {
+                Id = user.Id.ToString(),
+                Descript = user.Descript,
+                Img = user.Img,
+                ImgCover = user.ImgCover,
+                Address = user.Address,
+                PhoneNumber = user.PhoneNumber,
+                Email = user.Email,
+                FullName = user.FullName,
+                CountFollow = _context.Flower.Where(c => c.IdUser == IdUser && c.IsFollowing == true).Count(),
+            };
+        }
+
         [HttpGet("{id}/{idViewer}")]
         public async Task<ActionResult<UserProfileDto>> GetUserViewr(Guid id, Guid idViewer)
         {

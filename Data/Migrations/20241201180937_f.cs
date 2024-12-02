@@ -342,6 +342,26 @@ namespace Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "SearchHistories",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    IdUser = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Keyword = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    SearchDate = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SearchHistories", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_SearchHistories_Users_IdUser",
+                        column: x => x.IdUser,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "UserClaims",
                 columns: table => new
                 {
@@ -834,6 +854,11 @@ namespace Data.Migrations
                 column: "IdUser");
 
             migrationBuilder.CreateIndex(
+                name: "IX_SearchHistories_IdUser",
+                table: "SearchHistories",
+                column: "IdUser");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Tags_TagName",
                 table: "Tags",
                 column: "TagName",
@@ -914,6 +939,9 @@ namespace Data.Migrations
 
             migrationBuilder.DropTable(
                 name: "RoleClaims");
+
+            migrationBuilder.DropTable(
+                name: "SearchHistories");
 
             migrationBuilder.DropTable(
                 name: "UserClaims");

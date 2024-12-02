@@ -37,11 +37,11 @@ public class NoticeHub : Hub
     }
 
     // Phương thức gửi thông báo riêng tới một người dùng cụ thể
-    public async Task SendPrivateMessage(string userGuid, int noticeCount)
+    public async Task SendPrivateMessage(string userGuid)
     {
         if (!String.IsNullOrEmpty(userGuid))
         {
-            await Clients.Group(userGuid).SendAsync("ReceiveNotification", noticeCount);
+            await Clients.Group(userGuid).SendAsync("ReceiveNotification");
         }
     }
 }

@@ -3,6 +3,9 @@
 @using Client.Components.ComponentCustom
 @using Data.DTO.EntitiDTO
 @using System.Net.Http.Headers
+@using Data.Database.Table
+@using Microsoft.AspNetCore.SignalR.Client
+@using Newtonsoft.Json
 @using Newtonsoft.Json.Linq
 @using Radzen
 @using Radzen.Blazor
@@ -324,6 +327,29 @@
 
             isUpPost = false;
 
+            var result = await _httpClient.GetStringAsync($"/GetAllFolwerUser/{idUser}");
+            var listId = JsonConvert.DeserializeObject<List<Guid>>(result);
+
+            var hubConnection = new HubConnectionBuilder()
+            .WithUrl(Navigation.ToAbsoluteUri("/hubNotice"))
+            .Build();
+
+            await hubConnection.StartAsync();
+
+            foreach (var item in listId)
+            {
+                var notice = new Notice();
+                notice.Id = Guid.NewGuid();
+                notice.FromUser = idUser;
+                notice.ToUser = item;
+                notice.Content = "Đã thêm một bài viết mới";
+                notice.CreateDate = DateTime.Now;
+                notice.Link = $"/postDetail/{idPost}";
+                await _httpClient.PostAsJsonAsync($"/addNewNotice", notice);
+
+                await hubConnection.SendAsync("SendPrivateMessage", item.ToString());
+            }
+
             Snackbar.Add("Thêm bài viết thành công", Severity.Success);
         }
     }
@@ -359,8 +385,6 @@
                 isLoading = false;
                 StateHasChanged();
             }
-
-
         }
     }
 
