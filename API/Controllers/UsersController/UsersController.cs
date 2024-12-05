@@ -32,6 +32,39 @@ namespace API.Controllers.UserController
             {
                 return null;
             }
+
+            var TotalLike = 0;
+            var listLikePost =  _context.Posts.Where(a => a.IsDeleted == false && a.IdUser == Guid.Parse(id)).Select(a => a.Like);
+            foreach (var item in listLikePost)
+            {
+                var listLike = item.Split('|');
+                if (listLike.Contains(id))
+                {
+                    TotalLike++;
+                }
+            }
+
+            var listLikeCmt = _context.Responses.Where(a => a.IsDeleted == false && a.IdUser == Guid.Parse(id)).Select(a => a.Likes);
+            foreach (var item in listLikeCmt)
+            {
+                var listLike = item.Split('|');
+                if (listLike.Contains(id))
+                {
+                    TotalLike++;
+                }
+            }
+
+            var listLikeReply = _context.ReplyResponses.Where(a => a.IsDeleted == false && a.IdUser == Guid.Parse(id)).Select(a => a.Likes);
+            foreach (var item in listLikeReply)
+            {
+                var listLike = item.Split('|');
+                if (listLike.Contains(id))
+                {
+                    TotalLike++;
+                }
+            }
+
+
             return new UserProfileDto
             {
                 Id = id,
@@ -43,6 +76,7 @@ namespace API.Controllers.UserController
                 Email = user.Email,
                 FullName = user.FullName,
                 CountFollow = _context.Flower.Where(c => c.IdUser == Guid.Parse(id) && c.IsFollowing == true).Count(),
+                CountLike = TotalLike
             };
         }
 
@@ -71,7 +105,7 @@ namespace API.Controllers.UserController
         [HttpGet("{id}/{idViewer}")]
         public async Task<ActionResult<UserProfileDto>> GetUserViewr(Guid id, Guid idViewer)
         {
-            var user = await _userManager.FindByIdAsync(idViewer.ToString());
+            var user = await _userManager.FindByIdAsync(id.ToString());
             if (user == null)
             {
                 return null;
@@ -140,7 +174,6 @@ namespace API.Controllers.UserController
         {
             if (!string.IsNullOrEmpty(userId) && Guid.TryParse(userId, out var idGuid))
             {
-
                 var query = _context.Flower
                     .Where(f => f.IdUser == idGuid)
                     .Select(f => f.UserFlower);

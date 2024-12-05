@@ -15,6 +15,8 @@ namespace BlogWebsite.Data
         public DbSet<ExamHistoryDetails> ExamHistoryDetails { get; set; }
 
         public DbSet<Save> Saves { get; set; }
+        public DbSet<Report> Reports { get; set; }
+        public DbSet<RestrictedWord> RestrictedWords { get; set; }
         public DbSet<Post> Posts { get; set; }
         public DbSet<PostSave> PostSaves { get; set; }
         public DbSet<Notice> Notices { get; set; }
@@ -49,6 +51,11 @@ namespace BlogWebsite.Data
             { 
                 o.IdUser,
                 o.IdFlower 
+            });
+
+            modelBuilder.Entity<RestrictedWord>().HasKey(o => new
+            {
+                o.Id,
             });
 
             modelBuilder.Entity<GroupPost>().HasKey(u => new

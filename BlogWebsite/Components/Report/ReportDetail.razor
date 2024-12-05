@@ -1,0 +1,454 @@
+﻿@page "/postReport/{IdPost:guid}"
+
+@using ASM_PH35423.StaticClass
+@using Client.Components.ComponentCustom
+@using Data.DTO.EntitiDTO
+@using System.Net.Http.Headers
+@using Newtonsoft.Json
+@using Newtonsoft.Json.Linq
+@using System.Globalization;
+
+@inject IJSRuntime JSRunTime
+@inject IHttpClientFactory HttpClientFactory
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+@inject UserManager<ApplicationUser> UserManager
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+<style>
+    html {
+        scroll-behavior: auto !important;
+    }
+
+    .content_by_user img {
+        display: block; /* Chuyển ảnh thành khối để dễ căn giữa */
+        margin: 0 auto; /* Căn giữa theo chiều ngang */
+        height: 300px; /* Chiều cao của ảnh */
+        border-radius: 8px; /* Bo góc */
+    }
+
+    .rz-html-editor:focus-within {
+        outline: none !important;
+    }
+
+    .rz-html-editor-content img {
+        display: block; /* Chuyển ảnh thành khối để dễ căn giữa */
+        margin: 0 auto; /* Căn giữa theo chiều ngang */
+        height: 300px; /* Chiều cao của ảnh */
+        border-radius: 8px; /* Bo góc */
+    }
+
+    .pointer:hover {
+        cursor: pointer;
+    }
+
+    .hover:hover {
+        color: forestgreen;
+        transform: translateY(-4px);
+    }
+
+    .hover-post:hover {
+        background-color: rgb(249, 249, 249);
+        cursor: pointer;
+        transform: translateY(-4px);
+    }
+
+    .hover-post {
+        transform: translateY(0);
+        /* Thêm transition để tạo hiệu ứng mượt khi chuyển đổi */
+        transition: transform 0.3s ease;
+    }
+
+    .hover {
+        transform: translateY(0);
+        /* Thêm transition để tạo hiệu ứng mượt khi chuyển đổi */
+        transition: transform 0.3s ease;
+    }
+
+    .hover-underline:hover {
+        text-decoration: underline;
+        cursor: pointer;
+    }
+
+    .hover-border:hover {
+        border: 2px solid transparent;
+        cursor: pointer;
+    }
+
+    .codeContainer {
+        display: block !important;
+    }
+
+    .hover-border {
+        border: 2px solid lightgrey;
+        transition: border 0.3s ease-in-out;
+    }
+
+    .under-line:hover {
+        text-decoration: underline;
+        cursor: pointer;
+    }
+</style>
+
+@if (!Loaded)
+{
+    <LoadingLocal></LoadingLocal>
+}
+else
+{
+
+    if(!isFail)
+    {
+        <div>
+            <MudCardHeader>
+                <CardHeaderAvatar>
+                    <a href="@this.Link">
+                        <MudAvatar Class="hover-border">
+                            <MudImage Src="@this.Avatar"></MudImage>
+                        </MudAvatar>
+                    </a>
+                </CardHeaderAvatar>
+
+                <CardHeaderContent>
+
+                    <MudText Typo="Typo.body1"><a href="@this.Link"><b class="hover-underline">@this.UserName</b></a></MudText>
+                    <MudText Typo="Typo.body2"><span class="hover-underline">@this.Date</span></MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+
+
+            <MudCardContent Class="mb-2 py-0">
+                <MudCardActions Class="py-1 ms-4">
+                    @if (TagNames != null && TagNames.Count > 0)
+                    {
+                        foreach (var item in TagNames)
+                        {
+                            <a style="background-color:rgb(190, 255, 254) ; border-radius:6px; font-size:small;" class="py-1 px-2 mx-1 hover" href="/search/tags/@item">
+                                <MudIconButton Icon="@Icons.Material.Filled.Tag" Size="Size.Small" />
+                                <span style="margin-left:-6px;">@item</span>
+                            </a>
+                        }
+                    }
+                </MudCardActions>
+                <MudText Typo="Typo.h6">@this.Title</MudText>
+            </MudCardContent>
+
+            @if (Content != null && Content != "")
+            {
+                <MudCardContent Class="my-1 py-0">
+                    <div class="content_by_user">
+                        @ContentHtml
+                    </div>
+                </MudCardContent>
+            }
+
+            @if (ListVideo.Count != 0)
+            {
+                if (ListVideo.Count == 1)
+                {
+                    <div style="height:400px; background-color:black;overflow:hidden" class="d-flex mt-2 justify-content-center rounded-3 align-items-center">
+                        <Radzen.Blazor.RadzenHtml>
+                            <Blazorise.Video.Video Source="ListVideo[0]" AutomaticallyHideControls="true" SeekTime="5" style="height : 350px;">
+                            </Blazorise.Video.Video>
+                        </Radzen.Blazor.RadzenHtml>
+                    </div>
+                }
+                else
+                {
+                    <div style="height:400px; background-color:black;overflow:hidden" class="d-flex mt-2 justify-content-center rounded-3 align-items-center">
+                        <MudCarousel Class="mud-width-full" TData="object" AutoCycle="false" ShowBullets="false" BulletsColor="Color.Tertiary" Style="height:100%;">
+                            @foreach (var item in ListVideo)
+                            {
+                                <MudCarouselItem>
+                                    <Radzen.Blazor.RadzenHtml>
+                                        <Blazorise.Video.Video Source="item" AutomaticallyHideControls="true" SeekTime="5" style="height : 400px;">
+                                        </Blazorise.Video.Video>
+                                    </Radzen.Blazor.RadzenHtml>
+                                </MudCarouselItem>
+                            }
+                        </MudCarousel>
+                    </div>
+                }
+            }
+
+
+
+            <div class="d-flex align-items-center mt-4 ms-3">
+                <div @onclick="LikeClick" class="hover">
+                    <MudIconButton Style="padding:10px;" @onclick="LikeClick" Disabled="@(!isUserLike)" Icon="@Icons.Material.Filled.Favorite" Color="Color.Secondary" />
+                </div>
+                <MudText Class="ms-2">@LikeText</MudText>
+            </div>
+
+            <AddComment IdPost="IdPost" UserAddComment="UserAddNewComment"></AddComment>
+
+            <div style="margin-top:24px;">
+                <ListComment IdUserPost="IdUserPost" IdPost="IdPost" @ref="ListCommentComponent"></ListComment>
+            </div>
+
+        </div>
+
+        <script>
+            async function copyToClipboard(text) {
+                try {
+                    await navigator.clipboard.writeText(text);
+                    console.log('Copied to clipboard:', text);
+                } catch (err) {
+                    console.error('Failed to copy: ', err);
+                }
+            }
+        </script>
+    }
+    else
+    {
+        <div class="my-5 mx-auto">
+            <h3>Oops</h3>
+            <p>Có vẻ như bài viết này đã bị xóa</p>
+        </div>
+    }
+}
+
+@code {
+    [Parameter]
+    public Guid IdPost { get; set; }
+
+    public Guid IdUserPost { get; set; }
+
+    public string UserName { get; set; }
+
+    public string Avatar { get; set; }
+
+    public string Title { get; set; }
+
+    public string? Content { get; set; }
+
+    public string? VideoFile { get; set; }
+
+    public string Like { get; set; }
+
+    public string Link { get; set; }
+
+    public int CommentCount { get; set; }
+
+    public DateTime? CreateDate { get; set; }
+
+    public List<string>? TagNames { get; set; }
+
+    
+
+
+    ListComment ListCommentComponent { get; set; }
+
+    List<string> ListVideo { get; set; } = new List<string>();
+
+    bool isUserLike;
+
+    PostCommentDTO Comment { get; set; } = new PostCommentDTO();
+
+    bool Loaded { get; set; }
+    string LikeText { get; set; }
+    string SrcVideo { get; set; }
+    string Date { get; set; }
+    private MarkupString ContentHtml { get; set; }
+    private Guid IdUser { get; set; }
+
+    private bool isFail;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var _httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+        var result = await _httpClient.GetStringAsync($"/report/getReportPost/{IdPost}");
+        if (result == null)
+        {
+            isFail = true;
+            Loaded = true;
+            return;
+        }
+        var postIntro = JsonConvert.DeserializeObject<PostIntroDTO>(result);
+
+        Title = postIntro.Title;
+        IdUserPost = postIntro.IdUser;
+        UserName = postIntro.UserName;
+        Avatar = postIntro.Avatar;
+        Content = postIntro.Content;
+        VideoFile = postIntro.VideoFile;
+        Like = postIntro.Like;
+        CommentCount = postIntro.CommentCount;
+        CreateDate = postIntro.CreateDate;
+        TagNames = postIntro.ListTag;
+        Link = postIntro.Link;
+
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        var userCurrent = UserManager.GetUserId(user);
+        if(userCurrent != null)
+        {
+            IdUser = Guid.Parse(userCurrent);
+        }
+
+        var timeCacul = DateTime.Now - CreateDate.Value;
+
+        int yearsDifference = DateTime.Now.Year - CreateDate.Value.Year;
+        if (DateTime.Now < CreateDate.Value.AddYears(yearsDifference))
+        {
+            yearsDifference--;
+        }
+
+        int monthsDifference = (DateTime.Now.Year - CreateDate.Value.Year) * 12 + DateTime.Now.Month - CreateDate.Value.Month;
+        if (DateTime.Now.Day < CreateDate.Value.Day)
+        {
+            monthsDifference--;
+        }
+
+        if (yearsDifference >= 1)
+        {
+            Date = $"{yearsDifference} năm";
+        }
+        else if (monthsDifference >= 1)
+        {
+            Date = $"{monthsDifference} tháng";
+        }
+        else if (timeCacul.TotalDays >= 1)
+        {
+            Date = $"{(int)timeCacul.TotalDays} ngày";
+        }
+        else if (timeCacul.TotalHours >= 1)
+        {
+            Date = $"{(int)timeCacul.TotalHours} giờ";
+        }
+        else if (timeCacul.TotalMinutes >= 1)
+        {
+            Date = $"{(int)timeCacul.TotalMinutes} phút";
+        }
+        else
+        {
+            Date = "Vừa xong";
+        }
+
+        if (VideoFile != null)
+        {
+            SrcVideo = VideoFile.Split("|")[0];
+        }
+
+        var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+        var response = await httpClient.GetStringAsync($"/getLikePost/{IdPost}");
+        if (response != null)
+        {
+            Like = response;
+        }
+        if (VideoFile != null && VideoFile != "")
+        {
+            ListVideo = VideoFile.Split('|').ToList();
+        }
+
+        LikeCount();
+
+
+        if (Content != null)
+        {
+            ContentHtml = (MarkupString)Content;
+        }
+
+
+        Loaded = true;
+    }
+
+    async Task LikeClick()
+    {
+        if (IdUser == Guid.Empty)
+        {
+            var parameter = new DialogParameters<DialogLogin>();
+            var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+            await DialogService.Show<DialogLogin>("Yêu cầu đăng nhập", parameter, options).Result;
+            return;
+        }
+        var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+        var response = await httpClient.GetAsync($"/likePost/{IdPost}/{IdUser}/{!isUserLike}");
+        if (response.IsSuccessStatusCode)
+        {
+            isUserLike = !isUserLike;
+            Like = await response.Content.ReadAsStringAsync();
+            LikeCount();
+            StateHasChanged();
+        }
+    }
+
+    void LikeCount()
+    {
+        @if (Like == null || Like == "")
+        {
+            LikeText = "Hãy trở thành người đầu tiên thích bài viết này";
+        }
+        else
+        {
+            var customCulture = (CultureInfo)CultureInfo.InvariantCulture.Clone();
+            customCulture.NumberFormat.NumberGroupSeparator = ".";
+            var ListLike = Like.Split("|").ToList();
+            if (ListLike.Contains(IdUser.ToString()))
+            {
+                if (ListLike.Count == 1)
+                {
+                    LikeText = $"1";
+                }
+                else
+                {
+                    LikeText = $"Bạn và {(ListLike.Count - 1).ToString("N0", customCulture)} người khác ";
+                }
+                isUserLike = true;
+            }
+            else
+            {
+                LikeText = ListLike.Count().ToString("N0", customCulture);
+                isUserLike = false;
+            }
+        }
+    }
+
+    private async Task CopyCurrentUrl()
+    {
+        var currentUrl = Navigation.Uri; // Lấy URL hiện tại
+                                         //currentUrl =
+        await JSRunTime.InvokeVoidAsync("copyToClipboard", currentUrl);
+        Snackbar.Add("Đã sao chép đường dẫn bài viết vào bộ nhớ", Severity.Success);
+    }
+
+    async Task UserAddNewComment(PostCommentDTO commentDTO)
+    {
+        ListCommentComponent.AddNewComment(commentDTO);
+    }
+
+    async Task DeletePost()
+    {
+        var parameters = new DialogParameters<Dialog>();
+        parameters.Add(x => x.ContentText, "Xác nhận bạn muốn xóa bài viết này, sẽ xóa vĩnh viễn và không thể khôi phục?");
+        parameters.Add(x => x.ButtonText, "Xóa");
+        parameters.Add(x => x.Color, Color.Error);
+
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+        var result = await DialogService.Show<Dialog>("Xác nhận", parameters, options).Result;
+        if (result.Data != null)
+        {
+            if ((bool)result.Data)
+            {
+                var _httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+                var response = await _httpClient.PostAsJsonAsync($"/deletePost/{IdPost}", IdUser);
+                if (response.IsSuccessStatusCode)
+                {
+                    Snackbar.Add("Cập nhật bài viết thành công", Severity.Info);
+                    Navigation.NavigateTo("");
+                }
+            } 
+        }
+    }
+
+    class UserReport
+    {
+        public Guid Id;
+        public string UserName;
+        public string Img;
+        public string Content;
+    }
+}
+

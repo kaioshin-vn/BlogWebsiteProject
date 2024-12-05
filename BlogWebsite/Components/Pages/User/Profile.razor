@@ -1,7 +1,10 @@
 ﻿@page "/profile"
 @using System.Security.Claims
 @using Client.Components.ComponentCustom
+@using Client.Components.Layout
 @using Newtonsoft.Json
+
+@layout MainLayoutSub
 @inject ISnackbar Snackbar
 @inject IHttpClientFactory ClientFactory
 @inject AuthenticationStateProvider AuthenticationStateProvider
@@ -29,8 +32,15 @@
                     </ActivatorContent>
                 </MudFileUpload>
                 <div class="ms-2 text-start">
-                    <MudText Typo="Typo.h4">@model.FullName</MudText>
+                    <MudText Typo="Typo.h4">
+                        @model.FullName
+                        @if (@model.CountLike >= 10)
+                        {
+                            <MudIcon Class="ms-3" Icon="@Icons.Material.Filled.Verified" Color="Color.Info" Title="Favorite" />
+                        }
+                    </MudText>
                     <MudText Typo="Typo.body1" Class="mb-2">Người theo dõi: @model.CountFollow.ToString("N0", System.Globalization.CultureInfo.InvariantCulture)</MudText>
+                    <MudText Typo="Typo.body1" Class="mb-2">Lượt thích: @model.CountLike.ToString("N0", System.Globalization.CultureInfo.InvariantCulture)</MudText>
                 </div>
             </div>
             <div>
@@ -99,7 +109,7 @@
                     </MudCardContent>
                 </MudCard>
             </div>
-            <div class="" style="margin-top:-52px;">
+            <div class="" style="margin-top:-52px; width:68%;">
                 @if (listIntroPost.Count != 0)
                 {
                     <div>
@@ -325,6 +335,7 @@ else
         public string Id { get; set; }
         public string IdViewer { get; set; }
         public int CountFollow { get; set; }
+        public int CountLike { get; set; }
         public bool IsFollowing { get; set; }
     }
 }

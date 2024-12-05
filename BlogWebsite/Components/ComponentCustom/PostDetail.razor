@@ -1,5 +1,6 @@
 ﻿@using ASM_PH35423.StaticClass
 @using Client.Components.ComponentCustom
+@using Client.Components.Report
 @using Data.DTO.EntitiDTO
 @using System.Net.Http.Headers
 @using Newtonsoft.Json.Linq
@@ -12,80 +13,7 @@
 @inject UserManager<ApplicationUser> UserManager
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
-<style>
-    html {
-        scroll-behavior: auto !important;
-    }
 
-    .content_by_user img {
-        display: block; /* Chuyển ảnh thành khối để dễ căn giữa */
-        margin: 0 auto; /* Căn giữa theo chiều ngang */
-        height: 300px; /* Chiều cao của ảnh */
-        border-radius: 8px; /* Bo góc */
-    }
-
-    .rz-html-editor:focus-within {
-        outline: none !important;
-    }
-
-    .rz-html-editor-content img {
-        display: block; /* Chuyển ảnh thành khối để dễ căn giữa */
-        margin: 0 auto; /* Căn giữa theo chiều ngang */
-        height: 300px; /* Chiều cao của ảnh */
-        border-radius: 8px; /* Bo góc */
-    }
-
-    .pointer:hover {
-        cursor: pointer;
-    }
-
-    .hover:hover {
-        color: forestgreen;
-        transform: translateY(-4px);
-    }
-
-    .hover-post:hover {
-        background-color: rgb(249, 249, 249);
-        cursor: pointer;
-        transform: translateY(-4px);
-    }
-
-    .hover-post {
-        transform: translateY(0);
-        /* Thêm transition để tạo hiệu ứng mượt khi chuyển đổi */
-        transition: transform 0.3s ease;
-    }
-
-    .hover {
-        transform: translateY(0);
-        /* Thêm transition để tạo hiệu ứng mượt khi chuyển đổi */
-        transition: transform 0.3s ease;
-    }
-
-    .hover-underline:hover {
-        text-decoration: underline;
-        cursor: pointer;
-    }
-
-    .hover-border:hover {
-        border: 2px solid transparent;
-        cursor: pointer;
-    }
-
-    .codeContainer {
-        display: block !important;
-    }
-
-    .hover-border {
-        border: 2px solid lightgrey;
-        transition: border 0.3s ease-in-out;
-    }
-
-    .under-line:hover {
-        text-decoration: underline;
-        cursor: pointer;
-    }
-</style>
 
 @if (!Loaded)
 {
@@ -93,12 +21,86 @@
 }
 else
 {
+    <style>
+        html {
+            scroll-behavior: auto !important;
+        }
+
+        .content_by_user img {
+            display: block; /* Chuyển ảnh thành khối để dễ căn giữa */
+            margin: 0 auto; /* Căn giữa theo chiều ngang */
+            height: 300px; /* Chiều cao của ảnh */
+            border-radius: 8px; /* Bo góc */
+        }
+
+        .rz-html-editor:focus-within {
+            outline: none !important;
+        }
+
+        .rz-html-editor-content img {
+            display: block; /* Chuyển ảnh thành khối để dễ căn giữa */
+            margin: 0 auto; /* Căn giữa theo chiều ngang */
+            height: 300px; /* Chiều cao của ảnh */
+            border-radius: 8px; /* Bo góc */
+        }
+
+        .pointer:hover {
+            cursor: pointer;
+        }
+
+        .hover:hover {
+            color: forestgreen;
+            transform: translateY(-4px);
+        }
+
+        .hover-post:hover {
+            background-color: rgb(249, 249, 249);
+            cursor: pointer;
+            transform: translateY(-4px);
+        }
+
+        .hover-post {
+            transform: translateY(0);
+            /* Thêm transition để tạo hiệu ứng mượt khi chuyển đổi */
+            transition: transform 0.3s ease;
+        }
+
+        .hover {
+            transform: translateY(0);
+            /* Thêm transition để tạo hiệu ứng mượt khi chuyển đổi */
+            transition: transform 0.3s ease;
+        }
+
+        .hover-underline:hover {
+            text-decoration: underline;
+            cursor: pointer;
+        }
+
+        .hover-border:hover {
+            border: 2px solid transparent;
+            cursor: pointer;
+        }
+
+        .codeContainer {
+            display: block !important;
+        }
+
+        .hover-border {
+            border: 2px solid lightgrey;
+            transition: border 0.3s ease-in-out;
+        }
+
+        .under-line:hover {
+            text-decoration: underline;
+            cursor: pointer;
+        }
+    </style>
     <MudFab StartIcon="@Icons.Material.Filled.ArrowBack" Label=" " OnClick="Back" DropShadow="false" />
 
     <div>
         <MudCardHeader>
             <CardHeaderAvatar>
-                <a href="/other-profile/@IdUserPost">
+                <a href="@this.Link">
                     <MudAvatar Class="hover-border">
                         <MudImage Src="@this.Avatar"></MudImage>
                     </MudAvatar>
@@ -106,9 +108,9 @@ else
             </CardHeaderAvatar>
 
             <CardHeaderContent>
-                    <a href="/other-profile/@IdUserPost">
-                    <MudText Typo="Typo.body1"><b class="hover-underline">@this.UserName</b></MudText>
-                </a>
+
+                <MudText Typo="Typo.body1"><a href="@this.Link"><b class="hover-underline">@this.UserName</b></a></MudText>
+
                 <MudText Typo="Typo.body2"><span class="hover-underline">@this.Date</span></MudText>
             </CardHeaderContent>
 
@@ -119,7 +121,10 @@ else
                         <a href="/updatePost/@IdPost"><MudMenuItem>Chỉnh sửa</MudMenuItem></a>
                         <MudMenuItem OnClick="DeletePost">Xóa bài viết</MudMenuItem>
                     }
-                    <MudMenuItem>Báo cáo</MudMenuItem>
+                    @if (IdUser != Guid.Empty)
+                    {
+                        <MudMenuItem OnClick="() => Report(this.IdPost, this.IdUserPost, this.IdUser)">Báo cáo</MudMenuItem>
+                    }
                 </MudMenu>
             </CardHeaderActions>
         </MudCardHeader>
@@ -191,7 +196,7 @@ else
         <AddComment IdPost="IdPost" UserAddComment="UserAddNewComment"></AddComment>
 
         <div style="margin-top:24px;">
-            <ListComment IdPost="IdPost" @ref="ListCommentComponent"></ListComment>
+            <ListComment IdUserPost="IdUserPost" IdPost="IdPost" @ref="ListCommentComponent"></ListComment>
         </div>
 
     </div>
@@ -221,6 +226,8 @@ else
     public string Avatar { get; set; }
     [Parameter]
     public string Title { get; set; }
+    [Parameter]
+    public string Link { get; set; }
     [Parameter]
     public string? Content { get; set; }
     [Parameter]
@@ -259,7 +266,10 @@ else
         var user = authState.User;
 
         var userCurrent = UserManager.GetUserId(user);
-        IdUser = Guid.Parse(userCurrent);
+        if (userCurrent != null)
+        {
+            IdUser = Guid.Parse(userCurrent);
+        }
 
         var timeCacul = DateTime.Now - CreateDate.Value;
 
@@ -330,6 +340,13 @@ else
 
     async Task LikeClick()
     {
+        if (IdUser == Guid.Empty)
+        {
+            var parameters = new DialogParameters<DialogLogin>();
+            var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+            await DialogService.Show<DialogLogin>("Yêu cầu đăng nhập", parameters, options).Result;
+            return;
+        }
         var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
         var response = await httpClient.GetAsync($"/likePost/{IdPost}/{IdUser}/{!isUserLike}");
         if (response.IsSuccessStatusCode)
@@ -338,6 +355,14 @@ else
             Like = await response.Content.ReadAsStringAsync();
             LikeCount();
             StateHasChanged();
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JSRunTime.InvokeVoidAsync("restoreScrollPosition", 0);
         }
     }
 
@@ -411,11 +436,24 @@ else
                 var response = await _httpClient.PostAsJsonAsync($"/deletePost/{IdPost}", IdUser);
                 if (response.IsSuccessStatusCode)
                 {
-                    Snackbar.Add("Cập nhật bài viết thành công", Severity.Info);
-                    Navigation.NavigateTo("");
+                    Snackbar.Add("Xóa bài viết thành công", Severity.Info);
+                    Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
                 }
             }
         }
     }
+
+    async Task Report(Guid IdPost, Guid IdUser, Guid IdUserReport)
+    {
+        var parameters = new DialogParameters<DialogReport>();
+        parameters.Add(x => x.IdPost, IdPost);
+        parameters.Add(x => x.IdUserReport, IdUserReport);
+        parameters.Add(x => x.IdUser, IdUser);
+
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraLarge };
+
+        var result = await DialogService.Show<DialogReport>("Báo cáo", parameters, options).Result;
+    }
+
 }
 

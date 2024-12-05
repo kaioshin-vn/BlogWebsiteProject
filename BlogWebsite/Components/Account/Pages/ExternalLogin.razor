@@ -200,6 +200,7 @@
             }
         }
         user.FullName = externalLoginInfo.Principal.Identity.Name;
+        user.CreateTime = DateTime.Now;
         var result = await UserManager.CreateAsync(user);
         if (result.Succeeded)
         {

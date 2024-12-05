@@ -1,0 +1,20 @@
+﻿@inject NavigationManager Navigation
+
+<MudDialog>
+    <DialogContent>
+        <MudText>Bạn cần đăng nhập để thực hiện chức năng này</MudText>
+    </DialogContent>
+    <DialogActions >
+            <MudButton Color="Color.Success" Variant="Variant.Filled" OnClick="Login">Đăng nhập</MudButton>
+    </DialogActions>
+</MudDialog>
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+
+
+    void Login()
+    {
+        Navigation.NavigateTo("/account/login");
+        MudDialog.Close();
+    }
+}

@@ -55,12 +55,14 @@ namespace API.Controllers.PostController
 			});
 		}
 
-		[HttpGet("/GetListPostIntro/{idUser}")]
-		public async Task<List<PostIntroDTO>> GetListPostIntro(Guid idUser)
+		[HttpPost("/GetListPostIntro")]
+		public async Task<List<PostIntroDTO>> GetListPostIntro([FromBody] List<Guid> listPostExisted)
 		{
-			var listPost = await _context.Posts.Where(a => a.IsDeleted == false).ToListAsync();
+			var listPost = await _context.Posts.Include(a => a.GroupPost).ThenInclude(a => a.Group).Where(a => a.IsDeleted == false &&  (a.GroupPost.Count == 0 || 
+			(a.GroupPost.Any(b => b.IdPost == a.Id && b.WaitState == WaitState.Accept  && ( b.Group.StateGroup == KindGroup.Public  || b.Group.StateGroup == KindGroup.Restricted))))
+			&& !listPostExisted.Contains(a.Id)).OrderByDescending(a => a.CreateDate).Take(20).ToListAsync();
 
-			var listIntroPost = new List<PostIntroDTO>();
+            var listIntroPost = new List<PostIntroDTO>();
 			foreach (var item in listPost)
 			{
 				var introPost = await GetPostIntro(item);
@@ -69,10 +71,27 @@ namespace API.Controllers.PostController
 			return listIntroPost;
 		}
 
+        [HttpPost("/GetListPostHot")]
+        public async Task<List<PostIntroDTO>> GetListPostIntroHot([FromBody] List<Guid> listPostExisted)
+        {
+            var listPost = await _context.Posts.Include(a => a.GroupPost).ThenInclude(a => a.Group).Where(a => a.IsDeleted == false && (a.GroupPost.Count == 0 ||
+            (a.GroupPost.Any(b => b.IdPost == a.Id && b.WaitState == WaitState.Accept && (b.Group.StateGroup == KindGroup.Public || b.Group.StateGroup == KindGroup.Restricted))))
+            && !listPostExisted.Contains(a.Id)).OrderByDescending(a => a.Like.Length ).Take(20).ToListAsync();
+
+            var listIntroPost = new List<PostIntroDTO>();
+            foreach (var item in listPost)
+            {
+                var introPost = await GetPostIntro(item);
+                listIntroPost.Add(introPost);
+            }
+            return listIntroPost;
+        }
+
+
         [HttpGet("/GetListPostUser/{idUser}")]
         public async Task<List<PostIntroDTO>> GetListPostUser(Guid idUser)
         {
-            var listPost = await _context.Posts.Where(a => a.IdUser == idUser && a.IsDeleted == false).ToListAsync();
+            var listPost = await _context.Posts.Include(a => a.GroupPost).Where(a => a.IdUser == idUser && a.GroupPost.Count == 0 && a.IsDeleted == false).OrderByDescending(a => a.CreateDate).ToListAsync();
 
             var listIntroPost = new List<PostIntroDTO>();
             foreach (var item in listPost)
@@ -120,9 +139,8 @@ namespace API.Controllers.PostController
 		}
 
 		[HttpGet("getListPostIntroGroup")]
-		public async Task<ActionResult<List<PostIntroDTO>>> GetListPostIntroGroup([FromQuery] string groupName, [FromQuery] Guid? userId)
+		public async Task<ActionResult<List<PostIntroDTO>>> GetListPostIntroGroup([FromQuery] string groupName)
 		{
-			Console.WriteLine($"idUser: {userId}");
 
 			var group = await _context.Groups.FirstOrDefaultAsync(a => a.Name == groupName);
 
@@ -131,7 +149,7 @@ namespace API.Controllers.PostController
 				return new List<PostIntroDTO>();
 			}
 
-			var listPost = await _context.Posts.Where(a => a.IsDeleted == false).ToListAsync();
+			var listPost = await _context.Posts.Where(a => a.IsDeleted == false ).OrderByDescending(a => a.CreateDate).ToListAsync();
 
 			// Lấy danh sách GroupPosts cho nhóm này để kiểm tra quan hệ
 			var groupPosts = await _context.GroupPosts
@@ -148,7 +166,7 @@ namespace API.Controllers.PostController
 				{
 					var author = await _context.Users.Include(a => a.Post).FirstOrDefaultAsync(u => u.Id == item.IdUser);
 					var introPost = await GetPostIntro(item);
-					introPost.UserName = author.UserName;
+					introPost.UserName = author.FullName;
 					introPost.Avatar = author.Img;
 					listIntroPost.Add(introPost);
 				}
@@ -346,17 +364,20 @@ namespace API.Controllers.PostController
 			var introPost = post.GetIntroPost();
 			var groupPost = _context.GroupPosts.FirstOrDefault(a => a.IdPost == post.Id);
 
+			var link = "";
             if (groupPost != null)
             {
                 var group = await _context.Groups.FirstOrDefaultAsync(a => a.IdGroup == groupPost.IdGroup);
                 UserName = group.Name;
                 Avatar = group.ImgGroup==null? "/img/icon.jpg" : group.ImgGroup;
+				link = "/groups/" + group.Name;
             }
             else
             {
                 var user = await _context.Users.FirstOrDefaultAsync(a => a.Id == post.IdUser);
                 UserName = user.FullName;
                 Avatar = user.Img;
+				link = "/other-profile/" + user.Id.ToString();
             }
             var commment = _context.Responses.Where(a => a.IdPost == post.Id && a.IsDeleted == false);
             var replyCount = 0;
@@ -375,22 +396,24 @@ namespace API.Controllers.PostController
 									.ToList();
 			}
 
-			var totalReply = commment.Count() + replyComment.Count();
+
+            var totalReply = commment.Count() + replyComment.Count();
 
 			introPost.CommentCount = totalReply;
 			introPost.UserName = UserName;
 			introPost.Avatar = Avatar;
 			introPost.ListTag = tagNames;
+            introPost.Link = link;
 			return introPost;
 		}
 
 		[HttpGet("/post/getPost/{idPost}")]
 		public async Task<PostIntroDTO> GetPost(Guid idPost)
 		{
-			var post = await _context.Posts.FirstOrDefaultAsync(a => a.Id == idPost);
+			var post = await _context.Posts.FirstOrDefaultAsync(a => a.Id == idPost && a.IsDeleted == false);
 			if (post == null)
 			{
-				NotFound();
+				return null;
 			}
 			var postIntro = await GetPostIntro(post);
 			return postIntro;

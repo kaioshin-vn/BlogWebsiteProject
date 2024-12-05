@@ -20,6 +20,7 @@
 @inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
 @inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
 @inject IJSRuntime JS
+@inject ISnackbar Snackbar
 
 @if (lstPostUserTop == null)
 {
@@ -57,7 +58,7 @@ else
             text-overflow: ellipsis; /* Hiển thị dấu '...' khi nội dung bị tràn */
         }
     </style>
-    <div class="page">
+    <div class="page" @onclick="Hide">
         <MudLayout>
             <MudAppBar Elevation="1">
                 <div style="z-index:100; position :fixed;border-bottom:grey 0.5px solid;width:100%;" class="d-flex justify-content-between align-items-center row">
@@ -110,7 +111,7 @@ else
                                             <MudList T="string" Style="overflow:scroll; max-height:370px">
                                                 @foreach (var post in lstPostUserTop)
                                                 {
-                                                    <MudListItem>
+                                                    <MudListItem OnClick="() => NaviGate(post.Id.ToString())">
                                                         <MudGrid Justify="Justify.SpaceBetween">
                                                             <MudItem xs="6">
                                                                 <MudCardHeader Class="p-0 m-0">
@@ -134,10 +135,6 @@ else
                                                                 {
                                                                     <MudImage Style="border-radius:20px" Src="@(string.IsNullOrEmpty(post.ImgFile) ? post.VideoFile : post.ImgFile)" ObjectFit="ObjectFit.Cover" Width="150" Height="100" />
                                                                 }
-                                                                else
-                                                                {
-                                                                    <MudText Style="width:150px; height:100px"></MudText>
-                                                                }
                                                             </MudItem>
                                                         </MudGrid>
                                                     </MudListItem>
@@ -156,7 +153,7 @@ else
                                             <MudList T="string" Style="overflow:scroll; max-height:650px">
                                                 @foreach (var post in searchResult.Posts)
                                                 {
-                                                    <MudListItem>
+                                                    <MudListItem OnClick="() => NaviGate(post.Id.ToString())">
                                                         <MudGrid Justify="Justify.SpaceBetween">
                                                             <MudItem xs="6">
                                                                 <MudCardHeader Class="p-0 m-0">
@@ -180,14 +177,11 @@ else
                                                                 {
                                                                     <MudImage Style="border-radius:20px" Src="@(string.IsNullOrEmpty(post.ImgFile) ? post.VideoFile : post.ImgFile)" ObjectFit="ObjectFit.Cover" Width="150" Height="100" />
                                                                 }
-                                                                else
-                                                                {
-                                                                    <MudText Style="width:150px; height:100px"></MudText>
-                                                                }
                                                             </MudItem>
                                                         </MudGrid>
                                                     </MudListItem>
                                                     <MudDivider Style="border-color:gray; border-width:1px" />
+
                                                 }
                                             </MudList>
                                         </MudItem>
@@ -210,53 +204,65 @@ else
                                             <MudFab Class="mx-1" StartIcon="@Icons.Material.Filled.Add" @onclick="CreatePost" Size="Size.Medium" Style="border:none;box-shadow:none;background-color:none;" Label="Tạo mới" />
                                         </MudTooltip>
 
+                                        <MudIconButton @onclick="ClickNoticeLabel" Style="overflow:visible;">
+                                            <MudBadge Content="NoticeCount" Color="Color.Tertiary" Overlap="true" Class="">
+                                                <MudIcon Icon="@Icons.Material.Filled.Notifications">
+                                                </MudIcon>
+                                            </MudBadge>
+                                        </MudIconButton>
 
-                                        <MudBadge Content="NoticeCount" OnClick="ClickNoticeLabel" Color="Color.Tertiary" Overlap="true" Class="">
-                                            <MudIcon Icon="@Icons.Material.Filled.Notifications">
-                                            </MudIcon>
-                                        </MudBadge>
+                                        @if (isShowNotice)
+                                        {
 
-
-                                        @if(isShowNotice) {
-                                            <div class="rounded-3" style="position:fixed;top: 62px; right: 82px;z-index:100; border: 2px solid black;box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.3); /* Đổ bóng */">
-                                                @if (ListNotice.Count != 0)
+                                            <div class="" style="overflow:hidden;border-radius:12px;position:fixed;top: 62px; right: 82px;z-index:100; border: 2px solid lightgrey;box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.3); /* Đổ bóng */">
+                                                @if (LoadedNotice)
                                                 {
-                                                    @foreach (var item in ListNotice)
+                                                    @if (ListNotice.Count != 0)
                                                     {
-                                                        <div style="background-color:@(item.isRead ? " #fff" : "rgb(240, 240, 240)" );">
-                                                            <MudMenuItem Class="p-2" @onclick="() => GoTo(item.Id, item.Link)">
-                                                                <div class="d-flex justify-content-start align-items-start ">
-                                                                    <MudAvatar Class="hover-border">
-                                                                        <MudImage Src="@item.AvatarUserSend"></MudImage>
-                                                                    </MudAvatar>
-                                                                    <div class="ms-3">
-                                                                        <b>@item.UserNameSend</b>
-                                                                        <span>@item.Content</span>
-                                                                        <p style="color:deepskyblue;" class="mb-0">
-                                                                            @item.Time
-                                                                        </p>
+                                                        @foreach (var item in ListNotice)
+                                                        {
+                                                            <div style="background-color:@(item.isRead ? " #fff" : "rgb(230, 230, 230)" );">
+                                                                <MudMenuItem Class="p-2" @onclick="() => GoTo(item.Id, item.Link)">
+                                                                    <div class="d-flex justify-content-start align-items-start ">
+                                                                        <MudAvatar Class="hover-border">
+                                                                            <MudImage Src="@item.AvatarUserSend"></MudImage>
+                                                                        </MudAvatar>
+                                                                        <div class="ms-3">
+                                                                            <b>@item.UserNameSend</b>
+                                                                            <span>@item.Content</span>
+                                                                            <p style="color:deepskyblue;" class="mb-0">
+                                                                                @item.Time
+                                                                            </p>
+                                                                        </div>
                                                                     </div>
-                                                                </div>
-                                                            </MudMenuItem>
+                                                                </MudMenuItem>
+                                                            </div>
+                                                        }
+                                                        <div class="px-2 py-0" style="background-color:#fff">
+                                                            <div class="d-flex justify-content-between">
+                                                                <MudIconButton Class="m-0" @onclick="Pre" Disabled="!isPreValid" Icon="@Icons.Material.Filled.NavigateBefore"></MudIconButton>
+                                                                <MudIconButton Class="m-0" @onclick="Next" Disabled="!isNextValid" Icon="@Icons.Material.Filled.NavigateNext"></MudIconButton>
+                                                            </div>
                                                         </div>
                                                     }
-                                                    <div class="px-2 py-0 ">
-                                                        <div class="d-flex justify-content-between">
-                                                            <MudIconButton Class="m-0" @onclick="Pre" Icon="@Icons.Material.Filled.NavigateBefore"></MudIconButton>
-                                                            <MudIconButton Class="m-0" @onclick="Next" Icon="@Icons.Material.Filled.NavigateNext"></MudIconButton>
+                                                    else
+                                                    {
+                                                        <div style="background-color:gainsboro;" class="p-2">
+                                                            <div class="d-flex justify-content-start align-items-center ">
+                                                                <MudFab class="p-0 me-3" StartIcon="@Icons.Material.Filled.NotAccessible" Color="Color.Tertiary" Size="Size.Small" />
+                                                                <b>Không có thông báo nào</b>
+                                                            </div>
                                                         </div>
-                                                    </div>
+                                                    }
                                                 }
                                                 else
                                                 {
-                                                    <div style="background-color:gainsboro;">
-                                                        <div class="d-flex justify-content-start align-items-center ">
-                                                            <MudFab class="p-0 me-3" StartIcon="@Icons.Material.Filled.NotAccessible" Color="Color.Tertiary" Size="Size.Small" />
-                                                            <b>Không có thông báo nào</b>
-                                                        </div>
+                                                    <div>
+                                                        <Client.Components.ComponentCustom.WaveLoading></Client.Components.ComponentCustom.WaveLoading>
                                                     </div>
                                                 }
                                             </div>
+
                                         }
 
                                     </div>
@@ -378,6 +384,9 @@ else
 
     private string AntiforgeryToken;
 
+    bool isPreValid;
+    bool isNextValid;
+
     private bool _isDarkMode = false;
     private MudTheme? _theme = null;
 
@@ -401,6 +410,8 @@ else
     private SearchResultWithPaginationDTO searchResult;
 
     Guid IdUser;
+
+    bool LoadedNotice;
 
     protected override async Task OnInitializedAsync()
     {
@@ -521,6 +532,11 @@ else
         Navigation.NavigateTo("/createPost");
     }
 
+    void NaviGate(string link)
+    {
+        Navigation.NavigateTo("/postDetail/" + link, true);
+    }
+
     private List<PostIntroDTO> lstPostUserTop = new List<PostIntroDTO>();
 
     private async Task SearchKeyPress()
@@ -528,7 +544,15 @@ else
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
         var idUserCurrent = UserManager.GetUserId(user);
-        var idUser = Guid.Parse(idUserCurrent);
+        Guid idUser;
+        if (idUserCurrent != null)
+        {
+             idUser = Guid.Parse(idUserCurrent);
+        }
+        else
+        {
+            return;
+        }
 
         var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
         var result = await httpClient.GetStringAsync($"/api/search/getListPostTop/{idUser}");
@@ -646,26 +670,42 @@ else
         await HandleSearch();
     }
 
+    private void Hide()
+    {
+        isShowNotice = false;
+    }
+
     private async Task ClickNoticeLabel()
     {
+        LoadedNotice = false;
         isShowNotice = !isShowNotice;
+        if (!isShowNotice)
+        {
+            return;
+        }
         var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
         await httpClient.GetStringAsync($"/ClearNotice/{IdUser}");
         NoticeCount = 0;
-        await LoadNoticeUser();
+        CurrentCountNotice = 0;
+        ListNotice = await LoadNoticeUser();
+        isNextValid = ListNotice.Count >= 6;
+        isPreValid = false;
+        LoadedNotice = true;
     }
 
-    private async Task LoadNoticeUser()
+    private async Task<List<NoticeDTO>> LoadNoticeUser()
     {
         var _httpClient = HttpClientFactory.CreateClient("MyHttpClient");
-
         var result = await _httpClient.GetStringAsync($"/getAllNoticeUser/{IdUser}/{CurrentCountNotice}");
         var list = JsonConvert.DeserializeObject<List<NoticeDTO>>(result);
-        ListNotice = list;
+        return list;
     }
+
+
 
     private async Task GoTo(Guid Id, string link)
     {
+        Hide();
         var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
         await httpClient.GetStringAsync($"/ReadedNotice/{Id}");
         Navigation.NavigateTo(link);
@@ -673,12 +713,36 @@ else
 
     private async Task Pre()
     {
-        Console.WriteLine("prev");
+        CurrentCountNotice -= 6;
+        var listNotice = await LoadNoticeUser();
+        ListNotice = listNotice;
+        if (CurrentCountNotice == 0)
+        {
+            isPreValid = false;
+        }
+        isNextValid = true;
     }
 
     private async Task Next()
     {
-        Console.WriteLine("Next");
+        CurrentCountNotice += 6;
+        var listNotice = await LoadNoticeUser();
+        if (listNotice.Count == 0)
+        {
+            Snackbar.Add("Đã hết thông báo!", Severity.Error);
+            isNextValid = false;
+        }
+        else if (listNotice.Count < 6)
+        {
+            isNextValid = false;
+            isPreValid = true;
+            ListNotice = listNotice;
+        }
+        else
+        {
+            isPreValid = true;
+            ListNotice = listNotice;
+        }
     }
 }
 

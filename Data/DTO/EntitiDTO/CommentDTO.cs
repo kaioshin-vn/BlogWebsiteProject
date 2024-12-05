@@ -10,6 +10,7 @@ namespace Data.DTO.EntitiDTO
     {
         public Guid Id { get; set; }
         public Guid IdUser { get; set; }
+        public Guid IdPost { get; set; }
         public string UserName { get; set; }
         public string Avatar { get; set; }
         public string? Content { get; set; }

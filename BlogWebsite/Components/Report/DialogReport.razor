@@ -1,0 +1,52 @@
+﻿@using Data.Database.Table
+
+@inject IHttpClientFactory HttpClientFactory
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <DialogContent>
+        <div style="width:450px;">
+            <MudTextField Lines="3" Placeholder="Nhập nội dung báo cáo" @bind-Value="@this.TextReport" />
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Hủy</MudButton>
+        <MudButton Color="Color.Error" Variant="Variant.Filled" OnClick="Submit">Báo cáo</MudButton>
+    </DialogActions>
+</MudDialog>
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+
+    string TextReport = "";
+
+    [Parameter]
+    public Guid IdUserReport { get; set; }
+
+    [Parameter]
+    public Guid IdUser { get; set; }
+
+    [Parameter]
+    public Guid IdPost { get; set; }
+    async Task Submit()
+    {
+        if (string.IsNullOrEmpty(TextReport))
+        {
+            Snackbar.Add("Không thể bỏ trống", Severity.Error);
+            return;
+        }
+        var _httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+
+        var report = new Report();
+        report.Id = Guid.NewGuid();
+        report.IdPost = IdPost;
+        report.IdUser = IdUser;
+        report.IdUserReport = IdUserReport;
+        report.ContentReport = TextReport;
+        report.State = Data.Enums.WaitState.Pending;
+
+        var response = await _httpClient.PostAsJsonAsync($"/addReport", report);
+        Snackbar.Add("Đã báo cáo bài viết thành công", Severity.Error);
+        MudDialog.Close();
+    }
+    void Cancel() => MudDialog.Close();
+}

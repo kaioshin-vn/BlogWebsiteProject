@@ -1,7 +1,10 @@
 ﻿@page "/other-profile/{Id}"
 @using System.Security.Claims
 @using Client.Components.ComponentCustom
+@using Client.Components.Layout
 @using Newtonsoft.Json
+
+@layout MainLayoutSub
 @inject ISnackbar Snackbar
 @inject IJSRuntime JSRuntime
 @inject IHttpClientFactory ClientFactory
@@ -9,6 +12,7 @@
 @inject NavigationManager Navigation
 @inject IDialogService Dialog
 @inject UserManager<ApplicationUser> UserManager
+@inject IDialogService DialogService
 
 @if(!Loaded)
 {
@@ -78,7 +82,7 @@ else
                     </MudCardContent>
                 </MudCard>
             </div>
-            <div class="" style="margin-top:-52px;">
+            <div class="" style="margin-top:-52px; width:72%;">
                 @if (listIntroPost.Count != 0)
                 {
                     <div>
@@ -183,11 +187,18 @@ else
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
         var currentUserId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (currentUserId.ToLower() == Id.ToLower())
+        if (currentUserId != null)
         {
-            Navigation.NavigateTo("/profile");
+            if (currentUserId.ToLower() == Id.ToLower())
+            {
+                Navigation.NavigateTo("/profile");
+            }
         }
-        await GetInfoViewer(currentUserId, Id);
+        else
+        {
+            currentUserId = Guid.Empty.ToString();
+        }
+        await GetInfoViewer(Id, currentUserId);
     }
     private async Task GetInfoViewer(string id, string idViewer)
     {
@@ -219,6 +230,13 @@ else
         var user = authState.User;
         var client = ClientFactory.CreateClient("MyHttpClient");
         var currentUserId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (currentUserId == null)
+        {
+            var parameter = new DialogParameters<DialogLogin>();
+            var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+            await DialogService.Show<DialogLogin>("Yêu cầu đăng nhập", parameter, options).Result;
+            return;
+        }
         var response = await client.PostAsync($"api/users/{Id}/{currentUserId}/{model.IsFollowing}/toggle-follow", null);
         if (response.IsSuccessStatusCode)
         {

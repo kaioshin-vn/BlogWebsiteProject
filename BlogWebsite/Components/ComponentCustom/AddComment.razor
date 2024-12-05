@@ -3,7 +3,7 @@
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject UserManager<ApplicationUser> UserManager
 @inject ISnackbar Snackbar
-
+@inject IDialogService DialogService
 
 @if (isAddComment)
 {
@@ -84,8 +84,21 @@ else
         await editor.ExecuteCommandAsync(Radzen.HtmlEditorCommands.InsertHtml, $@"<div style=""background-color:beige;border-radius:5px;"" class=""m-3 pt-3 ps-3 codeContainer""><pre><code>&nbsp;</code></pre></div> <br/>");
     }
 
-    void ToggleComment()
+    async Task ToggleComment()
     {
+        if (!isAddComment)
+        {
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+            var idUserCurrent = UserManager.GetUserId(user);
+            if (idUserCurrent == null)
+            {
+                var parameter = new DialogParameters<DialogLogin>();
+                var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+                await DialogService.Show<DialogLogin>("Yêu cầu đăng nhập", parameter, options).Result;
+                return;
+            }
+        }
         isAddComment = !isAddComment;
     }
 

@@ -3,6 +3,9 @@ using BlogWebsite.Data;
 using Data.Database.Table;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Data.DTO.EntitiDTO;
+using Data.DTO;
+using Blazorise;
 
 namespace API.Controllers
 {
@@ -58,6 +61,89 @@ namespace API.Controllers
             {
                 return NotFound();
             }
+
+            return Ok(topic);
+        }
+
+		[HttpGet("/GetGroupTopic")]
+		public async Task<IActionResult> GetGroupTopic()
+		{
+            var listTopic = new List<Topic>();
+            if (_context.Topics.Count() != 0)
+            {
+                listTopic = _context.Topics.Include(a => a.GroupTopics).ThenInclude(a => a.Group).ThenInclude(a => a.MemberGroups).ToList();
+            }
+
+			return Ok(listTopic);
+		}
+
+        [HttpGet("/AllGroupTopic/{IdTopic}")]
+        public async Task<IActionResult> AllGroupTopic(Guid IdTopic)
+        {
+            var topic = new TopicDTO();
+
+            if (_context.GroupTopics.Count() != 0)
+            {
+                var tp = await _context.Topics.FirstOrDefaultAsync(a => a.IdTopic == IdTopic);
+                topic.Id = tp.IdTopic;
+                topic.Name = tp.TopicName;
+            }
+
+            var listIdGroup = new List<Guid>();
+            if (_context.GroupTopics.Count() != 0)
+            {
+                listIdGroup = _context.GroupTopics.Where(a => a.IdTopic == IdTopic).Select(a => a.IdGroup).ToList();
+            }
+
+            var listGroup = new List<GroupDTO>();
+
+            listGroup = _context.Groups.Where(a => listIdGroup.Contains(a.IdGroup)).Select(g => new GroupDTO
+            {
+                IdGroup = g.IdGroup,
+                Name = g.Name,
+                Description = g.Description,
+                ImgGroup = g.ImgGroup == null ? "/img/icon.jpg" : g.ImgGroup,
+                StateGroup = g.StateGroup,
+                MemberCount = _context.MemberGroups.Count(m => m.IdGroup == g.IdGroup)
+            }).ToList();
+
+            topic.groupDTOs = listGroup;
+
+            return Ok(topic);
+        }
+
+
+        [HttpGet("/SearchAllGroupTopic/{TopicName}")]
+        public async Task<IActionResult> SearchAllGroupTopic(string TopicName)
+        {
+            var topic = new TopicDTO();
+
+            if (_context.GroupTopics.Count() != 0)
+            {
+                var tp = await _context.Topics.FirstOrDefaultAsync(a => a.TopicName.ToLower().Contains((TopicName.ToLower())));
+                topic.Id = tp.IdTopic;
+                topic.Name = tp.TopicName;
+            }
+
+            var listIdGroup = new List<Guid>();
+            if (_context.GroupTopics.Count() != 0)
+            {
+                listIdGroup = _context.GroupTopics.Where(a => a.IdTopic == topic.Id).Select(a => a.IdGroup).ToList();
+            }
+
+            var listGroup = new List<GroupDTO>();
+
+            listGroup = _context.Groups.Where(a => listIdGroup.Contains(a.IdGroup)).Select(g => new GroupDTO
+            {
+                IdGroup = g.IdGroup,
+                Name = g.Name,
+                Description = g.Description,
+                ImgGroup = g.ImgGroup == null ? "/img/icon.jpg" : g.ImgGroup,
+                StateGroup = g.StateGroup,
+                MemberCount = _context.MemberGroups.Count(m => m.IdGroup == g.IdGroup)
+            }).ToList();
+
+            topic.groupDTOs = listGroup;
 
             return Ok(topic);
         }

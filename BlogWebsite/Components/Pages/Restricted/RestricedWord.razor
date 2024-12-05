@@ -1,0 +1,123 @@
+﻿@page "/restrictedword"
+@using Data.Database.Table
+@inject IHttpClientFactory _httpClientFactory;
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-16">
+    <h2>Quản lý từ ngữ hạn chế</h2>
+
+    <MudGrid>
+        <MudItem xs="12" sm="6" md="4">
+            <MudTextField @bind-Value="_searchString" Placeholder="Tìm kiếm" Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"
+                          Immediate="true" DebounceInterval="500" OnDebounceIntervalElapsed="@(async () => await LoadTopics())" OnInternalInputChanged="@(async () => await LoadTopics())" />
+        </MudItem>
+        <MudItem xs="12" sm="6" md="4"> </MudItem>
+        <MudItem xs="12" sm="6" md="4" Class="d-flex justify-content-end">
+            <MudButton StartIcon="@Icons.Material.Filled.Add" Variant="Variant.Filled" Color="Color.Primary" OnClick="@(async () => await OpenAddDialog())">Thêm từ khóa hạn chế</MudButton>
+        </MudItem>
+    </MudGrid>
+    <MudTable Items="@_topics" ServerData="@(new Func<TableState,CancellationToken, Task<TableData<RestrictedWordDto>>>(ServerReload))"
+              Dense="true" Hover="true" @ref="_table">
+        <HeaderContent>
+            <MudTh>ID</MudTh>
+            <MudTh>Từ khóa hạn chế</MudTh>
+            <MudTh>Thao tác</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="ID">@context.Id</MudTd>
+            <MudTd DataLabel="Tên chủ đề">@context.Word</MudTd>
+            <MudTd DataLabel="Thao tác">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => OpenEditDialog(context))">Sửa</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="@(() => OpenDeleteDialog(context))">Xóa</MudButton>
+            </MudTd>
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager />
+        </PagerContent>
+    </MudTable>
+</MudContainer>
+
+@code {
+    private string _searchString = "";
+    private MudTable<RestrictedWordDto> _table;
+    private List<RestrictedWordDto> _topics = new List<RestrictedWordDto>();
+
+    private async Task<TableData<RestrictedWordDto>> ServerReload(TableState state, CancellationToken cancellationToken)
+    {
+        var url = $"api/restrictedword/get-st?searchString={_searchString}&page={state.Page + 1}&pageSize={state.PageSize}";
+        var client = _httpClientFactory.CreateClient("MyHttpClient");
+        var response = await client.GetFromJsonAsync<RestrictedWordResponse>(url);
+        _topics = response.Topics;
+        return new TableData<RestrictedWordDto>() { TotalItems = response.TotalCount, Items = _topics };
+    }
+
+    private async Task LoadTopics()
+    {
+        await _table.ReloadServerData();
+    }
+
+    private async Task OpenAddDialog()
+    {
+        var dialog = DialogService.Show<AddRestrictedTopicDialog>("Thêm từ khóa hạn chế");
+        var result = await dialog.Result;
+        if (!result.Canceled)
+        {
+            await _table.ReloadServerData();
+        }
+    }
+
+    private async Task OpenEditDialog(RestrictedWordDto topic)
+    {
+        var parameters = new DialogParameters { ["Topic"] = topic };
+        var dialog = DialogService.Show<AddRestrictedTopicDialog>("Từ khóa hạn chế", parameters);
+        var result = await dialog.Result;
+        if (!result.Canceled)
+        {
+            await _table.ReloadServerData();
+        }
+    }
+
+    private async Task OpenDeleteDialog(RestrictedWordDto topic)
+    {
+        var parameters = new DialogParameters
+        {
+            { "ContentText", $"Bạn có chắc chắn muốn xóa từ khóa hạn chế'{topic.Word}'?" },
+            { "ButtonText", "Xóa" },
+            { "Color", Color.Error }
+        };
+
+        var dialog = DialogService.Show<ConfirmDialog>("Xóa từ khóa", parameters);
+        var result = await dialog.Result;
+        if (!result.Canceled)
+        {
+            var client = _httpClientFactory.CreateClient("MyHttpClient");
+            var response = await client.DeleteAsync($"api/restrictedword/{topic.Id}");
+            if (response.IsSuccessStatusCode)
+            {
+                await _table.ReloadServerData();
+                Snackbar.Add("Đã xóa từ khóa hạn chế thành công", Severity.Success);
+            }
+            else
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                Snackbar.Add($"Không thể xóa từ khóa hạn chế: {error}", Severity.Error);
+            }
+        }
+    }
+
+    public class RestrictedWordResponse
+    {
+        public List<RestrictedWordDto> Topics { get; set; }
+        public int TotalCount { get; set; }
+        public int Page { get; set; }
+        public int PageSize { get; set; }
+    }
+
+    public class RestrictedWordDto
+    {
+        public Guid Id { get; set; }
+        public string Word { get; set; }
+    }
+}

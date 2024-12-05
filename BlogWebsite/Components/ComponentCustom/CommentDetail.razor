@@ -168,7 +168,7 @@ else
                     @if (isFirstLoadReply)
                     {
                         <div style="width:100%; display: @(isLoadReply?"block":"none");">
-                            <ListReply IdCmt="@IdCmt"></ListReply>
+                            <ListReply IdUserPost="IdUserPost" IdCmt="@IdCmt"></ListReply>
                         </div>
                     }
                 }
@@ -225,9 +225,15 @@ else
                 @if (IdUser == IdUserComment)
                 {
                     <MudMenuItem @onclick="ShowUpdateComment">Chỉnh sửa</MudMenuItem>
+                }
+                @if (IdUser == IdUserComment || IdUser == IdUserPost)
+                {
                     <MudMenuItem OnClick="DeleteComment">Xóa bình luận</MudMenuItem>
                 }
-                <MudMenuItem>Báo cáo</MudMenuItem>
+                @* @if (IdUser != Guid.Empty)
+                {
+                    <MudMenuItem>Báo cáo</MudMenuItem>
+                } *@
             </MudMenu>
         </div>
     }
@@ -238,6 +244,8 @@ else
     public Guid IdCmt { get; set; }
     [Parameter]
     public Guid IdPost { get; set; }
+    [Parameter]
+    public Guid IdUserPost { get; set; }
     [Parameter]
     public Guid IdUserComment { get; set; }
     [Parameter]
@@ -281,7 +289,10 @@ else
         var user = authState.User;
 
         var userCurrent = UserManager.GetUserId(user);
-        IdUser = Guid.Parse(userCurrent);
+        if (userCurrent != null)
+        {
+            IdUser = Guid.Parse(userCurrent);
+        }
 
         var timeCacul = DateTime.Now - CreateDate.Value;
 
@@ -336,6 +347,13 @@ else
 
     async Task LikeClick()
     {
+        if (IdUser == Guid.Empty)
+        {
+            var parameter = new DialogParameters<DialogLogin>();
+            var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+            await DialogService.Show<DialogLogin>("Yêu cầu đăng nhập", parameter, options).Result;
+            return;
+        }
         var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
         var response = await httpClient.GetAsync($"/likeCmt/{IdCmt}/{IdUser}/{!isUserLike}");
         if (response.IsSuccessStatusCode)
@@ -392,8 +410,15 @@ else
         Snackbar.Add("Đã sao chép đường dẫn bài viết vào bộ nhớ", Severity.Success);
     }
 
-    void ShowComment()
+    async Task ShowComment()
     {
+        if (IdUser == Guid.Empty)
+        {
+            var parameter = new DialogParameters<DialogLogin>();
+            var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+            await DialogService.Show<DialogLogin>("Yêu cầu đăng nhập", parameter, options).Result;
+            return;
+        }
         isAddCmt = true;
     }
 

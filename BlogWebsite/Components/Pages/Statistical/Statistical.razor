@@ -1,0 +1,202 @@
+﻿@page "/statistical"
+@using Newtonsoft.Json
+
+@inject IHttpClientFactory HttpClientFactory
+@inject IJSRuntime JSRuntime
+
+<div class="d-flex justify-content-between mx-5">
+
+    <div class="d-flex align-items-end">
+        <select class="form-select mt-3" style="width:150px;" @onchange="(v) => Change(v)">
+            <option value="2022">2022</option>
+            <option value="2023">2023</option>
+            <option value="2024" selected>2024 </option>
+        </select>
+    </div>
+
+
+    <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="@(async () => await DownloadFile())" Color="Color.Tertiary">Tải file báo cáo</MudButton>
+</div>
+
+<div style="width:200px;" class="ms-5 mt-3">
+    <MudSelect Label="Kiểu biểu đồ" Variant="Variant.Outlined" @bind-Value="ChartType" AdornmentIcon="@Icons.Material.Filled.OpenWith" Adornment="Adornment.Start" AdornmentColor="Color.Warning">
+        <MudSelectItem Value="@(ChartType.Bar)">Biểu đồ cột</MudSelectItem>
+        <MudSelectItem Value="@(ChartType.Line)">Biểu đồ đường</MudSelectItem>
+    </MudSelect>
+</div>
+
+
+
+@if (isLoaded)
+{
+@*     <MudTabs Elevation="2" Rounded="true" Centered="true" Class="my-6" Color="Color.Dark">
+        <MudTabPanel OnClick="SelectAccount" Icon="@Icons.Material.Filled.Api" Text="Tài khoản" BadgeDot="true" BadgeColor="Color.Error" >
+        </MudTabPanel>
+
+        <MudTabPanel OnClick="SelectPost" Icon="@Icons.Material.Filled.Build" Text="Bài viết" BadgeDot="true" BadgeColor="Color.Success">
+        </MudTabPanel>
+
+        <MudTabPanel OnClick="SelectGroup" Icon="@Icons.Material.Filled.BugReport" Text="Nhóm" BadgeDot="true" BadgeColor="Color.Info">
+        </MudTabPanel>
+    </MudTabs> *@
+
+    <div class="mt-4">
+        <MudChart ChartType="ChartType" ChartSeries="@Series" XAxisLabels="@XAxisLabels" Width="100%" Height="350px" ChartOptions="@Options" />
+    </div>
+
+    <div class="my-3">
+        <MudText>Tổng số tài khoản : @TotalAccount</MudText>
+        <MudText>Tổng số bài viết : @TotalPost</MudText>
+        <MudText>Tổng số nhóm : @TotalGroup</MudText>
+    </div>
+}
+else
+{
+    <Client.Components.ComponentCustom.LoadingLocal></Client.Components.ComponentCustom.LoadingLocal>
+}
+<script>
+    window.saveAsFile = function (fileName, byteBase64) {
+        var link = document.createElement('a');
+        link.download = fileName;
+        link.href = "data:application/octet-stream;base64," + byteBase64;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+</script>
+
+@code {
+    public ChartOptions Options = new ChartOptions();
+
+    bool isLoaded;
+
+    ChartType ChartType = ChartType.Bar; 
+
+    int Year = 2024;
+
+    string TotalAccount;
+    string TotalGroup;
+    string TotalPost;
+
+    bool isColumn = true;
+
+    public List<ChartSeries> Series = new List<ChartSeries>();
+
+    public string[] XAxisLabels = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"};
+
+    protected override async Task OnInitializedAsync()
+    {
+        Options.YAxisTicks = 10;
+        await GetData();
+    }
+
+    async Task Change(ChangeEventArgs v)
+    {
+        Year = Convert.ToInt16(v.Value);
+        await GetData();
+        StateHasChanged();
+    }
+
+    async Task GetData ()
+    {
+        isLoaded = false;
+        var _httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+
+        var result = await _httpClient.GetStringAsync($"/getstatisUser/{Year}");
+
+        var listData = JsonConvert.DeserializeObject<List<double>>(result);
+
+        result = await _httpClient.GetStringAsync($"/getstatisPost/{Year}");
+
+        var listDataPost = JsonConvert.DeserializeObject<List<double>>(result);
+
+        result = await _httpClient.GetStringAsync($"/getstatisGroup/{Year}");
+
+        var listDataGroup = JsonConvert.DeserializeObject<List<double>>(result);
+
+        Series = new List<ChartSeries>()
+        {
+            new ChartSeries() { Name = "Tài khoản mới", Data = listData.ToArray() },
+            new ChartSeries() { Name = "Bài viết mới", Data = listDataPost.ToArray() },
+            new ChartSeries() { Name = "Nhóm mới", Data = listDataGroup.ToArray() },
+        };
+
+        result = await _httpClient.GetStringAsync($"/getStatisTotal");
+
+        var data = JsonConvert.DeserializeObject<Dictionary<string,string>>(result);
+        TotalAccount = data["Account"];
+        TotalPost = data["Post"];
+        TotalGroup = data["Group"];
+        isLoaded = true;
+    }
+
+    protected async Task DownloadFile()
+    {
+        // Kiểm tra xác nhận từ người dùng
+        bool confirmExport = await JSRuntime.InvokeAsync<bool>("confirm", "Do you want to Export?");
+
+        if (confirmExport)
+        {
+            StateHasChanged();
+
+            var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+            var response = await httpClient.GetAsync($"api/files/DownloadExcel/{Year}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                var fileBytes = await response.Content.ReadAsByteArrayAsync();
+                var fileName = $"MyReport{DateTime.Now.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture)}.xlsx";
+                await JSRuntime.InvokeAsync<object>("saveAsFile", fileName, Convert.ToBase64String(fileBytes));
+            }
+            else
+            {
+                // Xử lý lỗi ở đây nếu cần
+                Console.WriteLine($"Error: {response.StatusCode} - {response.ReasonPhrase}");
+            }
+        }
+    }
+
+    // async Task SelectAccount ()
+    // {
+    //     Options.YAxisTicks = 5;
+
+    //     var _httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+
+    //     var result = await _httpClient.GetStringAsync($"/getstatisUser/{Year}");
+
+    //     var listData = JsonConvert.DeserializeObject<List<double>>(result);
+
+    //     Series = new List<ChartSeries>()
+    //     {
+    //         new ChartSeries() { Name = "Tài khoản mới", Data = listData.ToArray() },
+    //     };
+    // }
+
+    // async Task SelectPost()
+    // {
+    //     var _httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+
+        
+
+    //     Series = new List<ChartSeries>()
+    //     {
+    //         new ChartSeries() { Name = "Bài viết mới", Data = listData.ToArray() },
+    //     };
+    // }
+
+    // async Task SelectGroup()
+    // {
+    //     Options.YAxisTicks = 5;
+    //     var _httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+
+    //     var result = await _httpClient.GetStringAsync($"/getstatisGroup/{Year}");
+
+    //     var listData = JsonConvert.DeserializeObject<List<double>>(result);
+
+    //     Series = new List<ChartSeries>()
+    //     {
+    //         new ChartSeries() { Name = "Nhóm mới", Data = listData.ToArray() },
+    //     };
+    // }
+
+}

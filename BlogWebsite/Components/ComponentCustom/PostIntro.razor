@@ -1,5 +1,6 @@
 ﻿@using ASM_PH35423.StaticClass
 @using Client.Components.ComponentCustom
+@using Client.Components.Report
 @using Data.DTO.EntitiDTO
 @using System.Net.Http.Headers
 @using Newtonsoft.Json.Linq
@@ -94,7 +95,7 @@ else
     <MudCard Style="margin-top:52px;" Elevation="3" class="hover-post" @onclick="() => DetailPost(IdPost)">
         <MudCardHeader>
             <CardHeaderAvatar>
-                <a href="/other-profile/@IdUserPost">
+                <a href="@this.Link">
                     <MudAvatar Class="hover-border">
                         <MudImage Src="@this.Avatar"></MudImage>
                     </MudAvatar>
@@ -102,9 +103,8 @@ else
             </CardHeaderAvatar>
 
             <CardHeaderContent>
-                    <a href="/other-profile/@IdUserPost">
-                    <MudText Typo="Typo.body1"><b class="hover-underline">@this.UserName</b></MudText>
-                </a>
+                <MudText Typo="Typo.body1"><a href="@this.Link"><b class="hover-underline">@this.UserName</b></a></MudText>
+
                 <MudText Typo="Typo.body2"><span class="hover-underline">@this.Date</span></MudText>
             </CardHeaderContent>
 
@@ -115,7 +115,10 @@ else
                         <a href="/updatePost/@IdPost"><MudMenuItem>Chỉnh sửa</MudMenuItem></a>
                         <MudMenuItem OnClick="DeletePost">Xóa bài viết</MudMenuItem>
                     }
-                    <MudMenuItem>Báo cáo</MudMenuItem>
+                    @if (IdUser != Guid.Empty)
+                    {
+                        <MudMenuItem OnClick="() => Report(this.IdPost, this.IdUserPost, this.IdUser)">Báo cáo</MudMenuItem>
+                    }
                 </MudMenu>
             </CardHeaderActions>
         </MudCardHeader>
@@ -160,8 +163,8 @@ else
             }
             else
             {
-                <div class="d-flex mt-2 py-2 justify-content-center align-items-center">
-                    <MudImage Src="@this.ImgFile" Fluid="true" Style="overflow-x:hidden;" Height="350" Alt="Swedish Farm House" Class="rounded-lg" />
+                <div class="d-flex mt-2 py-2 justify-content-center align-items-center" style="overflow-x:hidden;">
+                    <MudImage Src="@this.ImgFile"   Height="350" Alt="Swedish Farm House" Class="rounded-lg" />
                 </div>
             }
         }
@@ -249,6 +252,8 @@ else
     [Parameter]
     public string Like { get; set; }
     [Parameter]
+    public string Link { get; set; }
+    [Parameter]
     public int CommentCount { get; set; }
     [Parameter]
     public DateTime? CreateDate { get; set; }
@@ -274,7 +279,10 @@ else
         var user = authState.User;
 
         var userCurrent = UserManager.GetUserId(user);
-        IdUser = Guid.Parse(userCurrent);
+        if (userCurrent != null)
+        {
+            IdUser = Guid.Parse(userCurrent);
+        }
 
         var timeCacul = DateTime.Now - CreateDate.Value;
 
@@ -340,6 +348,13 @@ else
 
     async Task LikeClick()
     {
+        if (IdUser == Guid.Empty)
+        {
+            var parameters = new DialogParameters<DialogLogin>();
+            var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+            await DialogService.Show<DialogLogin>("Yêu cầu đăng nhập", parameters, options).Result;
+            return;
+        }
         var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
         var response = await httpClient.GetAsync($"/likePost/{IdPost}/{IdUser}/{!isUserLike}");
         if (response.IsSuccessStatusCode)
@@ -402,6 +417,13 @@ else
 
     public async Task OpenDialogSave(Guid id)
     {
+        if (IdUser == Guid.Empty)
+        {
+            var parameter = new DialogParameters<DialogLogin>();
+            var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+            await DialogService.Show<DialogLogin>("Yêu cầu đăng nhập", parameter, options).Result;
+            return;
+        }
         var parameters = new DialogParameters
         {
             { "idPost", id }
@@ -429,10 +451,22 @@ else
                 if (response.IsSuccessStatusCode)
                 {
                     Snackbar.Add("Đã xóa bài viết", Severity.Info);
-                    Navigation.NavigateTo("");
+                    Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
                 }
             }
         }
+    }
+
+    async Task Report (Guid IdPost, Guid IdUser, Guid IdUserReport)
+    {
+        var parameters = new DialogParameters<DialogReport>();
+        parameters.Add(x => x.IdPost, IdPost);
+        parameters.Add(x => x.IdUserReport, IdUserReport);
+        parameters.Add(x => x.IdUser, IdUser);
+
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraLarge };
+
+        var result = await DialogService.Show<DialogReport>("Báo cáo", parameters, options).Result;
     }
 }
 

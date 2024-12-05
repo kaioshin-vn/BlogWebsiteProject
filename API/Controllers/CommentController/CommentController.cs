@@ -89,6 +89,10 @@ namespace API.Controllers.CommentController
         {
             var cmtDTO = new CommentDTO();
             var cmt = await _context.Responses.FirstOrDefaultAsync(a => a.Id == idCmt && a.IsDeleted == false);
+            if (cmt == null)
+            {
+                return null;
+            }
             var infoUser = await _context.Users.FirstOrDefaultAsync(a => a.Id == cmt.IdUser);
             cmtDTO.Avatar = infoUser.Img;
             cmtDTO.UserName = infoUser.FullName;
@@ -98,6 +102,7 @@ namespace API.Controllers.CommentController
             cmtDTO.ReplyCount = _context.ReplyResponses.Where(a => a.IdResponse == cmt.Id && a.IsDeleted == false).Count();
             cmtDTO.Id = cmt.Id;
             cmtDTO.IdUser = cmt.IdUser;
+            cmtDTO.IdPost = cmt.IdPost;
             return cmtDTO;
         }
 

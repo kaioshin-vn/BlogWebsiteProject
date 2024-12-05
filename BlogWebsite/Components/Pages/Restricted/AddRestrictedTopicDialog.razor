@@ -1,0 +1,68 @@
+﻿@using static Client.Components.Pages.Restricted.RestricedWord
+@inject IHttpClientFactory _httpClientFactory;
+@inject ISnackbar Snackbar
+
+<MudDialog Style="width:500px;">
+    <DialogContent>
+        <MudTextField @bind-Value="topic.Word" Label="Từ khóa hạn chế" Required="true" RequiredError="Không được bỏ trống!" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Hủy</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Submit">@(Topic == null ? "Thêm" : "Cập nhật")</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    [Parameter] public RestrictedWordDto Topic { get; set; }
+
+    private RestrictedWordDto topic = new RestrictedWordDto();
+
+    protected override void OnInitialized()
+    {
+        if (Topic != null)
+        {
+            topic = new RestrictedWordDto { Id = Topic.Id, Word = Topic.Word };
+        }
+    }
+
+    private async Task Submit()
+    {
+        if (string.IsNullOrWhiteSpace(topic.Word))
+        {
+            Snackbar.Add("Không được bỏ trống", Severity.Error);
+            return;
+        }
+
+        try
+        {
+            HttpResponseMessage response;
+            var client = _httpClientFactory.CreateClient("MyHttpClient");
+            if (Topic == null)
+            {
+                response = await client.PostAsJsonAsync("api/restrictedword", topic);
+            }
+            else
+            {
+                response = await client.PutAsJsonAsync($"api/restrictedword/{topic.Id}", topic);
+            }
+
+            if (response.IsSuccessStatusCode)
+            {
+                Snackbar.Add(Topic == null ? "Đã thêm từ hạn chế thành công" : "Đã cập nhật từ hạn chế thành công", Severity.Success);
+                MudDialog.Close(DialogResult.Ok(true));
+            }
+            else
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                Snackbar.Add($"Không thể lưu từ hạn chế: {error}", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Lỗi: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}

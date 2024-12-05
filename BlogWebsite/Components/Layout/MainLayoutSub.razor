@@ -1,0 +1,740 @@
+﻿@using BlogWebsite.Data
+@using Data.DTO
+@using Microsoft.AspNetCore.Identity
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Antiforgery
+@using Microsoft.AspNetCore.SignalR.Client
+@using Newtonsoft.Json
+
+@inherits LayoutComponentBase
+<MudThemeProvider Theme="@_theme" IsDarkMode="_isDarkMode" />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+<Radzen.Blazor.RadzenComponents @rendermode="InteractiveServer" />
+
+@inject NavigationManager Navigation
+@inject IHttpClientFactory HttpClientFactory
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserManager<ApplicationUser> UserManager
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+@inject IJSRuntime JS
+@inject ISnackbar Snackbar
+
+@if (lstPostUserTop == null)
+{
+    <Client.Components.ComponentCustom.LoadingLocal></Client.Components.ComponentCustom.LoadingLocal>
+}
+else
+{
+    <style>
+        a:hover {
+            color: unset;
+        }
+
+        .scrollbar {
+            overflow: hidden; /* Ẩn thanh cuộn khi không hover */
+            border: 1px solid #ccc;
+            transition: overflow 0.5s ease; /* Thêm hiệu ứng chuyển đổi */
+        }
+
+            .scrollbar:hover {
+                overflow-y: auto; /* Hiện thanh cuộn khi hover */
+            }
+
+        .avatar {
+            transition: border-width 0.2s ease;
+        }
+
+            .avatar:hover {
+                border-width: 2px; /* Độ dày border khi hover */
+                border-color: lightgray;
+            }
+
+        .truncate-text {
+            white-space: nowrap; /* Không cho nội dung xuống dòng */
+            overflow: hidden; /* Ẩn phần nội dung bị tràn */
+            text-overflow: ellipsis; /* Hiển thị dấu '...' khi nội dung bị tràn */
+        }
+    </style>
+    <div class="page" @onclick="Hide">
+        <MudLayout>
+            <MudAppBar Elevation="1">
+                <div style="z-index:100; position :fixed;border-bottom:grey 0.5px solid;width:100%;" class="d-flex justify-content-between align-items-center row">
+                    <div class="col-3">
+                        <NavLink href="/">
+                            <MudImage Src="logo.png" Height="64"></MudImage>
+                        </NavLink>
+                    </div>
+                    <div class="d-flex col-6">
+                        <MudMenu AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter" Class="w-100" FullWidth>
+                            <ActivatorContent>
+                                <MudTextField @bind-Value="Search"
+                                              Placeholder="Tìm kiếm"
+                                              Variant="Variant.Text"
+                                              Adornment="Adornment.Start"
+                                              AdornmentIcon="@Icons.Material.Filled.Search"
+                                              Style="width: 100%"
+                                              @onclick="async ()=> await SearchKeyPress()"
+                                              OnKeyUp="@(async (e)=> await SearchKey(e))"
+                                              Immediate />
+                            </ActivatorContent>
+                            <ChildContent>
+                                @if (string.IsNullOrEmpty(Search))
+                                {
+                                    <MudGrid>
+                                        <MudItem Class="pb-0 mb-0" xs="12">
+                                            <MudList T="string">
+                                                @foreach (var history in SearchHistory)
+                                                {
+                                                    <MudListItem Icon="@Icons.Material.Filled.History">
+                                                        <MudGrid Justify="Justify.SpaceBetween">
+                                                            <MudItem xs="10" @onclick="@(async ()=> await SelectFromHistory(history))">
+                                                                <MudText>@history</MudText>
+                                                            </MudItem>
+                                                            <MudItem xs="2" Class="d-flex justify-content-end">
+                                                                <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" OnClick="@(() => DeleteHistoryItem(history))" />
+                                                            </MudItem>
+                                                        </MudGrid>
+                                                    </MudListItem>
+                                                }
+                                            </MudList>
+                                            <hr />
+                                        </MudItem>
+                                        <MudItem Class="pt-0 mt-0" xs="12">
+                                            <MudItem Class="d-flex justify-content-sm-between">
+                                                <MudText Class="m-2">Bài Viết HOT</MudText>
+                                                <MudButton Href="/searchPost" Class="m-2">Xem Thêm</MudButton>
+                                            </MudItem>
+                                            <MudDivider Style="border-color:black; border-width:1px" />
+                                            <MudList T="string" Style="overflow:scroll; max-height:370px">
+                                                @foreach (var post in lstPostUserTop)
+                                                {
+                                                    <MudListItem OnClick="() => NaviGate(post.Id.ToString())">
+                                                        <MudGrid Justify="Justify.SpaceBetween">
+                                                            <MudItem xs="6">
+                                                                <MudCardHeader Class="p-0 m-0">
+                                                                    <MudAvatar>
+                                                                        <MudImage ObjectFit="ObjectFit.Cover" Src="@post.Avatar"></MudImage>
+                                                                    </MudAvatar>
+                                                                    <MudText Class="px-2">@post.UserName</MudText>
+                                                                </MudCardHeader>
+                                                                <MudCardContent Class="p-0 pt-1 m-0">
+                                                                    <MudText Typo="Typo.h6" Class="truncate-text">@post.Title</MudText>
+                                                                </MudCardContent>
+                                                                @if (!string.IsNullOrEmpty(post.Like))
+                                                                {
+                                                                    string[] likeCount = post.Like.Split(',');
+                                                                    int toltalLike = likeCount.Distinct().Count();
+                                                                    <MudText Style=" font-size:12px; color:gray">@(string.IsNullOrEmpty(Convert.ToString(toltalLike)) ? 0 : toltalLike) lượt thích · @post.CommentCount bình luận </MudText>
+                                                                }
+                                                            </MudItem>
+                                                            <MudItem xs="6" Class="d-flex justify-content-end">
+                                                                @if (!string.IsNullOrEmpty(post.ImgFile) || !string.IsNullOrEmpty(post.VideoFile))
+                                                                {
+                                                                    <MudImage Style="border-radius:20px" Src="@(string.IsNullOrEmpty(post.ImgFile) ? post.VideoFile : post.ImgFile)" ObjectFit="ObjectFit.Cover" Width="150" Height="100" />
+                                                                }
+                                                            </MudItem>
+                                                        </MudGrid>
+                                                    </MudListItem>
+                                                    <MudDivider Style="border-color:gray; border-width:1px" />
+                                                }
+                                            </MudList>
+                                        </MudItem>
+                                    </MudGrid>
+                                }
+                                else if (searchResult?.Posts != null)
+                                {
+                                    <MudGrid>
+                                        <MudItem xs="12">
+                                            <MudText Class="p-2" Typo="Typo.body1">Bài viết</MudText>
+                                            <MudDivider Style="border-color:black; border-width:1px" />
+                                            <MudList T="string" Style="overflow:scroll; max-height:650px">
+                                                @foreach (var post in searchResult.Posts)
+                                                {
+                                                    <MudListItem OnClick="() => NaviGate(post.Id.ToString())">
+                                                        <MudGrid Justify="Justify.SpaceBetween">
+                                                            <MudItem xs="6">
+                                                                <MudCardHeader Class="p-0 m-0">
+                                                                    <MudAvatar Size="Size.Small">
+                                                                        <MudImage ObjectFit="ObjectFit.Cover" Src="@post.Avatar"></MudImage>
+                                                                    </MudAvatar>
+                                                                    <MudText Class="px-2">@post.UserName</MudText>
+                                                                </MudCardHeader>
+                                                                <MudCardContent Class="p-0 pt-1 m-0">
+                                                                    <MudText Typo="Typo.h6" Class="truncate-text">@post.Title</MudText>
+                                                                </MudCardContent>
+                                                                @if (!string.IsNullOrEmpty(post.Like))
+                                                                {
+                                                                    string[] likeCount = post.Like.Split(',');
+                                                                    int toltalLike = likeCount.Distinct().Count();
+                                                                    <MudText Style=" font-size:12px; color:gray">@(string.IsNullOrEmpty(Convert.ToString(toltalLike)) ? 0 : toltalLike) lượt thích · @post.CommentCount bình luận </MudText>
+                                                                }
+                                                            </MudItem>
+                                                            <MudItem xs="6" Class="d-flex justify-content-end">
+                                                                @if (!string.IsNullOrEmpty(post.ImgFile) || !string.IsNullOrEmpty(post.VideoFile))
+                                                                {
+                                                                    <MudImage Style="border-radius:20px" Src="@(string.IsNullOrEmpty(post.ImgFile) ? post.VideoFile : post.ImgFile)" ObjectFit="ObjectFit.Cover" Width="150" Height="100" />
+                                                                }
+                                                            </MudItem>
+                                                        </MudGrid>
+                                                    </MudListItem>
+                                                    <MudDivider Style="border-color:gray; border-width:1px" />
+
+                                                }
+                                            </MudList>
+                                        </MudItem>
+                                    </MudGrid>
+                                }
+                            </ChildContent>
+                        </MudMenu>
+                        <MudIconButton Icon="@Icons.Material.Filled.Search" @bind-Value="Search" @onclick="async ()=> await HandleSearch()" Color="Color.Info" aria-label="github"></MudIconButton>
+                        <MudIconButton Class="mx-2" Icon="@(DarkLightModeButtonIcon)" Color="Color.Inherit" OnClick="@DarkModeToggle" />
+                    </div>
+                    <div class="col-3">
+                        <AuthorizeView>
+                            <Authorized>
+                                <div class="d-flex justify-content-end">
+                                    <div class="d-flex justify-content-between align-items-center me-4">
+
+                                        <MudIconButton Class="mx-1" Icon="@Icons.Material.Filled.Chat"></MudIconButton>
+
+                                        <MudTooltip Class="mx-1" Text="Thêm mới bài viết">
+                                            <MudFab Class="mx-1" StartIcon="@Icons.Material.Filled.Add" @onclick="CreatePost" Size="Size.Medium" Style="border:none;box-shadow:none;background-color:none;" Label="Tạo mới" />
+                                        </MudTooltip>
+
+                                        <MudIconButton @onclick="ClickNoticeLabel" Style="overflow:visible;">
+                                            <MudBadge Content="NoticeCount" Color="Color.Tertiary" Overlap="true" Class="">
+                                                <MudIcon Icon="@Icons.Material.Filled.Notifications">
+                                                </MudIcon>
+                                            </MudBadge>
+                                        </MudIconButton>
+
+                                        @if (isShowNotice)
+                                        {
+
+                                            <div class="" style="overflow:hidden;border-radius:12px;position:fixed;top: 62px; right: 82px;z-index:100; border: 2px solid lightgrey;box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.3); /* Đổ bóng */">
+                                                @if (LoadedNotice)
+                                                {
+                                                    @if (ListNotice.Count != 0)
+                                                    {
+                                                        @foreach (var item in ListNotice)
+                                                        {
+                                                            <div style="background-color:@(item.isRead ? " #fff" : "rgb(230, 230, 230)" );">
+                                                                <MudMenuItem Class="p-2" @onclick="() => GoTo(item.Id, item.Link)">
+                                                                    <div class="d-flex justify-content-start align-items-start ">
+                                                                        <MudAvatar Class="hover-border">
+                                                                            <MudImage Src="@item.AvatarUserSend"></MudImage>
+                                                                        </MudAvatar>
+                                                                        <div class="ms-3">
+                                                                            <b>@item.UserNameSend</b>
+                                                                            <span>@item.Content</span>
+                                                                            <p style="color:deepskyblue;" class="mb-0">
+                                                                                @item.Time
+                                                                            </p>
+                                                                        </div>
+                                                                    </div>
+                                                                </MudMenuItem>
+                                                            </div>
+                                                        }
+                                                        <div class="px-2 py-0" style="background-color:#fff">
+                                                            <div class="d-flex justify-content-between">
+                                                                <MudIconButton Class="m-0" @onclick="Pre" Disabled="!isPreValid" Icon="@Icons.Material.Filled.NavigateBefore"></MudIconButton>
+                                                                <MudIconButton Class="m-0" @onclick="Next" Disabled="!isNextValid" Icon="@Icons.Material.Filled.NavigateNext"></MudIconButton>
+                                                            </div>
+                                                        </div>
+                                                    }
+                                                    else
+                                                    {
+                                                        <div style="background-color:gainsboro;" class="p-2">
+                                                            <div class="d-flex justify-content-start align-items-center ">
+                                                                <MudFab class="p-0 me-3" StartIcon="@Icons.Material.Filled.NotAccessible" Color="Color.Tertiary" Size="Size.Small" />
+                                                                <b>Không có thông báo nào</b>
+                                                            </div>
+                                                        </div>
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    <div>
+                                                        <Client.Components.ComponentCustom.WaveLoading></Client.Components.ComponentCustom.WaveLoading>
+                                                    </div>
+                                                }
+                                            </div>
+
+                                        }
+
+                                    </div>
+
+                                    <MudMenu Class="pt-2 pb-3" ActivationEvent="@MouseEvent.MouseOver" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.BottomRight">
+                                        <ActivatorContent>
+                                            <MudAvatar Class="avatar" Variant="Variant.Outlined">
+                                                <MudImage Src="@Avatar"></MudImage>
+                                            </MudAvatar>
+                                        </ActivatorContent>
+                                        <ChildContent>
+                                            <MudMenuItem Href="/profile">
+                                                <div class="d-flex justify-content-start align-items-center ">
+                                                    <MudFab class="p-0 me-3" StartIcon="@Icons.Material.Filled.Person" Color="Color.Tertiary" Size="Size.Small" />
+                                                    <b>Trang cá nhân</b>
+                                                </div>
+                                            </MudMenuItem>
+                                            <MudMenuItem Href="/Setting/ChangePassword">
+                                                <div class="d-flex justify-content-start align-items-center ">
+                                                    <MudFab class="p-0 me-3" StartIcon="@Icons.Material.Filled.Settings" Color="Color.Tertiary" Size="Size.Small" />
+                                                    <b>Đổi mật khẩu</b>
+                                                </div>
+                                            </MudMenuItem>
+                                            <MudMenuItem Href="/followers">
+                                                <div class="d-flex justify-content-start align-items-center ">
+                                                    <MudFab class="p-0 me-3" StartIcon="@Icons.Material.Filled.Groups" Color="Color.Tertiary" Size="Size.Small" />
+                                                    <b>Danh sách theo dõi</b>
+                                                </div>
+                                            </MudMenuItem>
+                                            <MudMenuItem>
+                                                <form action="Account/Logout" class="p-0" method="post">
+                                                    <input type="hidden" name="__RequestVerificationToken" value="@AntiforgeryToken" />
+                                                    <input type="hidden" name="ReturnUrl" value="Account/Login" />
+                                                    <button type="submit" style="width:230px;" class="d-flex justify-content-start ">
+                                                        <MudFab class="p-0 me-3" StartIcon="@Icons.Material.Filled.Logout" Color="Color.Tertiary" Size="Size.Small" />
+                                                        <b>Đăng xuất</b>
+                                                    </button>
+                                                </form>
+                                            </MudMenuItem>
+                                        </ChildContent>
+                                    </MudMenu>
+                                </div>
+                            </Authorized>
+
+                            <NotAuthorized>
+                                <div class="d-flex justify-content-end">
+                                    <div class="nav-item ">
+                                        <NavLink class="nav-link" href="Account/Register">
+                                            <center>
+                                                <button class="codepro-custom-btn codepro-btn-11" target="blank" title="Code Pro">
+                                                    Đăng ký
+                                                </button>
+                                            </center>
+                                        </NavLink>
+                                    </div>
+                                    <div class="nav-item">
+                                        <NavLink class="nav-link" href="Account/Login">
+                                            <center>
+                                                <button class="codepro-custom-btn codepro-btn-12" target="blank" title="Code Pro">
+                                                    <span>Go!</span>
+                                                    <span>Đăng nhập</span>
+                                                </button>
+                                            </center>
+                                        </NavLink>
+                                    </div>
+                                </div>
+                            </NotAuthorized>
+                        </AuthorizeView>
+                    </div>
+                </div>
+            </MudAppBar>
+            <div class="d-flex " style="margin-top:64px">
+                <div class="pe-3  scrollbar" style="height : 91vh;width : 290px; position: sticky;top: 64px;overflow-x : hidden;">
+                    <div class="me-3 " style="width:auto;">
+                        <NavMenu />
+                    </div>
+                </div>
+                <article class="content w-100 px-4 scrollbar" style="overflow:visible;">
+                    @Body
+                </article>
+            </div>
+            <audio id="audioPlayer" src="audio/newNoticeSound.mp3"></audio>
+        </MudLayout>
+    </div>
+
+    <div id="blazor-error-ui">
+        An unhandled error has occurred.
+        <a href="" class="reload">Reload</a>
+        <a class="dismiss">🗙</a>
+    </div>
+
+    <script>
+        function playAudio() {
+            var audioPlayer = document.getElementById('audioPlayer');
+            if (audioPlayer) {
+                        audioPlayer.play();
+            }
+                }
+    </script>
+
+    <script>
+        function saveScrollPosition() {
+                return window.scrollY; // Lấy vị trí cuộn dọc hiện tại
+                }
+
+                function restoreScrollPosition(position) {
+                    window.scrollTo({
+                        top: position,
+                        left: 0,
+                        behavior: 'auto' // Cuộn ngay lập tức
+                    });
+                }
+    </script>
+}
+@code {
+    bool isShowNotice;
+
+    string Search;
+
+    private string AntiforgeryToken;
+
+    bool isPreValid;
+    bool isNextValid;
+
+    private bool _isDarkMode = false;
+    private MudTheme? _theme = null;
+
+    private HubConnection? hubNotice;
+
+    protected int NoticeCount = 0;
+    public string Avatar;
+    private ClaimsPrincipal user;
+
+    int CurrentCountNotice = 0;
+
+    private List<NoticeDTO> ListNotice = new List<NoticeDTO>();
+
+    private bool isStatusHistory = false;
+
+    private bool ShowSearchResults = false;
+
+    private List<string> SearchHistory = new List<string>();
+    private const int MaxHistoryCount = 4;
+
+    private SearchResultWithPaginationDTO searchResult;
+
+    Guid IdUser;
+
+    bool LoadedNotice;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _theme = new()
+            {
+                PaletteLight = _lightPalette,
+                PaletteDark = _darkPalette,
+                LayoutProperties = new LayoutProperties()
+            };
+
+        var tokens = Antiforgery.GetAndStoreTokens(HttpContextAccessor.HttpContext);
+        AntiforgeryToken = tokens.RequestToken;
+
+        // Lấy trạng thái xác thực
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        user = authState.User;
+        // Lấy ID người dùng từ Claims
+        var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (userId != null)
+        {
+            var currentUser = await UserManager.FindByIdAsync(userId);
+
+            IdUser = Guid.Parse(userId);
+
+            hubNotice = new HubConnectionBuilder()
+            .WithUrl(Navigation.ToAbsoluteUri("/hubNotice"))
+            .Build();
+
+            hubNotice.On("ReceiveNotification", async () =>
+            {
+                var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+                var response = await httpClient.GetStringAsync($"/getAmountNoticeUser/{userId}");
+                if (response != null)
+                {
+                    NoticeCount = Convert.ToInt32(response);
+                }
+                await InvokeAsync(StateHasChanged);
+                await JS.InvokeVoidAsync("playAudio");
+            });
+
+            var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+            var response = await httpClient.GetStringAsync($"/getAmountNoticeUser/{userId}");
+            if (response != null)
+            {
+                NoticeCount = Convert.ToInt32(response);
+            }
+
+            await hubNotice.StartAsync();
+
+            await hubNotice.SendAsync("RegisterConnection", userId);
+
+            if (currentUser != null)
+            {
+                Avatar = currentUser.Img;
+            }
+            await LoadSearchHistory();
+
+
+
+        }
+    }
+
+    private void DarkModeToggle()
+    {
+        _isDarkMode = !_isDarkMode;
+    }
+
+
+
+    private readonly PaletteLight _lightPalette = new()
+        {
+            Black = "#110e2d",
+            AppbarText = "#424242",
+            AppbarBackground = "rgba(255,255,255,1)",
+            DrawerBackground = "#ffffff",
+            GrayLight = "#e8e8e8",
+            GrayLighter = "#f9f9f9",
+        };
+
+    private readonly PaletteDark _darkPalette = new()
+        {
+            Primary = "#7e6fff",
+            Surface = "#1e1e2d",
+            Background = "#1a1a27",
+            BackgroundGray = "#151521",
+            AppbarText = "#92929f",
+            AppbarBackground = "rgba(26,26,39,1)",
+            DrawerBackground = "#1a1a27",
+            ActionDefault = "#74718e",
+            ActionDisabled = "#9999994d",
+            ActionDisabledBackground = "#605f6d4d",
+            TextPrimary = "#b2b0bf",
+            TextSecondary = "#92929f",
+            TextDisabled = "#ffffff33",
+            DrawerIcon = "#92929f",
+            DrawerText = "#92929f",
+            GrayLight = "#2a2833",
+            GrayLighter = "#1e1e2d",
+            Info = "#4a86ff",
+            Success = "#3dcb6c",
+            Warning = "#ffb545",
+            Error = "#ff3f5f",
+            LinesDefault = "#33323e",
+            TableLines = "#33323e",
+            Divider = "#292838",
+            OverlayLight = "#1e1e2d80",
+        };
+
+    public string DarkLightModeButtonIcon => _isDarkMode switch
+    {
+        true => Icons.Material.Rounded.AutoMode,
+        false => Icons.Material.Outlined.DarkMode,
+    };
+
+    void CreatePost()
+    {
+        Navigation.NavigateTo("/createPost");
+    }
+
+    void NaviGate(string link)
+    {
+        Navigation.NavigateTo("/postDetail/" + link , true);
+    }
+
+    private List<PostIntroDTO> lstPostUserTop = new List<PostIntroDTO>();
+
+    private async Task SearchKeyPress()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        var idUserCurrent = UserManager.GetUserId(user);
+        var idUser = Guid.Parse(idUserCurrent);
+
+        var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+        var result = await httpClient.GetStringAsync($"/api/search/getListPostTop/{idUser}");
+
+        var resultConverted = JsonConvert.DeserializeObject<List<PostIntroDTO>>(result);
+        if (resultConverted != null)
+        {
+            lstPostUserTop = resultConverted;
+        }
+    }
+
+    // xử lý khi nhấn Enter
+    private async Task SearchKey(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await HandleSearch();
+        }
+        else if (e.Key != "Enter" && !string.IsNullOrEmpty(e.Key))
+        {
+            await SearchPosts(e.Key);
+        }
+    }
+
+    private async Task HandleSearch()
+    {
+        if (string.IsNullOrWhiteSpace(Search))
+            return;
+
+        try
+        {
+            // Chuyển hướng đến trang tìm kiếm với keyword
+            Navigation.NavigateTo($"/searchPost?keyword={Uri.EscapeDataString(Search)}", forceLoad: true);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error searching: {ex.Message}");
+        }
+    }
+
+    // Tạo phương thức riêng để tìm kiếm bài viết
+    private async Task SearchPosts(string keyword)
+    {
+        var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+        var response = await httpClient.GetAsync($"/api/search/search-all?keyword={Uri.EscapeDataString(keyword)}");
+
+        if (response.IsSuccessStatusCode)
+        {
+            var content = await response.Content.ReadAsStringAsync();
+            searchResult = JsonConvert.DeserializeObject<SearchResultWithPaginationDTO>(content);
+            StateHasChanged();
+        }
+        else
+        {
+            Console.WriteLine("Error fetching posts: " + response.ReasonPhrase);
+        }
+    }
+
+    private async Task DeleteHistoryItem(string keyword)
+    {
+        try
+        {
+            var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+            var idUserCurrent = UserManager.GetUserId(user);
+            var idUser = Guid.Parse(idUserCurrent);
+
+            var response = await httpClient.DeleteAsync($"/api/search/remove-history-search?keyword={Uri.EscapeDataString(keyword)}&idUser={idUser}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                // cập nhật lại lịch sử tìm kiếm local
+                await LoadSearchHistory();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error deleting search history item: {ex.Message}");
+        }
+    }
+
+    // Load lịch sử tìm kiếm từ API
+    private async Task LoadSearchHistory()
+    {
+        try
+        {
+            var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+            var idUserCurrent = UserManager.GetUserId(user);
+            var idUser = Guid.Parse(idUserCurrent);
+
+            var response = await httpClient.GetAsync($"/api/search/get-search-history?take=5&idUser={idUser}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                SearchHistory = JsonConvert.DeserializeObject<List<string>>(content);
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading search history: {ex.Message}");
+        }
+    }
+
+    // Chọn từ khóa từ lịch sử
+    private async Task SelectFromHistory(string keyword)
+    {
+        Search = keyword;
+        await HandleSearch();
+    }
+
+    private void Hide()
+    {
+        isShowNotice = false;
+    }
+
+    private async Task ClickNoticeLabel()
+    {
+        LoadedNotice = false;
+        isShowNotice = !isShowNotice;
+        if (!isShowNotice)
+        {
+            return;
+        }
+        var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+        await httpClient.GetStringAsync($"/ClearNotice/{IdUser}");
+        NoticeCount = 0;
+        CurrentCountNotice = 0;
+        ListNotice = await LoadNoticeUser();
+        isNextValid = ListNotice.Count >= 6;
+        isPreValid = false;
+        LoadedNotice = true;
+    }
+
+    private async Task<List<NoticeDTO>> LoadNoticeUser()
+    {
+        var _httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+        var result = await _httpClient.GetStringAsync($"/getAllNoticeUser/{IdUser}/{CurrentCountNotice}");
+        var list = JsonConvert.DeserializeObject<List<NoticeDTO>>(result);
+        return list;
+    }
+
+
+
+    private async Task GoTo(Guid Id, string link)
+    {
+        Hide();
+        var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+        await httpClient.GetStringAsync($"/ReadedNotice/{Id}");
+        Navigation.NavigateTo(link);
+    }
+
+    private async Task Pre()
+    {
+        CurrentCountNotice -= 6;
+        var listNotice = await LoadNoticeUser();
+        ListNotice = listNotice;
+        if (CurrentCountNotice == 0)
+        {
+            isPreValid = false;
+        }
+        isNextValid = true;
+    }
+
+    private async Task Next()
+    {
+        CurrentCountNotice += 6;
+        var listNotice = await LoadNoticeUser();
+        if (listNotice.Count == 0)
+        {
+            Snackbar.Add("Đã hết thông báo!", Severity.Error);
+            isNextValid = false;
+        }
+        else if (listNotice.Count < 6)
+        {
+            isNextValid = false;
+            isPreValid = true;
+            ListNotice = listNotice;
+        }
+        else
+        {
+            isPreValid = true;
+            ListNotice = listNotice;
+        }
+    }
+}
+

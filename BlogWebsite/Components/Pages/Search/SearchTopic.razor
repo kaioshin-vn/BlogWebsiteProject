@@ -1,0 +1,116 @@
+﻿@page "/searchTopic/{IdTopic:guid}"
+@using Client.Components.ComponentCustom
+@using Data.DTO
+@using Newtonsoft.Json
+
+@inject IHttpClientFactory HttpClientFactory
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserManager<ApplicationUser> UserManager
+
+<style>
+    .result-container {
+        margin-top: 20px;
+    }
+
+    .custom-tabs .mud-tab {
+        text-transform: none;
+    }
+
+    .truncate-text {
+        white-space: nowrap; /* Không cho nội dung xuống dòng */
+        overflow: hidden; /* Ẩn phần nội dung bị tràn */
+        text-overflow: ellipsis; /* Hiển thị dấu '...' khi nội dung bị tràn */
+    }
+
+    .hover-underline:hover {
+        text-decoration: underline;
+    }
+
+</style>
+
+@if (!isLoaded)
+{
+    <LoadingLocal></LoadingLocal>
+}
+else
+{
+    <div class="result-container">
+        <div>
+            <div class="top-row px-4 mb-4 d-flex justify-content-center">
+                <input type="text" @bind-value="Search" class="form-control" style="width : 550px" id="search" placeholder="Tên topic tìm kiếm " aria-label="Recipient's username" aria-describedby="basic-addon2">
+                <button @onclick="SearchAction" class="input-group-text fw-lagre mx-3" style="background-color: rgb(42, 198, 255);border:solid 2px grey" id=""> Tìm kiếm</button>
+            </div>
+            <MudList T="string">
+                @foreach (var group in groupDTOs)
+                {
+                    <MudListItem OnClick="() => GoToGroup(group.Name)" Style="width:900px; border-radius:20px">
+                        <MudGrid>
+                            <MudItem xs="12">
+                                <div class="d-flex">
+                                    <MudAvatar Class="mr-2" Size="Size.Large">
+                                        <MudImage Src="@group.ImgGroup" />
+                                    </MudAvatar>
+                                    <div>
+                                        <MudText Typo="Typo.h6" Class="truncate-text"><b class="hover-underline">@group.Name</b></MudText>
+                                        <MudText Typo="Typo.body2" Class="truncate-text">@group.Description</MudText>
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">@group.MemberCount thành viên</MudText>
+                                    </div>
+                                </div>
+                            </MudItem>
+                        </MudGrid>
+                    </MudListItem>
+                    <hr style="width:900px" />
+                }
+            </MudList>
+            @if (groupDTOs.Count == 0)
+            {
+                <MudText Class="mt-2">Không tìm thấy nhóm nào</MudText>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public Guid IdTopic { get; set; }
+
+    List<GroupDTO> groupDTOs = new List<GroupDTO>();
+
+    TopicDTO topic = new TopicDTO();
+
+    private string Search = "";
+    private SearchResultWithPaginationDTO searchResult;
+    private int activeTab = 0;
+    private int currentPage = 1;
+    private int pageSize = 10;
+
+    bool isLoaded;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+        var response = await httpClient.GetAsync($"/AllGroupTopic/{IdTopic}");
+        var content = await response.Content.ReadAsStringAsync();
+        topic = JsonConvert.DeserializeObject<TopicDTO>(content);
+        Search = topic.Name;
+        groupDTOs = topic.groupDTOs;
+        isLoaded = true;
+    }
+
+    void GoToGroup(string link)
+    {
+        NavigationManager.NavigateTo("/groups/" + link, true);
+    }
+
+    async Task SearchAction ()
+    {
+        isLoaded = false;
+        var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+        var response = await httpClient.GetAsync($"/SearchAllGroupTopic/{Search}");
+        var content = await response.Content.ReadAsStringAsync();
+        topic = JsonConvert.DeserializeObject<TopicDTO>(content);
+        groupDTOs = topic.groupDTOs;
+        isLoaded = true;
+    }
+}

@@ -359,6 +359,7 @@ else
             isLoaded = false;
 
             Snackbar.Add("Cập nhật bài viết thành công", Severity.Success);
+            Navigation.NavigateTo($"/postDetail/{Post.Id}");
         }
     }
 

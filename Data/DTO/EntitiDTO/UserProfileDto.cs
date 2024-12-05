@@ -12,6 +12,7 @@
         public string? Id { get; set; }
         public string? IdViewer { get; set; }
         public int CountFollow { get; set; }
+        public int CountLike { get; set; }
         public bool IsFollowing { get; set; }
     }
 }

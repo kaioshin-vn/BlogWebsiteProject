@@ -249,6 +249,8 @@
         user.Id = Guid.NewGuid();
         user.FullName = Input.FullName;
         user.UserName = Input.Username;
+        user.CreateTime = DateTime.Now;
+
         // user.PhoneNumber = Input.NumberPhone;
         user.Img = @"\Img\avatar_default1.jpg";
         await UserStore.SetUserNameAsync(user, Input.Username, CancellationToken.None);

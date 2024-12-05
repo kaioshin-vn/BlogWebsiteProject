@@ -38,6 +38,9 @@ namespace Data.Migrations
                         .IsConcurrencyToken()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateTime?>("CreateTime")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Descript")
                         .HasColumnType("nvarchar(max)");
 
@@ -146,6 +149,9 @@ namespace Data.Migrations
 
                     b.Property<int>("StateGroup")
                         .HasColumnType("int");
+
+                    b.Property<bool>("isDeleted")
+                        .HasColumnType("bit");
 
                     b.HasKey("IdGroup");
 
@@ -471,6 +477,39 @@ namespace Data.Migrations
                     b.ToTable("ReplyResponses");
                 });
 
+            modelBuilder.Entity("Data.Database.Table.Report", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ContentReport")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("IdPost")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdUser")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdUserReport")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("State")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IdPost");
+
+                    b.HasIndex("IdUser");
+
+                    b.HasIndex("IdUserReport");
+
+                    b.ToTable("Reports");
+                });
+
             modelBuilder.Entity("Data.Database.Table.Response", b =>
                 {
                     b.Property<Guid>("Id")
@@ -507,6 +546,21 @@ namespace Data.Migrations
                     b.HasIndex("IdUser");
 
                     b.ToTable("Responses");
+                });
+
+            modelBuilder.Entity("Data.Database.Table.RestrictedWord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Word")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("RestrictedWords");
                 });
 
             modelBuilder.Entity("Data.Database.Table.Save", b =>
@@ -1117,6 +1171,33 @@ namespace Data.Migrations
                     b.Navigation("Response");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Data.Database.Table.Report", b =>
+                {
+                    b.HasOne("Data.Database.Table.Post", "Post")
+                        .WithMany()
+                        .HasForeignKey("IdPost")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BlogWebsite.Data.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("IdUser")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BlogWebsite.Data.ApplicationUser", "UserReport")
+                        .WithMany()
+                        .HasForeignKey("IdUserReport")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Post");
+
+                    b.Navigation("User");
+
+                    b.Navigation("UserReport");
                 });
 
             modelBuilder.Entity("Data.Database.Table.Response", b =>

@@ -41,7 +41,7 @@ else
                 <MudList T="string">
                     @foreach (var post in searchResult.Posts)
                     {
-                        <MudListItem Style="width:900px; border-radius:20px">
+                        <MudListItem OnClick="() => NaviGate(post.Id.ToString())" Style="width:900px; border-radius:20px">
                             <MudGrid Justify="Justify.SpaceBetween">
                                 <MudItem xs="9">
                                     <MudCardHeader Class="p-0 m-0">
@@ -97,7 +97,7 @@ else
                 <MudList T="string">
                     @foreach (var group in searchResult.Groups)
                     {
-                        <MudListItem Style="width:900px; border-radius:20px">
+                        <MudListItem OnClick="() => GoToGroup(group.Name)" Style="width:900px; border-radius:20px">
                             <MudGrid>
                                 <MudItem xs="12">
                                     <div class="d-flex">
@@ -132,7 +132,7 @@ else
                     <MudList T="string"> 
                         @foreach (var user in searchResult.Users)
                         {
-                        <MudListItem Style="width:900px; border-radius:20px">
+                        <MudListItem OnClick="() => GoToUser(user.Id)" Style="width:900px; border-radius:20px">
                             <MudGrid>
                                 <MudItem xs="12">
                                     <MudCardHeader Class="p-0 m-0">
@@ -149,7 +149,7 @@ else
                             </MudGrid>
                         </MudListItem>
                         <hr style="width:900px" />
-                    }
+                        }
                     </MudList>
                     @if (searchResult.TotalUsers > 0)
                     {
@@ -185,6 +185,21 @@ else
         }
     }
 
+    void NaviGate(string link)
+    {
+        NavigationManager.NavigateTo("/postDetail/" + link, true);
+    }
+
+    void GoToGroup(string link)
+    {
+        NavigationManager.NavigateTo("/groups/" + link, true);
+    }
+
+    void GoToUser(string link)
+    {
+        NavigationManager.NavigateTo("/other-profile/" + link, true);
+    }
+
     private async Task PerformSearch()
     {
         try
@@ -194,7 +209,11 @@ else
             var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
             var user = authState.User;
             var idUserCurrent = UserManager.GetUserId(user);
-            var idUser = Guid.Parse(idUserCurrent);
+            Guid idUser = Guid.Empty;
+            if(idUserCurrent != null)
+            {
+                idUser = Guid.Parse(idUserCurrent);
+            }
 
             var response = await httpClient.GetAsync($"/api/search/search-all?keyword={Uri.EscapeDataString(searchKeyword)}&page={currentPage}&pageSize={pageSize}&idUser={idUser}");
 

@@ -111,7 +111,10 @@ else
                         <a href="/updatePost/@IdPost"><MudMenuItem>Chỉnh sửa</MudMenuItem></a>
                         <MudMenuItem OnClick="DeletePost">Xóa bài viết</MudMenuItem>
                     }
-                    <MudMenuItem>Báo cáo</MudMenuItem>
+                    @if(IdUser != Guid.Empty)
+{
+    <MudMenuItem>Báo cáo</MudMenuItem>
+}
                 </MudMenu>
             </CardHeaderActions>
         </MudCardHeader>

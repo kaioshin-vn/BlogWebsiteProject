@@ -8,7 +8,6 @@
 @using System.ComponentModel.DataAnnotations
 @using Newtonsoft.Json
 
-@attribute [Authorize(Roles = "Admin")]
 
 @inject NavigationManager Navigation
 @inject IDialogService DialogService
@@ -21,10 +20,11 @@
 
 @if (!LoadingSucces)
 {
-    <Loading></Loading>
+    <LoadingLocal></LoadingLocal>
 }
 else
 {
+
     <MudContainer MaxWidth="MaxWidth.Large">
         @if (!isAdd)
         {

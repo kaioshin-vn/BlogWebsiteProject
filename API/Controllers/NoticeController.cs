@@ -29,7 +29,7 @@ namespace API.Controllers
         [HttpGet("getAllNoticeUser/{id}/{Next}")]
         public async Task<List<NoticeDTO>> GetAllById(Guid id, int Next)
         {
-            var notices = _context.Notices.Skip(Next).Take(6).Where(a => a.ToUser == id).Include(a => a.UserSend).ToList();
+            var notices = _context.Notices.Where(a => a.ToUser == id).OrderByDescending(a => a.CreateDate).Skip(Next).Take(6).Include(a => a.UserSend).ToList();
             if (notices != null)
             {
                 return notices.Select(a =>

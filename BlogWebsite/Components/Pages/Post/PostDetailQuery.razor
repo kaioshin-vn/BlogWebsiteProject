@@ -97,115 +97,129 @@
 else
 {
 
-    <div>
-        <MudCardHeader>
-            <CardHeaderAvatar>
-                <MudAvatar Class="hover-border">
-                    <MudImage Src="@this.Avatar"></MudImage>
-                </MudAvatar>
-            </CardHeaderAvatar>
+    if(!isFail)
+    {
+        <div>
+            <MudCardHeader>
+                <CardHeaderAvatar>
+                    <a href="@this.Link">
+                        <MudAvatar Class="hover-border">
+                            <MudImage Src="@this.Avatar"></MudImage>
+                        </MudAvatar>
+                    </a>
+                </CardHeaderAvatar>
 
-            <CardHeaderContent>
-                <MudText Typo="Typo.body1"><b class="hover-underline">@this.UserName</b></MudText>
-                <MudText Typo="Typo.body2"><span class="hover-underline">@this.Date</span></MudText>
-            </CardHeaderContent>
+                <CardHeaderContent>
 
-            <CardHeaderActions>
-                <MudMenu Icon="@Icons.Material.Filled.MoreHoriz" ActivationEvent="@MouseEvent.MouseOver" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter" Color="Color.Default" AriaLabel="Open user menu">
-                    @if (IdUser == IdUserPost)
-                    {
-                        <a href="/updatePost/@IdPost"><MudMenuItem>Chỉnh sửa</MudMenuItem></a>
-                        <MudMenuItem OnClick="DeletePost">Xóa bài viết</MudMenuItem>
-                    }
-                    <MudMenuItem>Báo cáo</MudMenuItem>
-                </MudMenu>
-            </CardHeaderActions>
-        </MudCardHeader>
+                    <MudText Typo="Typo.body1"><a href="@this.Link"><b class="hover-underline">@this.UserName</b></a></MudText>
+                    <MudText Typo="Typo.body2"><span class="hover-underline">@this.Date</span></MudText>
+                </CardHeaderContent>
 
-
-        <MudCardContent Class="mb-2 py-0">
-            <MudCardActions Class="py-1 ms-4">
-                @if (TagNames != null && TagNames.Count > 0)
-                {
-                    foreach (var item in TagNames)
-                    {
-                        <a style="background-color:rgb(190, 255, 254) ; border-radius:6px; font-size:small;" class="py-1 px-2 mx-1 hover" href="/search/tags/@item">
-                            <MudIconButton Icon="@Icons.Material.Filled.Tag" Size="Size.Small" />
-                            <span style="margin-left:-6px;">@item</span>
-                        </a>
-                    }
-                }
-            </MudCardActions>
-            <MudText Typo="Typo.h6">@this.Title</MudText>
-        </MudCardContent>
-
-        @if (Content != null && Content != "")
-        {
-            <MudCardContent Class="my-1 py-0">
-                <div class="content_by_user">
-                    @ContentHtml
-                </div>
-            </MudCardContent>
-        }
-
-        @if (ListVideo.Count != 0)
-        {
-            if (ListVideo.Count == 1)
-            {
-                <div style="height:400px; background-color:black;overflow:hidden" class="d-flex mt-2 justify-content-center rounded-3 align-items-center">
-                    <Radzen.Blazor.RadzenHtml>
-                        <Blazorise.Video.Video Source="ListVideo[0]" AutomaticallyHideControls="true" SeekTime="5" style="height : 350px;">
-                        </Blazorise.Video.Video>
-                    </Radzen.Blazor.RadzenHtml>
-                </div>
-            }
-            else
-            {
-                <div style="height:400px; background-color:black;overflow:hidden" class="d-flex mt-2 justify-content-center rounded-3 align-items-center">
-                    <MudCarousel Class="mud-width-full" TData="object" AutoCycle="false" ShowBullets="false" BulletsColor="Color.Tertiary" Style="height:100%;">
-                        @foreach (var item in ListVideo)
+                <CardHeaderActions>
+                    <MudMenu Icon="@Icons.Material.Filled.MoreHoriz" ActivationEvent="@MouseEvent.MouseOver" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter" Color="Color.Default" AriaLabel="Open user menu">
+                        @if (IdUser == IdUserPost)
                         {
-                            <MudCarouselItem>
-                                <Radzen.Blazor.RadzenHtml>
-                                    <Blazorise.Video.Video Source="item" AutomaticallyHideControls="true" SeekTime="5" style="height : 400px;">
-                                    </Blazorise.Video.Video>
-                                </Radzen.Blazor.RadzenHtml>
-                            </MudCarouselItem>
+                            <a href="/updatePost/@IdPost"><MudMenuItem>Chỉnh sửa</MudMenuItem></a>
+                            <MudMenuItem OnClick="DeletePost">Xóa bài viết</MudMenuItem>
                         }
-                    </MudCarousel>
+                        @if(IdUser != Guid.Empty)
+                        {
+                            <MudMenuItem>Báo cáo</MudMenuItem>
+                        }
+                    </MudMenu>
+                </CardHeaderActions>
+            </MudCardHeader>
+
+
+            <MudCardContent Class="mb-2 py-0">
+                <MudCardActions Class="py-1 ms-4">
+                    @if (TagNames != null && TagNames.Count > 0)
+                    {
+                        foreach (var item in TagNames)
+                        {
+                            <a style="background-color:rgb(190, 255, 254) ; border-radius:6px; font-size:small;" class="py-1 px-2 mx-1 hover" href="/search/tags/@item">
+                                <MudIconButton Icon="@Icons.Material.Filled.Tag" Size="Size.Small" />
+                                <span style="margin-left:-6px;">@item</span>
+                            </a>
+                        }
+                    }
+                </MudCardActions>
+                <MudText Typo="Typo.h6">@this.Title</MudText>
+            </MudCardContent>
+
+            @if (Content != null && Content != "")
+            {
+                <MudCardContent Class="my-1 py-0">
+                    <div class="content_by_user">
+                        @ContentHtml
+                    </div>
+                </MudCardContent>
+            }
+
+            @if (ListVideo.Count != 0)
+            {
+                if (ListVideo.Count == 1)
+                {
+                    <div style="height:400px; background-color:black;overflow:hidden" class="d-flex mt-2 justify-content-center rounded-3 align-items-center">
+                        <Radzen.Blazor.RadzenHtml>
+                            <Blazorise.Video.Video Source="ListVideo[0]" AutomaticallyHideControls="true" SeekTime="5" style="height : 350px;">
+                            </Blazorise.Video.Video>
+                        </Radzen.Blazor.RadzenHtml>
+                    </div>
+                }
+                else
+                {
+                    <div style="height:400px; background-color:black;overflow:hidden" class="d-flex mt-2 justify-content-center rounded-3 align-items-center">
+                        <MudCarousel Class="mud-width-full" TData="object" AutoCycle="false" ShowBullets="false" BulletsColor="Color.Tertiary" Style="height:100%;">
+                            @foreach (var item in ListVideo)
+                            {
+                                <MudCarouselItem>
+                                    <Radzen.Blazor.RadzenHtml>
+                                        <Blazorise.Video.Video Source="item" AutomaticallyHideControls="true" SeekTime="5" style="height : 400px;">
+                                        </Blazorise.Video.Video>
+                                    </Radzen.Blazor.RadzenHtml>
+                                </MudCarouselItem>
+                            }
+                        </MudCarousel>
+                    </div>
+                }
+            }
+
+
+
+            <div class="d-flex align-items-center mt-4 ms-3">
+                <div @onclick="LikeClick" class="hover">
+                    <MudIconButton Style="padding:10px;" @onclick="LikeClick" Disabled="@(!isUserLike)" Icon="@Icons.Material.Filled.Favorite" Color="Color.Secondary" />
                 </div>
-            }
-        }
-
-
-
-        <div class="d-flex align-items-center mt-4 ms-3">
-            <div @onclick="LikeClick" class="hover">
-                <MudIconButton Style="padding:10px;" @onclick="LikeClick" Disabled="@(!isUserLike)" Icon="@Icons.Material.Filled.Favorite" Color="Color.Secondary" />
+                <MudText Class="ms-2">@LikeText</MudText>
             </div>
-            <MudText Class="ms-2">@LikeText</MudText>
+
+            <AddComment IdPost="IdPost" UserAddComment="UserAddNewComment"></AddComment>
+
+            <div style="margin-top:24px;">
+                <ListComment IdUserPost="IdUserPost" IdPost="IdPost" @ref="ListCommentComponent"></ListComment>
+            </div>
+
         </div>
 
-        <AddComment IdPost="IdPost" UserAddComment="UserAddNewComment"></AddComment>
-
-        <div style="margin-top:24px;">
-            <ListComment IdPost="IdPost" @ref="ListCommentComponent"></ListComment>
-        </div>
-
-    </div>
-
-
-
-    <script>
-        async function copyToClipboard(text) {
-            try {
-                await navigator.clipboard.writeText(text);
-                console.log('Copied to clipboard:', text);
-            } catch (err) {
-                console.error('Failed to copy: ', err);
+        <script>
+            async function copyToClipboard(text) {
+                try {
+                    await navigator.clipboard.writeText(text);
+                    console.log('Copied to clipboard:', text);
+                } catch (err) {
+                    console.error('Failed to copy: ', err);
+                }
             }
-        }
-    </script>
+        </script>
+    }
+    else
+    {
+        <div class="my-5 mx-auto">
+            <h3>Oops</h3>
+            <p>Có vẻ như bài viết này đã bị xóa</p>
+        </div>
+    }
 }
 
 @code {
@@ -225,6 +239,8 @@ else
     public string? VideoFile { get; set; }
 
     public string Like { get; set; }
+
+    public string Link { get; set; }
 
     public int CommentCount { get; set; }
 
@@ -248,11 +264,20 @@ else
     private MarkupString ContentHtml { get; set; }
     private Guid IdUser { get; set; }
 
+    private bool isFail;
+
     protected override async Task OnInitializedAsync()
     {
         var _httpClient = HttpClientFactory.CreateClient("MyHttpClient");
         var result = await _httpClient.GetStringAsync($"/post/getPost/{IdPost}");
+        if (result == null)
+        {
+            isFail = true;
+            Loaded = true;
+            return;
+        }
         var postIntro = JsonConvert.DeserializeObject<PostIntroDTO>(result);
+
         Title = postIntro.Title;
         IdUserPost = postIntro.IdUser;
         UserName = postIntro.UserName;
@@ -263,13 +288,16 @@ else
         CommentCount = postIntro.CommentCount;
         CreateDate = postIntro.CreateDate;
         TagNames = postIntro.ListTag;
-
+        Link = postIntro.Link;
 
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
 
         var userCurrent = UserManager.GetUserId(user);
-        IdUser = Guid.Parse(userCurrent);
+        if(userCurrent != null)
+        {
+            IdUser = Guid.Parse(userCurrent);
+        }
 
         var timeCacul = DateTime.Now - CreateDate.Value;
 
@@ -340,6 +368,13 @@ else
 
     async Task LikeClick()
     {
+        if (IdUser == Guid.Empty)
+        {
+            var parameter = new DialogParameters<DialogLogin>();
+            var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+            await DialogService.Show<DialogLogin>("Yêu cầu đăng nhập", parameter, options).Result;
+            return;
+        }
         var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
         var response = await httpClient.GetAsync($"/likePost/{IdPost}/{IdUser}/{!isUserLike}");
         if (response.IsSuccessStatusCode)

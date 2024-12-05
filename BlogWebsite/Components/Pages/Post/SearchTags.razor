@@ -1,0 +1,137 @@
+﻿@page "/search/tags/{TagName}"
+
+@using Data.DTO.EntitiDTO
+@using Data.DTO
+@using Newtonsoft.Json
+
+@inject IHttpClientFactory HttpClientFactory
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserManager<ApplicationUser> UserManager
+
+<style>
+    .result-container {
+        margin-top: 20px;
+    }
+
+    .custom-tabs .mud-tab {
+        text-transform: none;
+    }
+
+    .truncate-text {
+        white-space: nowrap; /* Không cho nội dung xuống dòng */
+        overflow: hidden; /* Ẩn phần nội dung bị tràn */
+        text-overflow: ellipsis; /* Hiển thị dấu '...' khi nội dung bị tràn */
+    }
+
+    .hover-underline:hover {
+        text-decoration: underline;
+    }
+
+</style>
+
+@if (!isLoaded)
+{
+    <Client.Components.ComponentCustom.LoadingLocal></Client.Components.ComponentCustom.LoadingLocal>
+}
+else
+{
+    <div class="result-container">
+        <div>
+            <div class="top-row px-4 mb-4 d-flex justify-content-center">
+                <input type="text" @bind-value="Search" class="form-control" style="width : 550px" id="search" placeholder="Nhập tag tìm kiếm " aria-label="Recipient's username" aria-describedby="basic-addon2">
+                <button @onclick="SearchAction" class="input-group-text fw-lagre mx-3" style="background-color: rgb(42, 198, 255);border:solid 2px grey" id=""> Tìm kiếm</button>
+            </div>
+            <MudList T="string">
+                @foreach (var post in postDTOs)
+                {
+                    <MudListItem OnClick="() => NaviGate(post.Id.ToString())" Style="width:900px; border-radius:20px">
+                        <MudGrid Justify="Justify.SpaceBetween">
+                            <MudItem xs="9">
+                                <MudCardHeader Class="p-0 m-0">
+                                    <MudAvatar Size="Size.Medium">
+                                        <MudImage ObjectFit="ObjectFit.Cover" Src="@post.Avatar"></MudImage>
+                                    </MudAvatar>
+                                    <MudItem Class="px-2">
+                                        <MudText Typo="Typo.body1"><b class="hover-underline">@post.UserName</b></MudText>
+                                        <MudText Typo="Typo.body2"><span>@post.CreateDate</span></MudText>
+                                    </MudItem>
+                                </MudCardHeader>
+                                <MudCardContent Class="p-0 pt-1 m-0">
+                                    <MudText Typo="Typo.body1" Class="truncate-text" Style="font-size: 20px;"><b class="hover-underline">@post.Title</b></MudText>
+                                </MudCardContent>
+                                <MudItem>
+                                    @if (!string.IsNullOrEmpty(post.Like))
+                                    {
+                                        string[] likeCount = post.Like.Split(',');
+                                        int toltalLike = likeCount.Distinct().Count();
+                                        <MudText Style=" font-size:12px; color:gray">@(string.IsNullOrEmpty(Convert.ToString(toltalLike)) ? 0 : toltalLike) lượt thích · @post.CommentCount bình luận </MudText>
+                                    }
+                                </MudItem>
+                            </MudItem>
+                            <MudItem xs="3" Class="d-flex justify-content-end">
+                                @if (!string.IsNullOrEmpty(post.ImgFile) || !string.IsNullOrEmpty(post.VideoFile))
+                                {
+                                    <MudImage Style="border-radius:20px" Src="@(string.IsNullOrEmpty(post.ImgFile) ? post.VideoFile : post.ImgFile)" ObjectFit="ObjectFit.Cover" Width="150" Height="100"></MudImage>
+                                }
+                                else
+                                {
+                                    <MudText Style="width:150px; height:100px"></MudText>
+                                }
+                            </MudItem>
+                        </MudGrid>
+                    </MudListItem>
+                    <hr style="width:900px" />
+                }
+            </MudList>
+            @if (postDTOs.Count == 0)
+            {
+                <MudText Class="mt-2">Không tìm thấy bài viết nào</MudText>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public string TagName { get; set; }
+
+    List<PostIntroDTO> postDTOs = new List<PostIntroDTO>();
+
+    TagDTO Tag = new TagDTO();
+
+    private string Search = "";
+    private SearchResultWithPaginationDTO searchResult;
+    private int activeTab = 0;
+    private int currentPage = 1;
+    private int pageSize = 10;
+
+    bool isLoaded;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Search = TagName;
+        var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+        var response = await httpClient.GetAsync($"/SearchAllPostTag/{Search}");
+        var content = await response.Content.ReadAsStringAsync();
+        Tag = JsonConvert.DeserializeObject<TagDTO>(content);
+        postDTOs = Tag.PostDTOs;
+        isLoaded = true;
+    }
+
+    void NaviGate(string link)
+    {
+        NavigationManager.NavigateTo("/postDetail/" + link, true);
+    }
+
+    async Task SearchAction ()
+    {
+        isLoaded = false;
+        var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+        var response = await httpClient.GetAsync($"/SearchAllPostTag/{Search}");
+        var content = await response.Content.ReadAsStringAsync();
+        Tag = JsonConvert.DeserializeObject<TagDTO>(content);
+        postDTOs = Tag.PostDTOs;
+        isLoaded = true;
+    }
+}

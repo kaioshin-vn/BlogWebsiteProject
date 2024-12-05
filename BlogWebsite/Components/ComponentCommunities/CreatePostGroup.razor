@@ -3,6 +3,7 @@
 @using Client.Components.ComponentCustom
 @using Data.DTO.EntitiDTO
 @using System.Net.Http.Headers
+@using HtmlAgilityPack
 @using Newtonsoft.Json
 @using Newtonsoft.Json.Linq
 @using Radzen
@@ -47,15 +48,18 @@ else
         <MudTabs Rounded="true" ApplyEffectsToContainer="true" ScrollIconColor="Color.Info" Color="Color.Default" SliderColor="Color.Tertiary" PanelClass="pa-6">
             <MudTabPanel Text="Soạn thảo" Icon="@Icons.Material.Filled.DriveFileRenameOutline">
 
-                <MudSelect Placeholder="Select culture" @bind-Value="IdGroupUserChoose" CloseIcon="@Icons.Material.Filled.Flag" AdornmentColor="Color.Tertiary">
-                    @foreach (var item in ListGroupUser)
-                    {
-                        <MudSelectItem Value="@item.IdGroup">
-                                <img src="@item.ImgGroup" height="14" />
-                               <span>@item.Name</span>
-                        </MudSelectItem>
-                    }
-                </MudSelect>
+                <div style="width:450px;" class="my-3">
+                    <MudSelect Placeholder="Select culture" @bind-Value="IdGroupUserChoose" CloseIcon="@Icons.Material.Filled.Flag" AdornmentColor="Color.Tertiary">
+                        @foreach (var item in ListGroupUser)
+                        {
+                            var imgSrc = string.IsNullOrEmpty(item.ImgGroup) ? "/img/icon.jpg" : item.ImgGroup;
+                            <MudSelectItem Value="@item.IdGroup">
+                                <img src="@imgSrc" height="25" />
+                                <span>@item.Name</span>
+                            </MudSelectItem>
+                        }
+                    </MudSelect>
+                </div>
 
                 <MudGrid>
                     <MudItem xs="11">
@@ -212,6 +216,8 @@ else
 
     bool isMember;
 
+    List<string> listRestricted = new List<string>();
+
     PostDTO Post = new PostDTO();
 
     override protected async Task OnInitializedAsync()
@@ -226,6 +232,10 @@ else
         ListGroupUser = JsonConvert.DeserializeObject<List<GroupInfoDTO>>(result);
 
         IdGroupUserChoose = IdGroup;
+
+        var response = await _httpClient.GetStringAsync($"/getAllRestrictedWord");
+
+        listRestricted = JsonConvert.DeserializeObject<List<string>>(response);
 
         isLoaded = true;
     }
@@ -301,6 +311,35 @@ else
         {
             Snackbar.Add("Hãy nhập tiêu đề bài viết", Severity.Info);
             return;
+        }
+
+        var isViolence = await CheckContent(Post.Title);
+
+        if (!isViolence.state)
+        {
+            Snackbar.Add("Tiêu đề bài viết có chứa từ" + $" \"{isViolence.word}\"" + " nằm trong danh sách từ khóa hạn chế", Severity.Info);
+            return;
+        }
+
+        if (!string.IsNullOrEmpty(Post.Content))
+        {
+            isViolence = await CheckContent(Post.Content);
+
+            if (!isViolence.state)
+            {
+                Snackbar.Add("Nội dung bài viết có chứa từ" + $" \"{isViolence.word}\"" + " nằm trong danh sách từ khóa hạn chế", Severity.Info);
+                return;
+            }
+        }
+
+
+        foreach (var item in listRestricted)
+        {
+            if (ListTag.Any(a => a.Name.ToLower().Contains(item.ToLower())))
+            {
+                Snackbar.Add("Danh sách thẻ tag có chứa từ" + $" \"{item}\"" + " nằm trong danh sách từ khóa hạn chế", Severity.Info);
+                return;
+            }
         }
 
         isUpPost = true;
@@ -465,6 +504,23 @@ else
 
             return url;
         }
+    }
+
+    async Task<(bool state, string word)> CheckContent(string htmlString)
+    {
+        var doc = new HtmlDocument();
+        doc.LoadHtml(htmlString);
+
+        var content = doc.DocumentNode.InnerText;
+
+        foreach (var item in listRestricted)
+        {
+            if (content.ToLower().Contains(item.ToLower()))
+            {
+                return (false, item);
+            }
+        }
+        return (true, "");
     }
 
 

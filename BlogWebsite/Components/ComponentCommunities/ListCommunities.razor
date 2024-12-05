@@ -8,62 +8,82 @@
 @inject NavigationManager Navigation
 @inject IHttpClientFactory HttpClientFactory
 
-<h3>Danh sách các cộng đồng</h3>
-<MudGrid>
-	@if (listGroup != null && listGroup.Count > 0)
-	{
-		foreach (var group in listGroup)
-		{
-			var href = $"/groups/{Uri.EscapeDataString(group.Name)}";
-			var imgSrc = string.IsNullOrEmpty(group.ImgCover) ? "/img/icon.jpg" : group.ImgCover;
-			<MudItem xs="3">
-				<div class="d-flex align-items-center justify-content-start">
-					<MudItem Style="padding-left: 32px; display: flex; align-items: center;">
-						<img src="@imgSrc" alt="Community Icon" style="width:50px; height:50px; border-radius:50%;" />
-					</MudItem>
-					<MudItem xs="10">
-						<a href="@href" style="cursor: pointer; text-decoration: none;"
-						   onmouseover="this.style.textDecoration='underline';"
-						   onmouseout="this.style.textDecoration='none';">
-							<MudText Typo="Typo.h6" Style="color: #2e292a; padding-left: 8px; font-size: 13px; font-weight: 800">
-								@group.Name
-							</MudText>
-						</a>
-						<MudText Typo="Typo.h6" Style="color: #47393c; padding-left: 8px; font-size: 12px;  overflow:hidden;text-overflow: ellipsis; white-space: nowrap;">@group.Description</MudText>
-						<MudText Typo="Typo.h6" Style="color: #816d71; padding-left: 8px; font-size: 12px; overflow:hidden;text-overflow: ellipsis;">
-							@group.MemberCount thành viên
-						</MudText>
-					</MudItem>
-				</div>
-			</MudItem>
-		}
-	}
-	else
-	{
-		<Client.Components.ComponentCustom.LoadingLocal></Client.Components.ComponentCustom.LoadingLocal>
-	}
+<MudGrid Class="mx-5 mt-5">
+<h4>Khám phá các cộng đồng của chúng tôi</h4>
+    @if (listTopic.Count > 0)
+    {
+        foreach (var item in listTopic)
+        {
+            if (item.GroupTopics.Count != 0)
+            {
+                <div class="mt-4">
+                    <h5 class="my-3">
+                        <a href="/searchTopic/@item.IdTopic">
+                            @item.TopicName <MudIconButton Icon="@Icons.Material.Filled.ArrowForwardIos" Size="Size.Small" />
+                        </a>
+                    </h5>
+                    <MudGrid>
+                        @foreach (var group in item.GroupTopics)
+                        {
+                            var href = $"/groups/{Uri.EscapeDataString(group.Group.Name)}";
+                            var imgSrc = string.IsNullOrEmpty(group.Group.ImgGroup) ? "/img/icon.jpg" : group.Group.ImgGroup;
+                            var memberCount = @group.Group.MemberGroups == null ? 0 : @group.Group.MemberGroups.Count;
+                            <MudItem xs="6" Class="">
+                                <div class="d-flex align-items-center justify-content-start">
+                                    <MudItem Style="padding-left: 32px; display: flex; align-items: center;">
+                                        <img src="@imgSrc" alt="Community Icon" style="width:50px; height:50px; border-radius:50%;" />
+                                    </MudItem>
+                                    <MudItem xs="10" Class="ms-2">
+                                        <a href="@href" style="cursor: pointer; text-decoration: none;"
+                                           onmouseover="this.style.textDecoration='underline';"
+                                           onmouseout="this.style.textDecoration='none';">
+                                            <MudText Typo="Typo.h6" Style="color: #2e292a; padding-left: 8px; font-size: 13px; font-weight: 800">
+                                                @group.Group.Name
+                                            </MudText>
+                                        </a>
+                                        <MudText Typo="Typo.h6" Style="color: #47393c; padding-left: 8px; font-size: 12px;  overflow:hidden;text-overflow: ellipsis; white-space: normal;line-height: 1.5; height: 3.0em;">@group.Group.Description</MudText>
+                                        <MudText Typo="Typo.h6" Style="color: #816d71; padding-left: 8px; font-size: 12px; overflow:hidden;text-overflow: ellipsis;">
+                                            @memberCount thành viên
+                                        </MudText>
+                                    </MudItem>
+                                </div>
+                            </MudItem>
+                        }
+                    </MudGrid>
+                </div>
+            }
+        }
+    }
+    else
+    {
+        <Client.Components.ComponentCustom.LoadingLocal></Client.Components.ComponentCustom.LoadingLocal>
+    }
 </MudGrid>
 
 @code {
-	List<GroupDTO>? listGroup;
-	protected override async Task OnInitializedAsync()
-	{
-		await GetAllGroups();
-	}
 
-	private async Task GetAllGroups()
-	{
-		var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
-		var response = await httpClient.GetAsync("api/group/get-all-memberCount-group");
-		if (response.IsSuccessStatusCode)
-		{
-			listGroup = await response.Content.ReadFromJsonAsync<List<GroupDTO>>();
-		}
-		else
-		{
-			var errorContent = await response.Content.ReadAsStringAsync();
-			Console.WriteLine($"Có lỗi xảy ra: {errorContent}");
-		}
-	}
+    List<Topic> listTopic = new List<Topic>();
+
+    List<GroupDTO>? listGroup = new List<GroupDTO>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetAllGroups();
+    }
+
+    private async Task GetAllGroups()
+    {
+        var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+        var response = await httpClient.GetAsync("/GetGroupTopic");
+        if (response.IsSuccessStatusCode)
+        {
+            listTopic = await response.Content.ReadFromJsonAsync<List<Topic>>();
+        }
+        else
+        {
+            var errorContent = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"Có lỗi xảy ra: {errorContent}");
+        }
+    }
 
 }

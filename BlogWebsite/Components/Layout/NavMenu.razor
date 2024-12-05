@@ -9,215 +9,207 @@
 @using Client.Components.ComponentCustom
 
 <style>
-	.mud-nav-group .mud-navmenu .mud-nav-item .mud-nav-link {
-		padding-left: 28px !important;
-		padding-inline-start: 36px !important padding-inline-start: 0 !important;
-	}
+    .mud-nav-group .mud-navmenu .mud-nav-item .mud-nav-link {
+        padding-left: 28px !important;
+        padding-inline-start: 36px !important padding-inline-start: 0 !important;
+    }
 </style>
 <input type="checkbox" title="Navigation menu" class="navbar-toggler" />
 
 <MudNavMenu Color="Color.Success" Class="">
-	<MudNavLink Match="NavLinkMatch.Prefix" Href="/listPost" Class="rounded-3 overflow-hidden m-3">
-		<MudIcon Icon="@Icons.Material.Filled.AutoStories"></MudIcon>
-		<MudText>Trang chủ</MudText>
-	</MudNavLink>
-
-	<MudNavLink Match="NavLinkMatch.Prefix" Href="/weather" Class="rounded-3 overflow-hidden m-3">
-		<MudIcon Icon="@Icons.Material.Filled.TrendingUp"></MudIcon>
-		<MudText>Thịnh hành</MudText>
-	</MudNavLink>
-
-	<MudNavLink Match="NavLinkMatch.Prefix" Href="/groups/marvel" Class="rounded-3 overflow-hidden m-3">
-		<MudIcon Icon="@Icons.Material.Filled.Explore"></MudIcon>
-		<MudText>Cộng đồng</MudText>
-	</MudNavLink>
-
-	<MudNavLink Match="NavLinkMatch.Prefix" Href="/download-excel" Class="rounded-3 overflow-hidden m-3">
-		<MudIcon Icon="@Icons.Material.Filled.AutoFixHigh"></MudIcon>
-		<MudText>Download Excel</MudText>
-	</MudNavLink>
-
-	<MudNavGroup Title="Nhóm đã tham gia" Expanded="false" Class="rounded-3 overflow-hidden ps-3" @onclick="ClickMe2" Style="width:200px; padding-left: 0; ">
-		@if (userGroups != null && userGroups.Count > 0)
-		{
-			foreach (var userGroup in userGroups)
-			{
-				var href = $"/groups/{Uri.EscapeDataString(userGroup.Name)}";
-				var imgSrc = string.IsNullOrEmpty(userGroup.ImgCover) ? "/img/icon.jpg" : userGroup.ImgCover;
-
-				<MudNavLink Href="@href" Class="rounded-3 overflow-hidden d-flex align-items-center">
-					<img src="@imgSrc" alt="@userGroup.Name" style="width:30px; height:30px; border-radius:50%; margin-right: 8px;" />
-					@userGroup.Name
-				</MudNavLink>
-			}
-		}
-		else if (userGroups == null)
-		{
-			<div class="d-flex justify-content-center my-2">
-				<MudProgressCircular Color="Color.Success" Size="Size.Small" Indeterminate="true" />
-			</div>
-		}
-	</MudNavGroup>
-
-	<MudNavGroup Title="Cộng đồng" Expanded="false" Class="rounded-3 overflow-hidden ps-3" @onclick="ClickMe" Style="width:200px; padding-left: 0; ">
-		<MudNavLink Icon="@Icons.Material.Filled.Add" Class="rounded-3 overflow-hidden mt-2 mb-2" Style="padding-left: 0" @onclick="OpenStepperDialog">Tạo cộng đồng </MudNavLink>
-		@if (groups != null && groups.Count > 0)
-		{
-			foreach (var group in groups)
-			{
-				var href = $"/groups/{Uri.EscapeDataString(group.Name)}"; 
-				var imgSrc = string.IsNullOrEmpty(group.ImgCover) ? "/img/icon.jpg" : group.ImgCover;
-
-				<MudNavLink Href="@href" Class="rounded-3 overflow-hidden d-flex align-items-center">
-					<img src="@imgSrc" alt="@group.Name" style="width:30px; height:30px; border-radius:50%; margin-right: 8px;" />
-					@group.Name
-				</MudNavLink>
-			}
-		}
-		else if (groups == null)
-		{
-			<div class="d-flex justify-content-center my-2">
-				<MudProgressCircular Color="Color.Success" Size="Size.Small" Indeterminate="true" />
-			</div>
-		}
-	</MudNavGroup>
-
-    <MudNavLink Match="NavLinkMatch.Prefix" Href="/savepost" Class="rounded-3 overflow-hidden m-3">
-        <MudIcon Icon="@Icons.Material.Filled.Kayaking"></MudIcon>
-        <MudText>Đã lưu</MudText>
+    <MudNavLink Match="NavLinkMatch.Prefix" Href="/listPost" Class="rounded-3 overflow-hidden m-3">
+        <MudIcon Icon="@Icons.Material.Filled.AutoStories"></MudIcon>
+        <MudText>Trang chủ</MudText>
     </MudNavLink>
 
-
-	<MudNavLink Match="NavLinkMatch.Prefix" Href="/Error" Class="rounded-3 overflow-hidden m-3">
-		<MudIcon Icon="@Icons.Material.Filled.Save"></MudIcon>
-		<MudText>Theo dõi</MudText>
-	</MudNavLink>
-
-	<MudNavLink Match="NavLinkMatch.Prefix" Href="/communities" Class="rounded-3 overflow-hidden m-3">
-		<MudIcon Icon="@Icons.Material.Filled.DataArray"></MudIcon>
-		<MudText>Cộng đồng</MudText>
-	</MudNavLink>
-	<MudNavLink Match="NavLinkMatch.Prefix" Href="/topics" Class="rounded-3 overflow-hidden m-3">
-		<MudIcon Icon="@Icons.Material.Filled.Topic"></MudIcon>
-		<MudText>Chủ đề</MudText>
-	</MudNavLink>
-    <MudNavLink Match="NavLinkMatch.Prefix" Href="/savepost" Class="rounded-3 overflow-hidden m-3">
-        <MudIcon Icon="@Icons.Material.Filled.Kayaking"></MudIcon>
-        <MudText>Đã lưu</MudText>
+    <MudNavLink Match="NavLinkMatch.Prefix" Href="/communities" Class="rounded-3 overflow-hidden m-3">
+        <MudIcon Icon="@Icons.Material.Filled.Explore"></MudIcon>
+        <MudText>Khám phá</MudText>
     </MudNavLink>
+    <AuthorizeView>
+        <Authorized>
+            <MudNavGroup Title="Cộng đồng tham gia" Expanded="false" Class="rounded-3 overflow-hidden ps-3" @onclick="ClickMe2" Style="width:200px; padding-left: 0; ">
+                <MudNavLink Icon="@Icons.Material.Filled.Add" Class="rounded-3 overflow-hidden mt-2 mb-2" Style="padding-left: 0" @onclick="OpenStepperDialog">Tạo cộng đồng </MudNavLink>
+                @if (userGroups != null && userGroups.Count > 0)
+                {
+                    foreach (var userGroup in userGroups)
+                    {
+                        var href = $"/groups/{Uri.EscapeDataString(userGroup.Name)}";
+                        var imgSrc = string.IsNullOrEmpty(userGroup.ImgCover) ? "/img/icon.jpg" : userGroup.ImgCover;
 
-	<MudNavLink Match="NavLinkMatch.Prefix" Href="/Error" Class="rounded-3 overflow-hidden m-3">
-		<MudIcon Icon="@Icons.Material.Filled.Accessibility"></MudIcon>
-		<MudText>Thống kê</MudText>
-	</MudNavLink>
+                        <MudNavLink Href="@href" Class="rounded-3 overflow-hidden d-flex align-items-center">
+                            <img src="@imgSrc" alt="@userGroup.Name" style="width:30px; height:30px; border-radius:50%; margin-right: 8px;" />
+                            @userGroup.Name
+                        </MudNavLink>
+                    }
+                }
+                else if (userGroups == null)
+                {
+                    <div class="d-flex justify-content-center my-2">
+                        <MudProgressCircular Color="Color.Success" Size="Size.Small" Indeterminate="true" />
+                    </div>
+                }
+                else if (userGroups.Count == 0)
+                {
+                    <p>Không có nhóm nào</p>
+                }
+            </MudNavGroup>
 
-	<MudNavGroup Title="Tài nguyên" Icon="@Icons.Material.Filled.Settings" Expanded="false" Class="rounded-3 overflow-hidden m-3 py-3" Style="width:200px;">
-		<MudNavLink Href="/users" Icon="@Icons.Material.Filled.People" IconColor="Color.Success" Class="rounded-3 overflow-hidden m-3">About Kaizen</MudNavLink>
-		<MudNavLink Href="/security" Icon="@Icons.Material.Filled.Security" IconColor="Color.Info" Class="rounded-3 overflow-hidden m-3">Dịch vụ</MudNavLink>
-		<MudNavLink Href="/security" Icon="@Icons.Material.Filled.Security" IconColor="Color.Info" Class="rounded-3 overflow-hidden m-3">Liên hệ </MudNavLink>
-		<MudNavLink Href="/security" Icon="@Icons.Material.Filled.Security" IconColor="Color.Info" Class="rounded-3 overflow-hidden m-3">Best of Kaizen</MudNavLink>
-	</MudNavGroup>
+            <MudNavLink Match="NavLinkMatch.Prefix" Href="/savepost" Class="rounded-3 overflow-hidden m-3">
+                <MudIcon Icon="@Icons.Material.Filled.Save"></MudIcon>
+                <MudText>Đã lưu</MudText>
+            </MudNavLink>
+
+
+            <MudNavLink Match="NavLinkMatch.Prefix" Href="/followwing" Class="rounded-3 overflow-hidden m-3">
+                <MudIcon Icon="@Icons.Material.Filled.RemoveRedEye"></MudIcon>
+                <MudText>Đang theo dõi</MudText>
+            </MudNavLink>
+
+            <AuthorizeView Roles="Admin" Context="ForAdmin">
+                <MudNavLink Match="NavLinkMatch.Prefix" Href="/ManageAuthor" Class="rounded-3 overflow-hidden m-3">
+                    <MudIcon Icon="@Icons.Material.Filled.EditAttributes"></MudIcon>
+                    <MudText>Phân quyền</MudText>
+                </MudNavLink>
+
+                <MudNavLink Match="NavLinkMatch.Prefix" Href="/restrictedword" Class="rounded-3 overflow-hidden m-3">
+                    <MudIcon Icon="@Icons.Material.Filled.Cancel"></MudIcon>
+                    <MudText>Từ khóa hạn chế</MudText>
+                </MudNavLink>
+
+                <MudNavLink Match="NavLinkMatch.Prefix" Href="/ManageAccount" Class="rounded-3 overflow-hidden m-3">
+                    <MudIcon Icon="@Icons.Material.Filled.ManageAccounts"></MudIcon>
+                    <MudText>Quản lý tài khoản</MudText>
+                </MudNavLink>
+
+
+                <MudNavLink Match="NavLinkMatch.Prefix" Href="/topics" Class="rounded-3 overflow-hidden m-3">
+                    <MudIcon Icon="@Icons.Material.Filled.Topic"></MudIcon>
+                    <MudText>Chủ đề</MudText>
+                </MudNavLink>
+
+
+                <MudNavLink Match="NavLinkMatch.Prefix" Href="/statistical" Class="rounded-3 overflow-hidden m-3">
+                    <MudIcon Icon="@Icons.Material.Filled.Accessibility"></MudIcon>
+                    <MudText>Thống kê</MudText>
+                </MudNavLink>
+
+                <MudNavLink Match="NavLinkMatch.Prefix" Href="/report" Class="rounded-3 overflow-hidden m-3">
+                    <MudIcon Icon="@Icons.Material.Filled.Report"></MudIcon>
+                    <MudText>Báo cáo</MudText>
+                </MudNavLink>
+            </AuthorizeView>
+
+        </Authorized>
+    </AuthorizeView>
+
+    <MudNavGroup Title="Tài nguyên" Icon="@Icons.Material.Filled.Settings" Expanded="false" Class="rounded-3 overflow-hidden m-3 py-3" Style="width:200px;">
+        <MudNavLink Href="/users" Icon="@Icons.Material.Filled.People" IconColor="Color.Success" Class="rounded-3 overflow-hidden m-3">About Kaizen</MudNavLink>
+        <MudNavLink Href="/security" Icon="@Icons.Material.Filled.Security" IconColor="Color.Info" Class="rounded-3 overflow-hidden m-3">Dịch vụ</MudNavLink>
+        <MudNavLink Href="/security" Icon="@Icons.Material.Filled.Security" IconColor="Color.Info" Class="rounded-3 overflow-hidden m-3">Liên hệ </MudNavLink>
+        <MudNavLink Href="/security" Icon="@Icons.Material.Filled.Security" IconColor="Color.Info" Class="rounded-3 overflow-hidden m-3">Best of Kaizen</MudNavLink>
+    </MudNavGroup>
 </MudNavMenu>
 
 @code {
-	private string? currentUrl;
+    private string? currentUrl;
 
-	protected override async Task OnInitializedAsync()
-	{
-		currentUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
-		NavigationManager.LocationChanged += OnLocationChanged;
-	}
+    protected override async Task OnInitializedAsync()
+    {
+        currentUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        NavigationManager.LocationChanged += OnLocationChanged;
+    }
 
-	private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
-	{
-		currentUrl = NavigationManager.ToBaseRelativePath(e.Location);
-		StateHasChanged();
-	}
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        currentUrl = NavigationManager.ToBaseRelativePath(e.Location);
+        StateHasChanged();
+    }
 
-	public void Dispose()
-	{
-		NavigationManager.LocationChanged -= OnLocationChanged;
-	}
+    public void Dispose()
+    {
+        NavigationManager.LocationChanged -= OnLocationChanged;
+    }
 
 }
 
 @code {
-	public bool ToolbarCheckBox { get; set; } = false;
-	string _selectedFolder = "Inbox";
+    public bool ToolbarCheckBox { get; set; } = false;
+    string _selectedFolder = "Inbox";
 }
 
 @code {
-	List<Group>? groups;
-	List<Group>? userGroups;
-	bool loadGroup = false;
-	bool loadUserGroup = false;
+    List<Group>? groups;
+    List<Group>? userGroups;
+    bool loadGroup = false;
+    bool loadUserGroup = false;
 
-	private async Task OpenStepperDialog()
-	{
-		var options = new DialogOptions
-			{
-				CloseOnEscapeKey = true,
-				CloseButton = true,
-				MaxWidth = MaxWidth.Medium
-			};
+    private async Task OpenStepperDialog()
+    {
+        var options = new DialogOptions
+            {
+                CloseOnEscapeKey = true,
+                CloseButton = true,
+                MaxWidth = MaxWidth.Medium
+            };
 
-		await DialogService.ShowAsync<Stepper>("", options);
-	}
+        await DialogService.ShowAsync<Stepper>("", options);
+    }
 
-	private async Task ClickMe()
-	{
-		if (!loadGroup)
-		{
-			await LoadGroupAsync();
-			loadGroup = true;
-			StateHasChanged();
-		}
-		
-	}
+    private async Task ClickMe()
+    {
+        if (!loadGroup)
+        {
+            await LoadGroupAsync();
+            loadGroup = true;
+            StateHasChanged();
+        }
 
-	private async Task ClickMe2()
-	{
-		if (!loadUserGroup)
-		{
-			await LoadUserGroupAsync();
-			loadUserGroup = true;
-			StateHasChanged();
-		}
-	}
+    }
 
-	private async Task LoadGroupAsync()
-	{
-		var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
-		var response = await httpClient.GetAsync("api/group/get-all-group");
-		if (response.IsSuccessStatusCode)
-		{
-			groups = await response.Content.ReadFromJsonAsync<List<Group>>();
-		}
-		else
-		{
-			var errorContent = await response.Content.ReadAsStringAsync();
-			Console.WriteLine($"Có lỗi xảy ra: {errorContent}");
-		}
-	}
+    private async Task ClickMe2()
+    {
+        if (!loadUserGroup)
+        {
+            await LoadUserGroupAsync();
+            loadUserGroup = true;
+            StateHasChanged();
+        }
+    }
 
-	private async Task LoadUserGroupAsync()
-	{
-		var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-		var user = authState.User;
-		var userCurrent = UserManager.GetUserId(user);
-		var currentUserId = Guid.Parse(userCurrent);
-		var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
-		var response = await httpClient.GetAsync($"api/group/get-all-group-user?userId={currentUserId}");
-		if (response.IsSuccessStatusCode)
-		{
-			userGroups = await response.Content.ReadFromJsonAsync<List<Group>>();
-		}
-		else
-		{
-			var errorContent = await response.Content.ReadAsStringAsync();
-			Console.WriteLine($"Có lỗi xảy ra: {errorContent}");
-		}
-	}
+    private async Task LoadGroupAsync()
+    {
+        var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+        var response = await httpClient.GetAsync("api/group/get-all-group");
+        if (response.IsSuccessStatusCode)
+        {
+            groups = await response.Content.ReadFromJsonAsync<List<Group>>();
+        }
+        else
+        {
+            var errorContent = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"Có lỗi xảy ra: {errorContent}");
+        }
+    }
+
+    private async Task LoadUserGroupAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        var userCurrent = UserManager.GetUserId(user);
+        var currentUserId = Guid.Parse(userCurrent);
+        var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+        var response = await httpClient.GetAsync($"api/group/get-all-group-user?userId={currentUserId}");
+        if (response.IsSuccessStatusCode)
+        {
+            userGroups = await response.Content.ReadFromJsonAsync<List<Group>>();
+        }
+        else
+        {
+            var errorContent = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"Có lỗi xảy ra: {errorContent}");
+        }
+    }
 }
 
 

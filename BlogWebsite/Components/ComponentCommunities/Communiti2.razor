@@ -1,5 +1,6 @@
 ﻿@page "/groups/{Name}"
 
+@using Client.Components.Layout
 @using Client.Components.Pages.Post
 @using Data.Database.Table
 @using Microsoft.EntityFrameworkCore
@@ -7,12 +8,16 @@
 @using Data.DTO.EntitiDTO
 @using Client.Components.ComponentCustom
 @using Data.Enums
+
+@layout MainLayoutSub
+
 @inject ApplicationDbContext DbContext
 @inject UserManager<ApplicationUser> UserManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager Navigation
 @inject IHttpClientFactory HttpClientFactory
 @inject IJSRuntime JSRunTime
+@inject IDialogService DialogService
 
 <style>
 
@@ -133,7 +138,7 @@ else
             </MudItem>
 
             <div class="d-flex justify-content-between">
-                <div class="ms-4" style="width:68% ; margin-top:-52px;">
+                <div class="ms-4 mb-4" style="width:68% ; margin-top:-52px;">
                     @foreach (var item in listIntroPost)
                     {
                         <PostIntro Avatar="@item.Avatar" Content="@item.Content"
@@ -142,10 +147,48 @@ else
                                    VideoFile="@item.VideoFile" ImgFile="@item.ImgFile" UserName="@item.UserName" Title="@item.Title">
                         </PostIntro>
                     }
+                    @if (listIntroPost.Count > 2)
+                    {
+                        <script>
+                            function removeHiddenOverflow() {
+                                const element = document.querySelector('#replaceHidden');
+
+                                let currentElement = element.parentElement;
+
+                                // Lặp qua tất cả các thẻ cha của thẻ được chọn
+                                while (currentElement) {
+                                    const overflowStyle = window.getComputedStyle(currentElement).overflow;
+
+
+                                    // Kiểm tra nếu overflow là hidden
+                                    console.log(overflowStyle)
+                                    if (overflowStyle === 'hidden' || overflowStyle === 'auto' || overflowStyle === 'scroll' || overflowStyle === 'hidden auto') {
+                                        currentElement.style.overflow = 'visible'; // Hoặc một giá trị phù hợp khác
+                                    }
+
+                                    // Chuyển sang thẻ cha tiếp theo
+                                    currentElement = currentElement.parentElement;
+                                }
+                            }
+                            removeHiddenOverflow();
+                        </script>
+                    }
+                    else
+                    {
+                        <script>
+                            function removeHiddenOverflow() {
+                                const allArticles = document.querySelector('article.content');
+
+                                allArticles.style.overflow = 'hidden'; // Hoặc một giá trị phù hợp khác
+
+                            }
+                            removeHiddenOverflow();
+                        </script>
+                    }
                 </div>
                 <div style="width:27%; height : 200px; position: sticky;top: 120px; border:none;" id="replaceHidden">
-                    <div id="another_unique_identifier" style="height:614px;">
-                        <div style="width:270px; background: #f4f8f5;border-radius:5px; margin-top: -16px">
+                    <div id="another_unique_identifier">
+                        <div style="width:270px; background: #f4f8f5;border-radius:12px; margin-top: -16px" class="p-3">
                             @{
                                 var day = group.DateTime.ToString("dd");
                                 var month = group.DateTime.ToString("MM");
@@ -194,29 +237,6 @@ else
             </div>
         </div>
     </div>
-    <script>
-        function removeHiddenOverflow() {
-            const element = document.querySelector('#replaceHidden');replaceHidden
-
-            let currentElement = element.parentElement;
-
-            // Lặp qua tất cả các thẻ cha của thẻ được chọn
-            while (currentElement) {
-                const overflowStyle = window.getComputedStyle(currentElement).overflow;
-
-
-                // Kiểm tra nếu overflow là hidden
-                console.log(overflowStyle)
-                if (overflowStyle === 'hidden' || overflowStyle === 'auto' || overflowStyle === 'scroll' || overflowStyle === 'hidden auto') {
-                    currentElement.style.overflow = 'visible'; // Hoặc một giá trị phù hợp khác
-                }
-
-                // Chuyển sang thẻ cha tiếp theo
-                currentElement = currentElement.parentElement;
-            }
-        }
-        removeHiddenOverflow();
-    </script>
 }
 
 @code {
@@ -226,15 +246,21 @@ else
     private Group? group;
     private bool isJoined;  // Biến lưu trạng thái tham gia
     private string buttonText = "Tham gia"; // Thay đổi nội dung của nút dựa trên trạng thái
-    private List<PostIntroDTO> listIntroPost;
+    private List<PostIntroDTO> listIntroPost = new List<PostIntroDTO>();
     int memberCount = 0;
     bool IsAdminOrChief { get; set; }
     string groupState;
 
     protected override async Task OnInitializedAsync()
     {
-        await GetAdminOrChief();
-        await GetPostGroup();
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        var userCurrent = UserManager.GetUserId(user);
+        if (userCurrent != null)
+        {
+            await GetAdminOrChief();
+            await GetPostGroup();
+        }
     }
 
     protected override async Task OnParametersSetAsync()
@@ -261,11 +287,15 @@ else
                 var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
                 var user = authState.User;
                 var userCurrent = UserManager.GetUserId(user);
-                var memberId = Guid.Parse(userCurrent);
-                await GetMember();
+                if (userCurrent != null)
+                {
+                    var memberId = Guid.Parse(userCurrent);
+                    await GetMember();
+                    await GetMemberCount();
+                    await GetAdminOrChief();
+                }
                 buttonText = isJoined ? "Đã tham gia" : "Tham gia";
-                await GetMemberCount();
-                await GetAdminOrChief();
+
                 StateHasChanged();
             }
             await GetPostGroup();
@@ -274,15 +304,9 @@ else
 
     private async Task GetPostGroup()
     {
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        var user = authState.User;
-        var userCurrent = UserManager.GetUserId(user);
-        var currentUserId = Guid.Parse(userCurrent);
-        Console.WriteLine($"namdg: {Name}");
-        Console.WriteLine($"cunetddg: {currentUserId}");
         var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
 
-        var response = await httpClient.GetAsync($"api/Post/getListPostIntroGroup/?userId={currentUserId}&groupName={Name}");
+        var response = await httpClient.GetAsync($"api/Post/getListPostIntroGroup/?groupName={Name}");
         if (response.IsSuccessStatusCode)
         {
             listIntroPost = await response.Content.ReadFromJsonAsync<List<PostIntroDTO>>();
@@ -345,9 +369,18 @@ else
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
         var userCurrent = UserManager.GetUserId(user);
-        var memberId = Guid.Parse(userCurrent);  // Chuyển UserId thành Guid
-
-        Console.WriteLine($"UserId từ UserManager: {memberId}");
+        Guid memberId = Guid.Empty;
+        if (userCurrent != null)
+        {
+            memberId = Guid.Parse(userCurrent);  // Chuyển UserId thành Guid
+        }
+        else
+        {
+            var parameter = new DialogParameters<DialogLogin>();
+            var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+            await DialogService.Show<DialogLogin>("Yêu cầu đăng nhập", parameter, options).Result;
+            return;
+        }
 
         var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
         var response = await httpClient.PostAsJsonAsync("api/group/memberGroup", new

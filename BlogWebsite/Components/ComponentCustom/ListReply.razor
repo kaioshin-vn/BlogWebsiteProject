@@ -16,7 +16,7 @@
 @inject ISnackbar Snackbar
 @inject IWebHostEnvironment env
 
-@if (!isLoaded)
+@if (!Loaded)
 {
     <LoadingLocal></LoadingLocal>
 }
@@ -42,7 +42,7 @@ else
         @foreach (var item in ListReplyCmt)
         {
             <ReplyDetail Avatar="@item.Avatar" Content="@item.Content" IdReply="@item.Id" AddNewReply="UserAddNewComment"
-                         CreateDate="@item.CreateDate" IdPost="@item.Id" IdCmt="@this.IdCmt"
+                         CreateDate="@item.CreateDate" IdPost="@item.Id" IdCmt="@this.IdCmt" IdUserPost="IdUserPost" 
                          Like="@item.Like" IdUserComment="@item.IdUser" IdMention="@item.Mention"
                          UserName="@item.UserName" UserMentionName="@item.UserNameMention">
             </ReplyDetail>
@@ -69,6 +69,9 @@ else
     [Parameter]
     public Guid IdCmt { get; set; }
 
+    [Parameter]
+    public Guid IdUserPost { get; set; }
+
     List<ReplyDTO> ListReplyCmt { get; set; } = new List<ReplyDTO>();
     List<ReplyDTO> ListNewReply { get; set; } = new List<ReplyDTO>();
 
@@ -78,7 +81,7 @@ else
 
     bool isHasMoreReply;
 
-    bool isLoaded;
+    bool Loaded;
 
     protected override async Task OnInitializedAsync()
     {
@@ -93,7 +96,7 @@ else
             {
                 isHasMoreReply = true;
             }
-            isLoaded = true;
+            Loaded = true;
         }
     }
 

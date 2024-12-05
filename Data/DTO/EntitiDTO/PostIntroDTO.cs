@@ -12,8 +12,8 @@ namespace Data.DTO.EntitiDTO
         public Guid Id { get; set; }
         public Guid IdUser { get; set; }
 
-        public string UserName { get; set; } 
-
+        public string UserName { get; set; }
+        public string Link { get; set; }
         public string Avatar { get; set; }
         public string Title { get; set; }
         public string? Content { get; set; }

@@ -4,6 +4,7 @@ using BlogWebsite.Data;
 using Data.Database.Table;
 using Data.DTO;
 using Data.DTO.EntitiDTO;
+using Data.Enums;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
@@ -33,7 +34,7 @@ namespace API.Controllers
                 var introPostUser = await GetPostIntro(item);
                 lstPostUser.Add(introPostUser);
             }
-            var lstPostTop = lstPostUser.OrderByDescending(x => x.Like).Take(10).ToList();
+            var lstPostTop = lstPostUser.OrderByDescending(x => x.Like.Length).Take(10).ToList();
             return lstPostTop;
         }
 
@@ -59,17 +60,20 @@ namespace API.Controllers
             var introPost = post.GetIntroPost();
             var groupPost = _context.GroupPosts.FirstOrDefault(a => a.IdPost == post.Id);
 
+            var link = "";
             if (groupPost != null)
             {
                 var group = await _context.Groups.FirstOrDefaultAsync(a => a.IdGroup == groupPost.IdGroup);
                 UserName = group.Name;
-                Avatar = group.ImgGroup;
+                Avatar = group.ImgGroup == null ? "/img/icon.jpg" : group.ImgGroup;
+                link = "/groups/" + group.Name;
             }
             else
             {
                 var user = await _context.Users.FirstOrDefaultAsync(a => a.Id == post.IdUser);
                 UserName = user.FullName;
                 Avatar = user.Img;
+                link = "/other-profile/" + user.Id.ToString();
             }
             var commment = _context.Responses.Where(a => a.IdPost == post.Id);
             var replyCount = 0;
@@ -94,6 +98,7 @@ namespace API.Controllers
             introPost.UserName = UserName;
             introPost.Avatar = Avatar;
             introPost.ListTag = tagNames;
+            introPost.Link = link;
             return introPost;
         }
 
@@ -104,7 +109,10 @@ namespace API.Controllers
                 return Ok(new SearchResultWithPaginationDTO());
 
             // Lưu keyword search
-            await SaveSearchHistory(keyword, idUser);
+            if (idUser != Guid.Empty)
+            {
+                await SaveSearchHistory(keyword, idUser);
+            }
 
             // Chuẩn hóa từ khóa tìm kiếm
             var normalizedKeyword = keyword.ToLower().RemoveDiacritics();
@@ -112,7 +120,7 @@ namespace API.Controllers
 
             // POSTS
             var posts = await _context.Posts
-                .Where(p => !p.IsDeleted)
+                .Include(a => a.GroupPost).ThenInclude(a => a.Group).Where(a => a.IsDeleted == false && (a.GroupPost.Count == 0 || (a.GroupPost.Any(b => b.IdPost == a.Id && b.WaitState == WaitState.Accept && (b.Group.StateGroup == KindGroup.Public || b.Group.StateGroup == KindGroup.Restricted)))))
                 .ToListAsync();
 
             // listPost tìm được qua keyword, lấy những title gần nhất với keyword
@@ -192,7 +200,7 @@ namespace API.Controllers
                     IdGroup = g.IdGroup,
                     Name = g.Name,
                     Description = g.Description,
-                    ImgGroup = g.ImgGroup,
+                    ImgGroup = g.ImgGroup == null ? "/img/icon.jpg" : g.ImgGroup,
                     StateGroup = g.StateGroup,
                     MemberCount = _context.MemberGroups.Count(m => m.IdGroup == g.IdGroup)
                 })

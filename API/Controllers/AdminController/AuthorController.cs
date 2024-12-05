@@ -15,7 +15,7 @@ namespace ASM_PH35423.Controllers
         RoleManager<IdentityRole<Guid>> _roleManage;
         UserManager<ApplicationUser> _userManager;
         SignInManager<ApplicationUser> _signInManager;
-        public AuthorController(ApplicationDbContext context, RoleManager<IdentityRole<Guid>> roleManage , UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager)
+        public AuthorController(ApplicationDbContext context, RoleManager<IdentityRole<Guid>> roleManage, UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager)
         {
             _context = context;
             _roleManage = roleManage;
@@ -64,18 +64,67 @@ namespace ASM_PH35423.Controllers
             _context.SaveChanges();
         }
 
-        [HttpGet("/GetListUser")]
-        public List<ApplicationUser> GetAllUser()
+        [HttpGet("/GetListUser/{page}/{searchBan}/{Search?}")]
+        public List<ApplicationUser> GetAllUser(int page, string? Search, bool searchBan)
         {
-            return _context.Users.ToList();
+            page = page - 1;
+            if (string.IsNullOrEmpty(Search))
+            {
+                if (searchBan)
+                {
+                    return _context.Users.Where(a => a.LockoutEnd != null).Skip(page * 10).Take(10).ToList();
+                }
+                else
+                {
+                    return _context.Users.Skip(page * 10).Take(10).ToList();
+                }
+            }
+            else
+            {
+                if (searchBan)
+                {
+                    return _context.Users.Where(a => ( a.UserName.ToLower().Contains(Search.ToLower()) || a.Email.ToLower().Contains(Search.ToLower()) || a.FullName.ToLower().Contains(Search.ToLower())) && a.LockoutEnd != null).Skip(page * 10).Take(10).ToList();
+                }
+                else
+                {
+                    return _context.Users.Where(a => a.UserName.ToLower().Contains(Search.ToLower()) || a.Email.ToLower().Contains(Search.ToLower()) || a.FullName.ToLower().Contains(Search.ToLower())).Skip(page * 10).Take(10).ToList();
+                }
+            }
+        }
+
+        [HttpGet("/GetTotalUserPage/{searchBan}/{Search?}")]
+        public int GetTotalPage(string? Search, bool searchBan)
+        {
+            if (string.IsNullOrEmpty(Search))
+            {
+                if (searchBan)
+                {
+                    return _context.Users.Where(a => a.LockoutEnd != null).Count() / 10;
+                }
+                else
+                {
+                    return _context.Users.Count() / 10;
+                }
+            }
+            else
+            {
+                if (searchBan)
+                {
+                    return _context.Users.Where(a => (a.UserName.ToLower().Contains(Search.ToLower()) || a.Email.ToLower().Contains(Search.ToLower()) || a.FullName.ToLower().Contains(Search.ToLower())) && a.LockoutEnd != null).Count() / 10;
+                }
+                else
+                {
+                    return _context.Users.Where(a => a.UserName.ToLower().Contains(Search.ToLower()) || a.Email.ToLower().Contains(Search.ToLower()) || a.FullName.ToLower().Contains(Search.ToLower())).Count() / 10;
+                }
+            }
         }
 
         [HttpGet("/GetRoleUser/{Id}")]
         public List<string?> GetRoleUser(Guid Id)
         {
             var listRoleUser = new List<string?>();
-            var userRoles = _context.UserRoles.Where(a => a.UserId ==  Id);
-            listRoleUser =  _context.Roles.Join(userRoles, a => a.Id, b => b.RoleId, (c, d) => c.Name).ToList();
+            var userRoles = _context.UserRoles.Where(a => a.UserId == Id);
+            listRoleUser = _context.Roles.Join(userRoles, a => a.Id, b => b.RoleId, (c, d) => c.Name).ToList();
             return listRoleUser;
         }
 

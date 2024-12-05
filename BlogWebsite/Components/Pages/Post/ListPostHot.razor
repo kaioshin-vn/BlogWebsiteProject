@@ -1,0 +1,170 @@
+﻿@page "/tophot"
+@using ASM_PH35423.StaticClass
+@using Client.Components.ComponentCustom
+@using Data.DTO.EntitiDTO
+@using System.Net.Http.Headers
+@using Newtonsoft.Json
+@using Newtonsoft.Json.Linq
+@using Radzen
+@using Radzen.Blazor
+
+@inject IJSRuntime JSRunTime
+@inject IHttpClientFactory HttpClientFactory
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+@inject UserManager<ApplicationUser> UserManager
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject IWebHostEnvironment env
+
+@if (listIntroPost == null)
+{
+    <Loading></Loading>
+}
+else
+{
+    <style>
+        html {
+            scroll-behavior: auto !important;
+        }
+    </style>
+
+    <div>
+        <div class="mt-3 ms-4" style="width:70%; display: @(PostDetail == null?"block":"none");">
+            @foreach (var item in listIntroPost)
+            {
+                <PostIntro Avatar="@item.Avatar" Content="@item.Content"
+                           CreateDate="@item.CreateDate" IdPost="@item.Id"
+                           CommentCount="@item.CommentCount" Like="@item.Like"
+                           VideoFile="@item.VideoFile" ImgFile="@item.ImgFile"
+                           UserName="@item.UserName" TagNames="@item.ListTag" IdUserPost="@item.IdUser"
+                           Title="@item.Title" WatchDetailPost="DetailPost">
+                </PostIntro>
+            }
+        </div>
+    </div>
+
+    @if (PostDetail != null)
+    {
+        <div>
+            <div class="mt-3 ms-4" style="width:70%;">
+                <PostDetail Avatar="@PostDetail.Avatar" Content="@PostDetail.Content"
+                            CreateDate="@PostDetail.CreateDate" IdPost="@PostDetail.Id"
+                            CommentCount="@PostDetail.CommentCount" Like="@PostDetail.Like"
+                            VideoFile="@PostDetail.VideoFile" IdUserPost="@PostDetail.IdUser"
+                            UserName="@PostDetail.UserName" TagNames="@PostDetail.ListTag"
+                            Title="@PostDetail.Title" GoBack="GoBack">
+                </PostDetail>
+            </div>
+        </div>
+    }
+    @if (loadMorePost)
+    {
+        <LoadingLocal></LoadingLocal>
+    }
+    <script>
+        function onScrollToEnd(dotNetHelper) {
+            window.addEventListener('scroll', () => {
+                if (Math.ceil((window.innerHeight + window.scrollY)) >= document.body.offsetHeight) {
+                    dotNetHelper.invokeMethodAsync('OnScrollToEnd');
+                }
+            });
+        }
+    </script>
+}
+
+
+@code {
+    List<PostIntroDTO> listIntroPost = new List<PostIntroDTO>();
+
+    PostIntroDTO? PostDetail = null;
+    private double ScrollPosition = 0;
+
+    private DotNetObjectReference<ListPostHot>? dotNetRef;
+
+    int PosttCount = 20;
+
+    bool loadMorePost;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var _httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        var idUserCurrent = UserManager.GetUserId(user);
+        var idUser = Guid.Parse(idUserCurrent);
+
+        var result = await _httpClient.PostAsJsonAsync($"/GetListPostHot", new List<Guid>());
+
+        var resultConverted = JsonConvert.DeserializeObject<List<PostIntroDTO>>(await result.Content.ReadAsStringAsync());
+        if (resultConverted != null)
+        {
+            listIntroPost = resultConverted;
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            dotNetRef = DotNetObjectReference.Create(this);
+            await JSRunTime.InvokeVoidAsync("onScrollToEnd", dotNetRef);
+        }
+        if (!firstRender && ScrollPosition > 0 && PostDetail == null)
+        {
+            await JSRunTime.InvokeVoidAsync("restoreScrollPosition", ScrollPosition);
+        }
+    }
+
+    public void Dispose()
+    {
+        dotNetRef?.Dispose();
+    }
+
+    [JSInvokable]
+    public async Task OnScrollToEnd()
+    {
+        if (listIntroPost.Count < PosttCount || listIntroPost.Count % 20 != 0)
+        {
+            return;
+        }
+        else
+        {
+            Console.WriteLine("Hello");
+            loadMorePost = true;
+            var _httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+
+            var listIdUserCmt = listIntroPost.Select(a => a.Id).ToList();
+            var listIdCmt = listIntroPost.Select(a => a.Id).ToList();
+            listIdCmt.AddRange(listIdUserCmt);
+            var result = await _httpClient.PostAsJsonAsync($"/GetListPostHot", listIdCmt);
+            if (result.IsSuccessStatusCode)
+            {
+                var data = await result.Content.ReadAsStringAsync();
+                var ListCommentGetMore = JsonConvert.DeserializeObject<List<PostIntroDTO>>(data);
+                if (ListCommentGetMore != null && ListCommentGetMore.Count != 0)
+                {
+                    listIntroPost.AddRange(ListCommentGetMore);
+                    PosttCount += ListCommentGetMore.Count;
+                    loadMorePost = false;
+                    StateHasChanged();
+                }
+            }
+        }
+    }
+
+
+    async Task DetailPost(Guid idPost)
+    {
+        ScrollPosition = await JSRunTime.InvokeAsync<double>("saveScrollPosition");
+
+        PostDetail = listIntroPost.FirstOrDefault(a => a.Id == idPost);
+        StateHasChanged();
+        await JSRunTime.InvokeVoidAsync("restoreScrollPosition", 0);
+    }
+    async Task GoBack()
+    {
+        PostDetail = null;
+    }
+}

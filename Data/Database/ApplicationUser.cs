@@ -13,6 +13,7 @@ namespace BlogWebsite.Data
         public string? FullName { get; set; }
         public string? ImgCover { get; set; }
         public string? Address { get; set; }
+        public DateTime? CreateTime { get; set; }
         public ICollection<Exam>? Exams { get; set; }
         public ICollection<Flower>? Flowers { get; set; }
 

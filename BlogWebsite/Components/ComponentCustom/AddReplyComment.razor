@@ -1,10 +1,12 @@
 ﻿@using Data.Database.Table
 @using HtmlAgilityPack;
+@using Microsoft.AspNetCore.SignalR.Client
 
 @inject IHttpClientFactory HttpClientFactory
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject UserManager<ApplicationUser> UserManager
 @inject ISnackbar Snackbar
+@inject NavigationManager Navigation
 
 <div style="border:1px solid  rgb(206, 206, 206); border-radius:12px;" class="p-2 my-2">
     <Radzen.Blazor.RadzenHtmlEditor @bind-Value="@Reply.Content" @ref="radzenHtmlEditor" Execute="@OnExecute" style="min-height:80px; height: auto;max-width:675px;border:none ;overflow:hidden;" UploadUrl="minimalApi/uploadImage">
@@ -85,10 +87,13 @@
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
         var idUserCurrent = UserManager.GetUserId(user);
-        IdUserCurrent = Guid.Parse(idUserCurrent);
+        if (idUserCurrent != null)
+        {
+            IdUserCurrent = Guid.Parse(idUserCurrent);
+        }
         if (IdUserComment != IdUserCurrent)
         {
-            Reply.Content = $@"<a href=""/profile/{IdUserComment.ToString()}"" style=""color:rgb(60, 190, 226);"" class=""{IdUserComment.ToString()} hover-underline"" contenteditable=""false""><b class=""me-1"" >{this.UserName} </b></a>&nbsp;";
+            Reply.Content = $@"<a href=""/other-profile/{IdUserComment.ToString()}"" style=""color:rgb(60, 190, 226);"" class=""{IdUserComment.ToString()} hover-underline"" contenteditable=""false""><b class=""me-1"" >{this.UserName} </b></a>&nbsp;";
         }
     }
 
@@ -139,8 +144,26 @@
         Reply.Likes = "";
         var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
         var result = await httpClient.PostAsJsonAsync("comment/addNewReplyComment", Reply);
+
         if (result.IsSuccessStatusCode)
         {
+            if (Reply.Mention != null)
+            {
+                var hubConnection = new HubConnectionBuilder()
+                                    .WithUrl(Navigation.ToAbsoluteUri("/hubNotice"))
+                                    .Build();
+
+                await hubConnection.StartAsync();
+                var notice = new Notice();
+                notice.Id = Guid.NewGuid();
+                notice.FromUser = IdUserCurrent;
+                notice.ToUser = IdUserComment;
+                notice.Content = "Đã nhắc đến bạn trong 1 bình luận gần đây";
+                notice.CreateDate = DateTime.Now;
+                notice.Link = $"/commentDetail/{IdCmt}";
+                await httpClient.PostAsJsonAsync($"/addNewNotice", notice);
+                await hubConnection.SendAsync("SendPrivateMessage", IdUserComment.ToString());
+            }
             if (UserAddComment.HasDelegate)
             {
                 Reply.Content = "";

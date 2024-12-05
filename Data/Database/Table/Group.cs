@@ -19,6 +19,7 @@ namespace Data.Database.Table
         public string? ImgGroup { get; set; }
         public string? ImgCover { get; set; }
         public DateTime DateTime { get; set; }
+        public bool isDeleted { get; set; }
         public KindGroup StateGroup { get; set; } // Trạng thái của nhóm 
 
         public ICollection<MemberGroup>? MemberGroups { get; set; }
