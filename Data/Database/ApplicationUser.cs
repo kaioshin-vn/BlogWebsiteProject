@@ -1,5 +1,4 @@
 using Data.Database.Table;
-using Data.Tables;
 using Microsoft.AspNetCore.Identity;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -14,10 +13,8 @@ namespace BlogWebsite.Data
         public string? ImgCover { get; set; }
         public string? Address { get; set; }
         public DateTime? CreateTime { get; set; }
-        public ICollection<Exam>? Exams { get; set; }
         public ICollection<Flower>? Flowers { get; set; }
 
-        public ICollection<ExamHistory>? ExamHistories { get; set; }
         public ICollection<Post>? Post { get; set; }
         public ICollection<Save>? Saves { get; set; }
         public ICollection<PaidPost>? PaidPosts { get; set; }

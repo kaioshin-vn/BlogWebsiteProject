@@ -1,5 +1,4 @@
 ﻿using Data.Database.Table;
-using Data.Tables;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -9,10 +8,10 @@ namespace BlogWebsite.Data
 {
     public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>(options)
     {
-        public DbSet<Exam> Exams { get; set; }
-        public DbSet<ExamHistory> ExamHistories { get; set; }
-        public DbSet<Question> Questions { get; set; }
-        public DbSet<ExamHistoryDetails> ExamHistoryDetails { get; set; }
+
+        public DbSet<PostHide> PostHides { get; set; }
+        public DbSet<Messenger> Messengers { get; set; }
+        public DbSet<Conversation> Conversations { get; set; }
 
         public DbSet<Petition> Petitions { get; set; }
         public DbSet<Save> Saves { get; set; }
@@ -47,6 +46,12 @@ namespace BlogWebsite.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<PostHide>().HasKey(o => new
+            {
+                o.IdPost,
+                o.IdUser
+            });
 
             modelBuilder.Entity<Flower>().HasKey(o => new 
             { 
@@ -95,17 +100,6 @@ namespace BlogWebsite.Data
                 entity.HasIndex(e => e.TagName).IsUnique();
             });
 
-            modelBuilder.Entity<Exam>()
-                .HasOne(n => n.User)
-                .WithMany(u => u.Exams)
-                .HasForeignKey(n => n.IdUser)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<ExamHistory>()
-                .HasOne(n => n.User)
-                .WithMany(u => u.ExamHistories)
-                .HasForeignKey(n => n.IdUser)
-                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Notice>()
                  .HasOne(n => n.UserReceive)
@@ -163,6 +157,9 @@ namespace BlogWebsite.Data
                 .WithMany(u => u.SearchHistories)
                 .HasForeignKey(n => n.IdUser);
             });
+
+
+
 
             foreach (var entityType in modelBuilder.Model.GetEntityTypes())
             {

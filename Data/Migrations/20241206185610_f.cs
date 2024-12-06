@@ -21,11 +21,24 @@ namespace Data.Migrations
                     ImgGroup = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     ImgCover = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     DateTime = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    isDeleted = table.Column<bool>(type: "bit", nullable: false),
                     StateGroup = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Groups", x => x.IdGroup);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "RestrictedWords",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Word = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_RestrictedWords", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -76,6 +89,7 @@ namespace Data.Migrations
                     FullName = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     ImgCover = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Address = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreateTime = table.Column<DateTime>(type: "datetime2", nullable: true),
                     UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
@@ -142,30 +156,29 @@ namespace Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Exams",
+                name: "Conversations",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     IdUser = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Title = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    CreateDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    Descripton = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Type = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Img = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Time = table.Column<int>(type: "int", nullable: false),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
-                    IsOpen = table.Column<bool>(type: "bit", nullable: false),
-                    Code = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    IdUserReceive = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    isDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    IdUserSend = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Exams", x => x.Id);
+                    table.PrimaryKey("PK_Conversations", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Exams_Users_IdUser",
-                        column: x => x.IdUser,
+                        name: "FK_Conversations_Users_IdUserReceive",
+                        column: x => x.IdUserReceive,
                         principalTable: "Users",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Conversations_Users_IdUserSend",
+                        column: x => x.IdUserSend,
+                        principalTable: "Users",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -294,6 +307,26 @@ namespace Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Petitions",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    IdUser = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Content = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    State = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Petitions", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Petitions_Users_IdUser",
+                        column: x => x.IdUser,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Posts",
                 columns: table => new
                 {
@@ -358,7 +391,7 @@ namespace Data.Migrations
                         column: x => x.IdUser,
                         principalTable: "Users",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.NoAction);
                 });
 
             migrationBuilder.CreateTable(
@@ -447,59 +480,39 @@ namespace Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "ExamHistories",
+                name: "Messengers",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    IdUser = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    IdExam = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    TimeStart = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    TimeEnd = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    Info = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Scores = table.Column<double>(type: "float", nullable: false)
+                    IdUserSend = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    IdUserReceive = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    IdConversation = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    IdReply = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    Content = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CreateTime = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ExamHistories", x => x.Id);
+                    table.PrimaryKey("PK_Messengers", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_ExamHistories_Exams_IdExam",
-                        column: x => x.IdExam,
-                        principalTable: "Exams",
+                        name: "FK_Messengers_Conversations_IdConversation",
+                        column: x => x.IdConversation,
+                        principalTable: "Conversations",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.NoAction);
                     table.ForeignKey(
-                        name: "FK_ExamHistories_Users_IdUser",
-                        column: x => x.IdUser,
+                        name: "FK_Messengers_Users_IdUserReceive",
+                        column: x => x.IdUserReceive,
                         principalTable: "Users",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Questions",
-                columns: table => new
-                {
-                    IdQuestion = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    IdExam = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    ContentQuestion = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Img = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Answer1 = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Answer2 = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Answer3 = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Answer4 = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Answer5 = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    isMultiple = table.Column<bool>(type: "bit", nullable: false),
-                    NumberRight = table.Column<string>(type: "nvarchar(max)", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Questions", x => x.IdQuestion);
+                        onDelete: ReferentialAction.NoAction);
                     table.ForeignKey(
-                        name: "FK_Questions_Exams_IdExam",
-                        column: x => x.IdExam,
-                        principalTable: "Exams",
+                        name: "FK_Messengers_Users_IdUserSend",
+                        column: x => x.IdUserSend,
+                        principalTable: "Users",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.NoAction);
                 });
 
             migrationBuilder.CreateTable(
@@ -555,6 +568,30 @@ namespace Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "PostHides",
+                columns: table => new
+                {
+                    IdPost = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    IdUser = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PostHides", x => new { x.IdPost, x.IdUser });
+                    table.ForeignKey(
+                        name: "FK_PostHides_Posts_IdPost",
+                        column: x => x.IdPost,
+                        principalTable: "Posts",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.NoAction);
+                    table.ForeignKey(
+                        name: "FK_PostHides_Users_IdUser",
+                        column: x => x.IdUser,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.NoAction);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "PostTags",
                 columns: table => new
                 {
@@ -601,6 +638,40 @@ namespace Data.Migrations
                         principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Reports",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    IdUserReport = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    IdUser = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    IdPost = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ContentReport = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    State = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Reports", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Reports_Posts_IdPost",
+                        column: x => x.IdPost,
+                        principalTable: "Posts",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.NoAction);
+                    table.ForeignKey(
+                        name: "FK_Reports_Users_IdUser",
+                        column: x => x.IdUser,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.NoAction);
+                    table.ForeignKey(
+                        name: "FK_Reports_Users_IdUserReport",
+                        column: x => x.IdUserReport,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.NoAction);
                 });
 
             migrationBuilder.CreateTable(
@@ -659,34 +730,6 @@ namespace Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "ExamHistoryDetails",
-                columns: table => new
-                {
-                    IdExamHistoryDetail = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    IdEH = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Question = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Answer1 = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Answer2 = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Answer3 = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Answer4 = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Answer5 = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Img = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    isMultiple = table.Column<bool>(type: "bit", nullable: false),
-                    NumbersRight = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    NumbersChose = table.Column<string>(type: "nvarchar(max)", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_ExamHistoryDetails", x => x.IdExamHistoryDetail);
-                    table.ForeignKey(
-                        name: "FK_ExamHistoryDetails_ExamHistories_IdEH",
-                        column: x => x.IdEH,
-                        principalTable: "ExamHistories",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "ReplyResponses",
                 columns: table => new
                 {
@@ -717,24 +760,14 @@ namespace Data.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_ExamHistories_IdExam",
-                table: "ExamHistories",
-                column: "IdExam");
+                name: "IX_Conversations_IdUserReceive",
+                table: "Conversations",
+                column: "IdUserReceive");
 
             migrationBuilder.CreateIndex(
-                name: "IX_ExamHistories_IdUser",
-                table: "ExamHistories",
-                column: "IdUser");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_ExamHistoryDetails_IdEH",
-                table: "ExamHistoryDetails",
-                column: "IdEH");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Exams_IdUser",
-                table: "Exams",
-                column: "IdUser");
+                name: "IX_Conversations_IdUserSend",
+                table: "Conversations",
+                column: "IdUserSend");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Flower_IdFlower",
@@ -755,6 +788,21 @@ namespace Data.Migrations
                 name: "IX_MemberGroups_IdMember",
                 table: "MemberGroups",
                 column: "IdMember");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Messengers_IdConversation",
+                table: "Messengers",
+                column: "IdConversation");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Messengers_IdUserReceive",
+                table: "Messengers",
+                column: "IdUserReceive");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Messengers_IdUserSend",
+                table: "Messengers",
+                column: "IdUserSend");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Notices_FromUser",
@@ -787,6 +835,16 @@ namespace Data.Migrations
                 column: "IdUser");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Petitions_IdUser",
+                table: "Petitions",
+                column: "IdUser");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PostHides_IdUser",
+                table: "PostHides",
+                column: "IdUser");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Posts_IdUser",
                 table: "Posts",
                 column: "IdUser");
@@ -812,11 +870,6 @@ namespace Data.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Questions_IdExam",
-                table: "Questions",
-                column: "IdExam");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_ReplyResponses_IdResponse",
                 table: "ReplyResponses",
                 column: "IdResponse");
@@ -825,6 +878,21 @@ namespace Data.Migrations
                 name: "IX_ReplyResponses_IdUser",
                 table: "ReplyResponses",
                 column: "IdUser");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Reports_IdPost",
+                table: "Reports",
+                column: "IdPost");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Reports_IdUser",
+                table: "Reports",
+                column: "IdUser");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Reports_IdUserReport",
+                table: "Reports",
+                column: "IdUserReport");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Responses_IdPost",
@@ -896,9 +964,6 @@ namespace Data.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "ExamHistoryDetails");
-
-            migrationBuilder.DropTable(
                 name: "Flower");
 
             migrationBuilder.DropTable(
@@ -909,6 +974,9 @@ namespace Data.Migrations
 
             migrationBuilder.DropTable(
                 name: "MemberGroups");
+
+            migrationBuilder.DropTable(
+                name: "Messengers");
 
             migrationBuilder.DropTable(
                 name: "Notices");
@@ -923,6 +991,12 @@ namespace Data.Migrations
                 name: "PaymentTransactions");
 
             migrationBuilder.DropTable(
+                name: "Petitions");
+
+            migrationBuilder.DropTable(
+                name: "PostHides");
+
+            migrationBuilder.DropTable(
                 name: "PostSaves");
 
             migrationBuilder.DropTable(
@@ -932,10 +1006,13 @@ namespace Data.Migrations
                 name: "PostViews");
 
             migrationBuilder.DropTable(
-                name: "Questions");
+                name: "ReplyResponses");
 
             migrationBuilder.DropTable(
-                name: "ReplyResponses");
+                name: "Reports");
+
+            migrationBuilder.DropTable(
+                name: "RestrictedWords");
 
             migrationBuilder.DropTable(
                 name: "RoleClaims");
@@ -956,13 +1033,13 @@ namespace Data.Migrations
                 name: "UserTokens");
 
             migrationBuilder.DropTable(
-                name: "ExamHistories");
-
-            migrationBuilder.DropTable(
                 name: "Topics");
 
             migrationBuilder.DropTable(
                 name: "Groups");
+
+            migrationBuilder.DropTable(
+                name: "Conversations");
 
             migrationBuilder.DropTable(
                 name: "Saves");
@@ -975,9 +1052,6 @@ namespace Data.Migrations
 
             migrationBuilder.DropTable(
                 name: "Roles");
-
-            migrationBuilder.DropTable(
-                name: "Exams");
 
             migrationBuilder.DropTable(
                 name: "Posts");

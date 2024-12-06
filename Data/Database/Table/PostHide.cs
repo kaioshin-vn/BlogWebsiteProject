@@ -1,4 +1,4 @@
-﻿
+﻿using BlogWebsite.Data;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -8,13 +8,13 @@ using System.Threading.Tasks;
 
 namespace Data.Database.Table
 {
-    public class PostTag
+    public class PostHide
     {
-        public Guid IdTag { get; set; }
         public Guid IdPost { get; set; }
-        [ForeignKey("IdTag")]
-        public Tag? Tag { get; set; }
+        public Guid IdUser { get; set; }
         [ForeignKey("IdPost")]
         public Post? Post { get; set; }
+        [ForeignKey("IdUser")]
+        public ApplicationUser? User { get; set; }
     }
 }

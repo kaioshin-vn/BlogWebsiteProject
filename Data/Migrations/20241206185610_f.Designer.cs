@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20241205082310_t")]
-    partial class t
+    [Migration("20241206185610_f")]
+    partial class f
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -109,6 +109,33 @@ namespace Data.Migrations
                     b.ToTable("Users", (string)null);
                 });
 
+            modelBuilder.Entity("Data.Database.Table.Conversation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdUser")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdUserReceive")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("IdUserSend")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("isDeleted")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IdUserReceive");
+
+                    b.HasIndex("IdUserSend");
+
+                    b.ToTable("Conversations");
+                });
+
             modelBuilder.Entity("Data.Database.Table.Flower", b =>
                 {
                     b.Property<Guid>("IdUser")
@@ -152,6 +179,9 @@ namespace Data.Migrations
 
                     b.Property<int>("StateGroup")
                         .HasColumnType("int");
+
+                    b.Property<bool>("isDeleted")
+                        .HasColumnType("bit");
 
                     b.HasKey("IdGroup");
 
@@ -207,6 +237,45 @@ namespace Data.Migrations
                     b.HasIndex("IdMember");
 
                     b.ToTable("MemberGroups");
+                });
+
+            modelBuilder.Entity("Data.Database.Table.Messenger", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreateTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("IdConversation")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("IdReply")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdUserReceive")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdUserSend")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IdConversation");
+
+                    b.HasIndex("IdUserReceive");
+
+                    b.HasIndex("IdUserSend");
+
+                    b.ToTable("Messengers");
                 });
 
             modelBuilder.Entity("Data.Database.Table.Notice", b =>
@@ -339,6 +408,29 @@ namespace Data.Migrations
                     b.ToTable("PaymentTransactions");
                 });
 
+            modelBuilder.Entity("Data.Database.Table.Petition", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("IdUser")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("State")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IdUser");
+
+                    b.ToTable("Petitions");
+                });
+
             modelBuilder.Entity("Data.Database.Table.Post", b =>
                 {
                     b.Property<Guid>("Id")
@@ -383,6 +475,21 @@ namespace Data.Migrations
                     b.HasIndex("IdUser");
 
                     b.ToTable("Posts");
+                });
+
+            modelBuilder.Entity("Data.Database.Table.PostHide", b =>
+                {
+                    b.Property<Guid>("IdPost")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdUser")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("IdPost", "IdUser");
+
+                    b.HasIndex("IdUser");
+
+                    b.ToTable("PostHides");
                 });
 
             modelBuilder.Entity("Data.Database.Table.PostSave", b =>
@@ -475,6 +582,39 @@ namespace Data.Migrations
                     b.HasIndex("IdUser");
 
                     b.ToTable("ReplyResponses");
+                });
+
+            modelBuilder.Entity("Data.Database.Table.Report", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ContentReport")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("IdPost")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdUser")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdUserReport")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("State")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IdPost");
+
+                    b.HasIndex("IdUser");
+
+                    b.HasIndex("IdUserReport");
+
+                    b.ToTable("Reports");
                 });
 
             modelBuilder.Entity("Data.Database.Table.Response", b =>
@@ -608,188 +748,6 @@ namespace Data.Migrations
                     b.ToTable("Topics");
                 });
 
-            modelBuilder.Entity("Data.Tables.Exam", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Code")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("CreateDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Descripton")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid>("IdUser")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Img")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsOpen")
-                        .HasColumnType("bit");
-
-                    b.Property<int>("Time")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("IdUser");
-
-                    b.ToTable("Exams");
-                });
-
-            modelBuilder.Entity("Data.Tables.ExamHistory", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("IdExam")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("IdUser")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Info")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<double>("Scores")
-                        .HasColumnType("float");
-
-                    b.Property<DateTime>("TimeEnd")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("TimeStart")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("IdExam");
-
-                    b.HasIndex("IdUser");
-
-                    b.ToTable("ExamHistories");
-                });
-
-            modelBuilder.Entity("Data.Tables.ExamHistoryDetails", b =>
-                {
-                    b.Property<Guid>("IdExamHistoryDetail")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Answer1")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Answer2")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Answer3")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Answer4")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Answer5")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid>("IdEH")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Img")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("NumbersChose")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("NumbersRight")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Question")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("isMultiple")
-                        .HasColumnType("bit");
-
-                    b.HasKey("IdExamHistoryDetail");
-
-                    b.HasIndex("IdEH");
-
-                    b.ToTable("ExamHistoryDetails");
-                });
-
-            modelBuilder.Entity("Data.Tables.Question", b =>
-                {
-                    b.Property<Guid>("IdQuestion")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Answer1")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Answer2")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Answer3")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Answer4")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Answer5")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ContentQuestion")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid>("IdExam")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Img")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("NumberRight")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("isMultiple")
-                        .HasColumnType("bit");
-
-                    b.HasKey("IdQuestion");
-
-                    b.HasIndex("IdExam");
-
-                    b.ToTable("Questions");
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole<System.Guid>", b =>
                 {
                     b.Property<Guid>("Id")
@@ -921,6 +879,23 @@ namespace Data.Migrations
                     b.ToTable("UserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("Data.Database.Table.Conversation", b =>
+                {
+                    b.HasOne("BlogWebsite.Data.ApplicationUser", "UserReceive")
+                        .WithMany()
+                        .HasForeignKey("IdUserReceive")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BlogWebsite.Data.ApplicationUser", "UserSend")
+                        .WithMany()
+                        .HasForeignKey("IdUserSend");
+
+                    b.Navigation("UserReceive");
+
+                    b.Navigation("UserSend");
+                });
+
             modelBuilder.Entity("Data.Database.Table.Flower", b =>
                 {
                     b.HasOne("BlogWebsite.Data.ApplicationUser", "UserFlower")
@@ -997,6 +972,33 @@ namespace Data.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Data.Database.Table.Messenger", b =>
+                {
+                    b.HasOne("Data.Database.Table.Conversation", "Conversation")
+                        .WithMany()
+                        .HasForeignKey("IdConversation")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BlogWebsite.Data.ApplicationUser", "UserReceive")
+                        .WithMany()
+                        .HasForeignKey("IdUserReceive")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BlogWebsite.Data.ApplicationUser", "UserSend")
+                        .WithMany()
+                        .HasForeignKey("IdUserSend")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Conversation");
+
+                    b.Navigation("UserReceive");
+
+                    b.Navigation("UserSend");
+                });
+
             modelBuilder.Entity("Data.Database.Table.Notice", b =>
                 {
                     b.HasOne("BlogWebsite.Data.ApplicationUser", "UserSend")
@@ -1053,6 +1055,17 @@ namespace Data.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Data.Database.Table.Petition", b =>
+                {
+                    b.HasOne("BlogWebsite.Data.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("IdUser")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Data.Database.Table.Post", b =>
                 {
                     b.HasOne("BlogWebsite.Data.ApplicationUser", "User")
@@ -1060,6 +1073,25 @@ namespace Data.Migrations
                         .HasForeignKey("IdUser")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Data.Database.Table.PostHide", b =>
+                {
+                    b.HasOne("Data.Database.Table.Post", "Post")
+                        .WithMany()
+                        .HasForeignKey("IdPost")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BlogWebsite.Data.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("IdUser")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Post");
 
                     b.Navigation("User");
                 });
@@ -1140,6 +1172,33 @@ namespace Data.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Data.Database.Table.Report", b =>
+                {
+                    b.HasOne("Data.Database.Table.Post", "Post")
+                        .WithMany()
+                        .HasForeignKey("IdPost")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BlogWebsite.Data.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("IdUser")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BlogWebsite.Data.ApplicationUser", "UserReport")
+                        .WithMany()
+                        .HasForeignKey("IdUserReport")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Post");
+
+                    b.Navigation("User");
+
+                    b.Navigation("UserReport");
+                });
+
             modelBuilder.Entity("Data.Database.Table.Response", b =>
                 {
                     b.HasOne("Data.Database.Table.Post", "Post")
@@ -1179,58 +1238,6 @@ namespace Data.Migrations
                         .IsRequired();
 
                     b.Navigation("ApplicationUser");
-                });
-
-            modelBuilder.Entity("Data.Tables.Exam", b =>
-                {
-                    b.HasOne("BlogWebsite.Data.ApplicationUser", "User")
-                        .WithMany("Exams")
-                        .HasForeignKey("IdUser")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("Data.Tables.ExamHistory", b =>
-                {
-                    b.HasOne("Data.Tables.Exam", "Exam")
-                        .WithMany("ExamHistories")
-                        .HasForeignKey("IdExam")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("BlogWebsite.Data.ApplicationUser", "User")
-                        .WithMany("ExamHistories")
-                        .HasForeignKey("IdUser")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Exam");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("Data.Tables.ExamHistoryDetails", b =>
-                {
-                    b.HasOne("Data.Tables.ExamHistory", "ExamHistory")
-                        .WithMany("ExamHistoryDetails")
-                        .HasForeignKey("IdEH")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("ExamHistory");
-                });
-
-            modelBuilder.Entity("Data.Tables.Question", b =>
-                {
-                    b.HasOne("Data.Tables.Exam", "Exam")
-                        .WithMany("Questions")
-                        .HasForeignKey("IdExam")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Exam");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
@@ -1286,10 +1293,6 @@ namespace Data.Migrations
 
             modelBuilder.Entity("BlogWebsite.Data.ApplicationUser", b =>
                 {
-                    b.Navigation("ExamHistories");
-
-                    b.Navigation("Exams");
-
                     b.Navigation("Flowers");
 
                     b.Navigation("MemberGroups");
@@ -1350,18 +1353,6 @@ namespace Data.Migrations
             modelBuilder.Entity("Data.Database.Table.Topic", b =>
                 {
                     b.Navigation("GroupTopics");
-                });
-
-            modelBuilder.Entity("Data.Tables.Exam", b =>
-                {
-                    b.Navigation("ExamHistories");
-
-                    b.Navigation("Questions");
-                });
-
-            modelBuilder.Entity("Data.Tables.ExamHistory", b =>
-                {
-                    b.Navigation("ExamHistoryDetails");
                 });
 #pragma warning restore 612, 618
         }

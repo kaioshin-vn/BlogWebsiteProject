@@ -37,22 +37,28 @@ namespace API.Controllers
             return Ok();
         }
 
+        [HttpGet("/getPetitionDetail/{Id}")]
+        public async Task<IActionResult> GetPetitionDetail(Guid Id)
+        {
+            var petition = await _context.Petitions.Include(a => a.User).FirstOrDefaultAsync(a => a.Id == Id);
+            _context.SaveChanges();
+            return Ok(petition);
+        }
+
         [HttpGet("/getListPetition/{page}")]
         public async Task<IActionResult> GetTopics(int page)
         {
             page = page - 1;
-            var listPostRepost = _context.Reports.Include(a => a.Post).Where(a => a.State == Data.Enums.WaitState.Pending && a.Post.IsDeleted == false).GroupBy(a => a.IdPost).ToList().Skip(page * 10).Take(10).ToList();
+            var listPetition = _context.Petitions.Include(a => a.User).Where(a => a.State == Data.Enums.WaitState.Pending && a.Content != "").ToList().Skip(page * 10).Take(10).ToList();
 
-            var listReport = new List<ReportDTO>();
-
-            return Ok(listReport);
+            return Ok(listPetition);
         }
 
-        //[HttpGet("/getTotalPagePetition")]
-        //public async Task<int> GetTotalPage()
-        //{
-        //    return _context.Petitions.Include(a => a.User).Where(a => a.State == Data.Enums.WaitState.Pending && a.Content != "").GroupBy(a => a.).Count() / 10;
-        //}
+        [HttpGet("/getTotalPagePetition")]
+        public async Task<int> GetTotalPage()
+        {
+            return _context.Petitions.Include(a => a.User).Where(a => a.State == Data.Enums.WaitState.Pending && a.Content != "").Count() / 10;
+        }
 
     }
 }
