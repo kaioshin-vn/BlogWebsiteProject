@@ -8,6 +8,7 @@ using Data.DTO;
 using Blazorise;
 using Client.Components.Pages.Restricted;
 using API.StaticClass;
+using Data.Enums;
 
 namespace API.Controllers
 {
@@ -47,6 +48,25 @@ namespace API.Controllers
             return Ok(listReport);
         }
 
+        [HttpGet("/getListUserReport/{IdUser}")]
+        public async Task<IActionResult> GetReportUser(Guid IdUser)
+        {
+            var listPostRepost = _context.Reports.Include(a => a.Post).Where(a => a.State == Data.Enums.WaitState.Accept && a.IdUser == IdUser).GroupBy(a => a.IdPost).ToList();
+
+            var listReport = new List<ReportDTO>();
+            foreach (var item in listPostRepost)
+            {
+                var report = new ReportDTO();
+                report.IdPost = item.Key;
+                var post = await _context.Posts.FirstOrDefaultAsync(a => a.Id == item.Key);
+                report.PostIntro = await GetPostIntro(post);
+                report.ReportCount = item.Count();
+
+                listReport.Add(report);
+            }
+            return Ok(listReport);
+        }
+
         [HttpGet("/report/getReportPost/{idPost}")]
         public async Task<PostIntroDTO> GetPost(Guid idPost)
         {
@@ -59,10 +79,79 @@ namespace API.Controllers
             return postIntro;
         }
 
+        [HttpGet("/report/getReportedPost/{idPost}")]
+        public async Task<PostIntroDTO> GetPostReported(Guid idPost)
+        {
+            var post = await _context.Posts.FirstOrDefaultAsync(a => a.Id == idPost);
+            if (post == null)
+            {
+                return null;
+            }
+            var postIntro = await GetPostIntro(post);
+            return postIntro;
+        }
+
+        [HttpGet("/report/changeStateReport/{idPost}/{State}")]
+        public async Task ChangeStateReport(Guid idPost, WaitState State)
+        {
+            var reports = _context.Reports.Where(a => a.IdPost == idPost && a.State == WaitState.Pending).ToList();
+
+            reports.ForEach(a => a.State = State);
+
+            _context.Reports.UpdateRange(reports);
+            await _context.SaveChangesAsync();
+            Ok();
+        }
+
+        [HttpGet("/report/getReporDetail/{idPost}")]
+        public async Task<List<UserReport>> GetDetailPost(Guid idPost)
+        {
+            var reposts = _context.Reports.Include(a => a.UserReport).Where(a => a.State == Data.Enums.WaitState.Pending && a.IdPost == idPost).ToList();
+
+            var listRepost = new List<UserReport>();
+            foreach (var item in reposts)
+            {
+                var userRp = new UserReport();
+                userRp.Img = item.UserReport.Img;
+                userRp.UserName = item.UserReport.FullName;
+                userRp.Id = item.UserReport.Id;
+                userRp.Content = item.ContentReport;
+                listRepost.Add(userRp);
+            }
+
+            return listRepost;
+        }
+
+        [HttpGet("/report/getReportedDetail/{idPost}")]
+        public async Task<List<UserReport>> GetReportedDetailPost(Guid idPost)
+        {
+            var reposts = _context.Reports.Include(a => a.UserReport).Where(a => a.State == Data.Enums.WaitState.Accept && a.IdPost == idPost).ToList();
+
+            var listRepost = new List<UserReport>();
+            foreach (var item in reposts)
+            {
+                var userRp = new UserReport();
+                userRp.Img = item.UserReport.Img;
+                userRp.UserName = item.UserReport.FullName;
+                userRp.Id = item.UserReport.Id;
+                userRp.Content = item.ContentReport;
+                listRepost.Add(userRp);
+            }
+
+            return listRepost;
+        }
+
         [HttpGet("/getTotalPageReport")]
         public async Task<int> GetTotalPage()
         {
             return _context.Reports.Include(a => a.Post).Where(a => a.State == Data.Enums.WaitState.Pending && a.Post.IsDeleted == false).GroupBy(a => a.IdPost).Count() / 10;
+        }
+
+        [HttpGet("/getViolation/{Id}")]
+        public async Task<string> GetViolation(Guid Id)
+        {
+            var notice = await _context.Notices.FirstOrDefaultAsync(a => a.Id == Id);
+            return notice.Content;
         }
 
 
@@ -103,4 +192,6 @@ namespace API.Controllers
             return introPost;
         }
     }
+
+    
 }

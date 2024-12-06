@@ -119,8 +119,8 @@ namespace API.Controllers
             var originalKeyword = keyword.ToLower();
 
             // POSTS
-            var posts = await _context.Posts
-                .Include(a => a.GroupPost).ThenInclude(a => a.Group).Where(a => a.IsDeleted == false && (a.GroupPost.Count == 0 || (a.GroupPost.Any(b => b.IdPost == a.Id && b.WaitState == WaitState.Accept && (b.Group.StateGroup == KindGroup.Public || b.Group.StateGroup == KindGroup.Restricted)))))
+            var posts = await _context.Posts.Include(a => a.User)
+                .Include(a => a.GroupPost).ThenInclude(a => a.Group).Where(a => a.IsDeleted == false && a.User.LockoutEnd == null && (a.GroupPost.Count == 0 || (a.GroupPost.Any(b => b.IdPost == a.Id && b.WaitState == WaitState.Accept && (b.Group.StateGroup == KindGroup.Public || b.Group.StateGroup == KindGroup.Restricted)))))
                 .ToListAsync();
 
             // listPost tìm được qua keyword, lấy những title gần nhất với keyword

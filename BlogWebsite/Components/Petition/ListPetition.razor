@@ -1,0 +1,110 @@
+﻿@page "/listpetition"
+
+@using Data.Database.Table
+@using Data.DTO
+@using Newtonsoft.Json
+
+@inject IHttpClientFactory HttpClientFactory
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserManager<ApplicationUser> UserManager
+
+<style>
+    .result-container {
+        margin-top: 20px;
+    }
+
+    .custom-tabs .mud-tab {
+        text-transform: none;
+    }
+
+    .truncate-text {
+        white-space: nowrap; /* Không cho nội dung xuống dòng */
+        overflow: hidden; /* Ẩn phần nội dung bị tràn */
+        text-overflow: ellipsis; /* Hiển thị dấu '...' khi nội dung bị tràn */
+    }
+
+    .hover-underline:hover {
+        text-decoration: underline;
+    }
+
+</style>
+
+@if (!isLoaded)
+{
+    <Client.Components.ComponentCustom.LoadingLocal></Client.Components.ComponentCustom.LoadingLocal>
+}
+else
+{
+    <div class="result-container">
+        <div class="mt-3">
+            @if (listPetition.Count != 0)
+            {
+                <MudList T="string">
+                    @foreach (var post in listPetition)
+                    {
+                        <MudListItem OnClick="() => NaviGate(post.Id.ToString())" Style="width:900px; border-radius:20px">
+                            <MudGrid Justify="Justify.SpaceBetween">
+                                <MudItem xs="9">
+                                    <MudCardHeader Class="p-0 m-0">
+                                        <MudAvatar Size="Size.Medium">
+                                            <MudImage ObjectFit="ObjectFit.Cover" Src="@post.User.Img"></MudImage>
+                                        </MudAvatar>
+                                        <MudItem Class="px-2">
+                                            <MudText Typo="Typo.body1"><b class="hover-underline">@post.User.FullName</b></MudText>
+                                        </MudItem>
+                                    </MudCardHeader>
+                                </MudItem>
+                            </MudGrid>
+                        </MudListItem>
+                        <hr style="width:900px" />
+                    }
+                    <div class="d-flex justify-content-center">
+                        <MudPagination Color="Color.Primary" Count="TotalPage" @bind-value="@Page" SelectedChanged="LoadReport" />
+                    </div>
+                </MudList>
+            }
+            else
+            {
+                <MudText Class="mt-2">Chưa có báo cáo nào</MudText>
+            }
+        </div>
+    </div>
+}
+
+@code {
+
+    List<Petition> listPetition = new List<Petition>();
+
+
+    private string Search = "";
+
+    int TotalPage;
+
+    int Page = 1;
+
+    bool isLoaded;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadReport();
+    }
+
+    async Task LoadReport ()
+    {
+        isLoaded = false;
+        var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+        var response = await httpClient.GetStringAsync($"/getListPetition/{Page}");
+
+        listPetition = JsonConvert.DeserializeObject<List<Petition>>(response);
+
+        var data = await httpClient.GetStringAsync($"/getTotalPagePetition");
+        TotalPage = JsonConvert.DeserializeObject<int>(data);
+        isLoaded = true;
+    }
+
+    void NaviGate(string link)
+    {
+        NavigationManager.NavigateTo("/PetitionDetail/" + link, true);
+    }
+}

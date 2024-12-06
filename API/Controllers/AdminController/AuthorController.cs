@@ -119,6 +119,13 @@ namespace ASM_PH35423.Controllers
             }
         }
 
+
+        [HttpGet("/manage/GetInfoUser/{IdUser}")]
+        public async Task<ApplicationUser> GetInfoUser(Guid? IdUser)
+        {
+            return await _context.Users.FirstOrDefaultAsync(a => a.Id == IdUser) ;
+        }
+
         [HttpGet("/GetRoleUser/{Id}")]
         public List<string?> GetRoleUser(Guid Id)
         {

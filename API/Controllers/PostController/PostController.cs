@@ -58,9 +58,9 @@ namespace API.Controllers.PostController
 		[HttpPost("/GetListPostIntro")]
 		public async Task<List<PostIntroDTO>> GetListPostIntro([FromBody] List<Guid> listPostExisted)
 		{
-			var listPost = await _context.Posts.Include(a => a.GroupPost).ThenInclude(a => a.Group).Where(a => a.IsDeleted == false &&  (a.GroupPost.Count == 0 || 
+			var listPost = await _context.Posts.Include(a => a.User).Include(a => a.GroupPost).ThenInclude(a => a.Group).Where(a => a.IsDeleted == false &&  (a.GroupPost.Count == 0 || 
 			(a.GroupPost.Any(b => b.IdPost == a.Id && b.WaitState == WaitState.Accept  && ( b.Group.StateGroup == KindGroup.Public  || b.Group.StateGroup == KindGroup.Restricted))))
-			&& !listPostExisted.Contains(a.Id)).OrderByDescending(a => a.CreateDate).Take(20).ToListAsync();
+			&& !listPostExisted.Contains(a.Id) && a.User.LockoutEnd == null).OrderByDescending(a => a.CreateDate).Take(20).ToListAsync();
 
             var listIntroPost = new List<PostIntroDTO>();
 			foreach (var item in listPost)
@@ -74,9 +74,9 @@ namespace API.Controllers.PostController
         [HttpPost("/GetListPostHot")]
         public async Task<List<PostIntroDTO>> GetListPostIntroHot([FromBody] List<Guid> listPostExisted)
         {
-            var listPost = await _context.Posts.Include(a => a.GroupPost).ThenInclude(a => a.Group).Where(a => a.IsDeleted == false && (a.GroupPost.Count == 0 ||
+            var listPost = await _context.Posts.Include(a => a.User).Include(a => a.GroupPost).ThenInclude(a => a.Group).Where(a => a.IsDeleted == false && (a.GroupPost.Count == 0 ||
             (a.GroupPost.Any(b => b.IdPost == a.Id && b.WaitState == WaitState.Accept && (b.Group.StateGroup == KindGroup.Public || b.Group.StateGroup == KindGroup.Restricted))))
-            && !listPostExisted.Contains(a.Id)).OrderByDescending(a => a.Like.Length ).Take(20).ToListAsync();
+            && !listPostExisted.Contains(a.Id) && a.User.LockoutEnd == null).OrderByDescending(a => a.Like.Length ).Take(20).ToListAsync();
 
             var listIntroPost = new List<PostIntroDTO>();
             foreach (var item in listPost)

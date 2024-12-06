@@ -1,0 +1,33 @@
+﻿@page "/violation/{Id:guid}"
+
+@inject IHttpClientFactory HttpClientFactory
+
+@if (isLoaded)
+{
+    <header>
+        <h1 class="text-danger">Bài viết của bạn đã vi phạm </h1>
+        <p class="text-danger">@this.ContentViolation nếu vi phạm quá nhiều lần sẽ khiến tài khoản bị khóa</p>
+    </header>
+}
+else
+{
+    <Client.Components.ComponentCustom.LoadingLocal></Client.Components.ComponentCustom.LoadingLocal>
+}
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    string ContentViolation = "";
+
+    bool isLoaded;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var _httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+        var result = await _httpClient.GetStringAsync($"/getViolation/{Id}");
+        ContentViolation = result;
+        isLoaded = true;
+
+    }
+}

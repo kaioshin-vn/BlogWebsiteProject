@@ -14,6 +14,7 @@ namespace BlogWebsite.Data
         public DbSet<Question> Questions { get; set; }
         public DbSet<ExamHistoryDetails> ExamHistoryDetails { get; set; }
 
+        public DbSet<Petition> Petitions { get; set; }
         public DbSet<Save> Saves { get; set; }
         public DbSet<Report> Reports { get; set; }
         public DbSet<RestrictedWord> RestrictedWords { get; set; }

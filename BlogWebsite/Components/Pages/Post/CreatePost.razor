@@ -25,124 +25,125 @@
 {
     <LoadingLocal></LoadingLocal>
 }
+else
+{
+    <style>
+        .rz-html-editor-content img {
+            display: block; /* Chuyển ảnh thành khối để dễ căn giữa */
+            margin: 0 auto; /* Căn giữa theo chiều ngang */
+            height: 300px; /* Chiều cao của ảnh */
+            border-radius: 8px; /* Bo góc */
+        }
+    </style>
 
-<style>
-    .rz-html-editor-content img {
-        display: block; /* Chuyển ảnh thành khối để dễ căn giữa */
-        margin: 0 auto; /* Căn giữa theo chiều ngang */
-        height: 300px; /* Chiều cao của ảnh */
-        border-radius: 8px; /* Bo góc */
-    }
-</style>
-
-<div class="p-5">
-    <MudDivider />
-    <MudTabs Rounded="true" ApplyEffectsToContainer="true" ScrollIconColor="Color.Info" Color="Color.Default" SliderColor="Color.Tertiary" PanelClass="pa-6">
-        <MudTabPanel Text="Soạn thảo" Icon="@Icons.Material.Filled.DriveFileRenameOutline">
-            <MudGrid>
-                <MudItem xs="11">
-                    <MudTextField Style="" @bind-Value="Post.Title" AutoGrow Label="Tiêu đề" Variant="MudBlazor.Variant.Outlined"></MudTextField>
-                </MudItem>
-            </MudGrid>
-            @if (ListTag.Count > 0)
-            {
-                <MudItem Class="d-flex flex-wrap">
-                    @foreach (var item in ListTag)
-                    {
-                        <MudButtonGroup Color="Color.Info" Variant="MudBlazor.Variant.Filled" Class="mx-3 mt-3" Style="border-radius:8px;">
-                            <MudButton Style="overflow:hidden">@item.Name</MudButton>
-                            <MudIconButton Icon="@Icons.Material.Filled.Cancel" OnClick="() => { DeleteTag(item.Id) ;}"></MudIconButton>
-                        </MudButtonGroup>
-                    }
-                </MudItem>
-            }
-            <MudGrid Class="p-2" Justify="Justify.FlexStart">
-                <MudItem Class="my-4 d-flex">
-                    <MudTextField @bind-Value="TagName" Placeholder="Tên thẻ" Style="width:300px;" Variant="MudBlazor.Variant.Text" />
-                    <MudTooltip Class="mx-1" Text="Thêm thẻ bài viết">
-                        <MudFab Class="ms-5" StartIcon="@Icons.Material.Filled.Add" @onclick="AddTag" Color="Color.Tertiary" Size="Size.Small" Style="border:none;background-color:none;" />
-                    </MudTooltip>
-                </MudItem>
-            </MudGrid>
-            <MudGrid>
-                <MudItem xs="12">
-                    <RadzenHtmlEditor @bind-Value="@Post.Content" Execute="@OnExecute" UploadComplete="@OnUploadComplete" style="min-height:300px; height: auto;max-width:990px;border-radius:12px;overflow:hidden;" UploadUrl="minimalApi/uploadImage">
-                        <RadzenHtmlEditorUndo Title="Trước" />
-                        <RadzenHtmlEditorRedo Title="Sau" />
-                        <RadzenHtmlEditorSeparator />
-                        <RadzenHtmlEditorBold Title="In đậm" />
-                        <RadzenHtmlEditorItalic Title="In nghiêng" />
-                        <RadzenHtmlEditorUnderline Title="Gạch chân" />
-                        <RadzenHtmlEditorStrikeThrough Title="Xuyên qua" />
-                        <RadzenHtmlEditorSeparator />
-                        <RadzenHtmlEditorAlignLeft Title="Căn trái" />
-                        <RadzenHtmlEditorAlignCenter Title="Căn giữa" />
-                        <RadzenHtmlEditorAlignRight Title="Căn phải" />
-                        @* <RadzenHtmlEditorJustify Title="Căn đều" /> *@
-                        <RadzenHtmlEditorSeparator />
-                        <RadzenHtmlEditorIndent Title="Thụt lề" />
-                        <RadzenHtmlEditorOutdent Title="Nhô lề" />
-                        @* <RadzenHtmlEditorUnorderedList Title="Danh sách" /> *@
-                        <RadzenHtmlEditorOrderedList Title="Danh sách sắp xếp" />
-                        <RadzenHtmlEditorSeparator />
-                        <RadzenHtmlEditorColor Title="Màu chữ" />
-                        <RadzenHtmlEditorBackground Title="Màu nền" />
-                        <RadzenHtmlEditorRemoveFormat Title="Bỏ định dạng" />
-                        <RadzenHtmlEditorSeparator />
-                        @* <RadzenHtmlEditorSubscript Title="Chữ phía dưới" />
-                        <RadzenHtmlEditorSuperscript Title="Chữ phía trên" /> *@
-                        @* <RadzenHtmlEditorSeparator /> *@
-                        <RadzenHtmlEditorLink Title="Thêm link" CancelText="Hủy" LinkText="Hiển thị" OpenInNewWindowText="Mở trong cửa số mới" UrlText="Đường dẫn" />
-                        <RadzenHtmlEditorUnlink Title="Bỏ đường dẫn" />
-                        <RadzenHtmlEditorImage Title="Thêm ảnh" ShowHeight="false" ShowWidth="false" ShowAlt="false" UploadChooseText="Tải ảnh lên" AltText="Tên ảnh" CancelText="Hủy" SelectText="Chọn ảnh tải lên" UrlText="Nếu không có sẵn ảnh trên máy, hãy nhập đường dẫn ảnh trên web" HeightText="Chiều cao" WidthText="Chiều rộng" />
-                        <RadzenHtmlEditorSeparator />
-                        <RadzenHtmlEditorFontName Title="Phông chữ" Placeholder="Phông chữ" />
-                        <RadzenHtmlEditorFontSize Title="Kích thước" Placeholder="Cỡ chữ" />
-                        @* <RadzenHtmlEditorFormatBlock Title="Cỡ chữ" Placeholder="Cỡ chữ" NormalText="Thông thường" Heading1Text="Loại 1" Heading2Text="Loại 2" Heading3Text="Loại 3" Heading4Text="Loại 4" Heading5Text="Loại 5" Heading6Text="Loại 6" /> *@
-                        <RadzenHtmlEditorSeparator />
-                        <RadzenHtmlEditorCustomTool CommandName="AddCode" Icon="code" Title="Code" />
-                    </RadzenHtmlEditor>
-
-                    <MudItem xs="11" class="d-flex justify-content-end mt-3">
-                        <MudButton Class="mt-3 rounded-3" OnClick="(async ()=> await CreatePostSubmit())" Variant="MudBlazor.Variant.Filled" Color="Color.Tertiary">Tạo bài viết</MudButton>
+    <div class="p-5">
+        <MudDivider />
+        <MudTabs Rounded="true" ApplyEffectsToContainer="true" ScrollIconColor="Color.Info" Color="Color.Default" SliderColor="Color.Tertiary" PanelClass="pa-6">
+            <MudTabPanel Text="Soạn thảo" Icon="@Icons.Material.Filled.DriveFileRenameOutline">
+                <MudGrid>
+                    <MudItem xs="11">
+                        <MudTextField Style="" @bind-Value="Post.Title" AutoGrow Label="Tiêu đề" Variant="MudBlazor.Variant.Outlined"></MudTextField>
                     </MudItem>
-                </MudItem>
-            </MudGrid>
-        </MudTabPanel>
-        <MudTabPanel Text="Video" Icon="@Icons.Material.Filled.VideoCall">
-            <MudTooltip Text="Tải video lên">
-                <MudFileUpload T="IBrowserFile" Accept=".mp4,.MKV,.MOV" FilesChanged="UploadFiles">
-                    <ActivatorContent>
-                        <MudFab Color="Color.Success"
-                                StartIcon="@Icons.Material.Filled.AttachFile" />
-                    </ActivatorContent>
-                </MudFileUpload>
-            </MudTooltip>
-            @if (ListVideo.Count > 0)
-            {
-                <MudItem Class=" flex-wrap">
-                    @foreach (var item in ListVideo)
-                    {
-                        <MudFab Class="mt-5" StartIcon="@Icons.Material.Filled.Delete" @onclick="(() => DeleteVideo(item.Id))" Color="Color.Error" Size="Size.Small" Style="border:none;background-color:none;" />
-                        <div style="height:500px; border-radius:6px; background-color:aliceblue;overflow:hidden" class="d-flex mt-2 justify-content-center align-items-center">
-                            <div class="video_player d-flex justify-content-center align-items-center ">
-                                <Video class="main-video " style="height : 500px;" AutomaticallyHideControls="true" SeekTime="5" controls Source="@item.Data">
-                                </Video>
+                </MudGrid>
+                @if (ListTag.Count > 0)
+                {
+                    <MudItem Class="d-flex flex-wrap">
+                        @foreach (var item in ListTag)
+                        {
+                            <MudButtonGroup Color="Color.Info" Variant="MudBlazor.Variant.Filled" Class="mx-3 mt-3" Style="border-radius:8px;">
+                                <MudButton Style="overflow:hidden">@item.Name</MudButton>
+                                <MudIconButton Icon="@Icons.Material.Filled.Cancel" OnClick="() => { DeleteTag(item.Id) ;}"></MudIconButton>
+                            </MudButtonGroup>
+                        }
+                    </MudItem>
+                }
+                <MudGrid Class="p-2" Justify="Justify.FlexStart">
+                    <MudItem Class="my-4 d-flex">
+                        <MudTextField @bind-Value="TagName" Placeholder="Tên thẻ" Style="width:300px;" Variant="MudBlazor.Variant.Text" />
+                        <MudTooltip Class="mx-1" Text="Thêm thẻ bài viết">
+                            <MudFab Class="ms-5" StartIcon="@Icons.Material.Filled.Add" @onclick="AddTag" Color="Color.Tertiary" Size="Size.Small" Style="border:none;background-color:none;" />
+                        </MudTooltip>
+                    </MudItem>
+                </MudGrid>
+                <MudGrid>
+                    <MudItem xs="12">
+                        <RadzenHtmlEditor @bind-Value="@Post.Content" Execute="@OnExecute" UploadComplete="@OnUploadComplete" style="min-height:300px; height: auto;max-width:990px;border-radius:12px;overflow:hidden;" UploadUrl="minimalApi/uploadImage">
+                            <RadzenHtmlEditorUndo Title="Trước" />
+                            <RadzenHtmlEditorRedo Title="Sau" />
+                            <RadzenHtmlEditorSeparator />
+                            <RadzenHtmlEditorBold Title="In đậm" />
+                            <RadzenHtmlEditorItalic Title="In nghiêng" />
+                            <RadzenHtmlEditorUnderline Title="Gạch chân" />
+                            <RadzenHtmlEditorStrikeThrough Title="Xuyên qua" />
+                            <RadzenHtmlEditorSeparator />
+                            <RadzenHtmlEditorAlignLeft Title="Căn trái" />
+                            <RadzenHtmlEditorAlignCenter Title="Căn giữa" />
+                            <RadzenHtmlEditorAlignRight Title="Căn phải" />
+                            @* <RadzenHtmlEditorJustify Title="Căn đều" /> *@
+                            <RadzenHtmlEditorSeparator />
+                            <RadzenHtmlEditorIndent Title="Thụt lề" />
+                            <RadzenHtmlEditorOutdent Title="Nhô lề" />
+                            @* <RadzenHtmlEditorUnorderedList Title="Danh sách" /> *@
+                            <RadzenHtmlEditorOrderedList Title="Danh sách sắp xếp" />
+                            <RadzenHtmlEditorSeparator />
+                            <RadzenHtmlEditorColor Title="Màu chữ" />
+                            <RadzenHtmlEditorBackground Title="Màu nền" />
+                            <RadzenHtmlEditorRemoveFormat Title="Bỏ định dạng" />
+                            <RadzenHtmlEditorSeparator />
+                            @* <RadzenHtmlEditorSubscript Title="Chữ phía dưới" />
+                        <RadzenHtmlEditorSuperscript Title="Chữ phía trên" /> *@
+                            @* <RadzenHtmlEditorSeparator /> *@
+                            <RadzenHtmlEditorLink Title="Thêm link" CancelText="Hủy" LinkText="Hiển thị" OpenInNewWindowText="Mở trong cửa số mới" UrlText="Đường dẫn" />
+                            <RadzenHtmlEditorUnlink Title="Bỏ đường dẫn" />
+                            <RadzenHtmlEditorImage Title="Thêm ảnh" ShowHeight="false" ShowWidth="false" ShowAlt="false" UploadChooseText="Tải ảnh lên" AltText="Tên ảnh" CancelText="Hủy" SelectText="Chọn ảnh tải lên" UrlText="Nếu không có sẵn ảnh trên máy, hãy nhập đường dẫn ảnh trên web" HeightText="Chiều cao" WidthText="Chiều rộng" />
+                            <RadzenHtmlEditorSeparator />
+                            <RadzenHtmlEditorFontName Title="Phông chữ" Placeholder="Phông chữ" />
+                            <RadzenHtmlEditorFontSize Title="Kích thước" Placeholder="Cỡ chữ" />
+                            @* <RadzenHtmlEditorFormatBlock Title="Cỡ chữ" Placeholder="Cỡ chữ" NormalText="Thông thường" Heading1Text="Loại 1" Heading2Text="Loại 2" Heading3Text="Loại 3" Heading4Text="Loại 4" Heading5Text="Loại 5" Heading6Text="Loại 6" /> *@
+                            <RadzenHtmlEditorSeparator />
+                            <RadzenHtmlEditorCustomTool CommandName="AddCode" Icon="code" Title="Code" />
+                        </RadzenHtmlEditor>
+
+                        <MudItem xs="11" class="d-flex justify-content-end mt-3">
+                            <MudButton Class="mt-3 rounded-3" OnClick="(async ()=> await CreatePostSubmit())" Variant="MudBlazor.Variant.Filled" Color="Color.Tertiary">Tạo bài viết</MudButton>
+                        </MudItem>
+                    </MudItem>
+                </MudGrid>
+            </MudTabPanel>
+            <MudTabPanel Text="Video" Icon="@Icons.Material.Filled.VideoCall">
+                <MudTooltip Text="Tải video lên">
+                    <MudFileUpload T="IBrowserFile" Accept=".mp4,.MKV,.MOV" FilesChanged="UploadFiles">
+                        <ActivatorContent>
+                            <MudFab Color="Color.Success"
+                                    StartIcon="@Icons.Material.Filled.AttachFile" />
+                        </ActivatorContent>
+                    </MudFileUpload>
+                </MudTooltip>
+                @if (ListVideo.Count > 0)
+                {
+                    <MudItem Class=" flex-wrap">
+                        @foreach (var item in ListVideo)
+                        {
+                            <MudFab Class="mt-5" StartIcon="@Icons.Material.Filled.Delete" @onclick="(() => DeleteVideo(item.Id))" Color="Color.Error" Size="Size.Small" Style="border:none;background-color:none;" />
+                            <div style="height:500px; border-radius:6px; background-color:aliceblue;overflow:hidden" class="d-flex mt-2 justify-content-center align-items-center">
+                                <div class="video_player d-flex justify-content-center align-items-center ">
+                                    <Video class="main-video " style="height : 500px;" AutomaticallyHideControls="true" SeekTime="5" controls Source="@item.Data">
+                                    </Video>
+                                </div>
                             </div>
-                        </div>
 
-                    }
-                </MudItem>
-            }
-            @if (isLoading)
-            {
-                <LoadingLocal></LoadingLocal>
-            }
-        </MudTabPanel>
-    </MudTabs>
-</div>
+                        }
+                    </MudItem>
+                }
+                @if (isLoading)
+                {
+                    <LoadingLocal></LoadingLocal>
+                }
+            </MudTabPanel>
+        </MudTabs>
+    </div>
 
-
+}
 <style>
     a {
         color: dodgerblue;
@@ -367,7 +368,6 @@
                 await _httpClient.PostAsJsonAsync($"/addNewPostTag", PostTag);
             }
 
-            isUpPost = false;
 
             var result = await _httpClient.GetStringAsync($"/GetAllFolwerUser/{idUser}");
             var listId = JsonConvert.DeserializeObject<List<Guid>>(result);
@@ -393,6 +393,8 @@
             }
 
             Navigation.NavigateTo($"/postDetail/{idPost}");
+
+            isUpPost = false;
 
             Snackbar.Add("Thêm bài viết thành công", Severity.Success);
         }

@@ -1,4 +1,4 @@
-﻿@page "/report"
+﻿@page "/listUserReport/{IdUser:guid}"
 
 @using Data.DTO.EntitiDTO
 @using Data.DTO
@@ -82,14 +82,11 @@ else
                         </MudListItem>
                         <hr style="width:900px" />
                     }
-                    <div class="d-flex justify-content-center">
-                        <MudPagination Color="Color.Primary" Count="TotalPage" @bind-value="@Page" SelectedChanged="LoadReport" />
-                    </div>
                 </MudList>
             }
             else
             {
-                <MudText Class="mt-2">Chưa có báo cáo nào</MudText>
+                <MudText Class="mt-2">Tài khoản không có báo cáo nào</MudText>
             }
         </div>
     </div>
@@ -97,16 +94,14 @@ else
 
 @code {
 
+    [Parameter]
+    public Guid IdUser { get; set; }
+
     List<ReportDTO> listReport = new List<ReportDTO>();
 
-    TagDTO Tag = new TagDTO();
 
     private string Search = "";
     private SearchResultWithPaginationDTO searchResult;
-
-    int TotalPage;
-
-    int Page = 1;
 
     bool isLoaded;
 
@@ -115,21 +110,19 @@ else
         await LoadReport();
     }
 
-    async Task LoadReport ()
+    async Task LoadReport()
     {
         isLoaded = false;
         var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
-        var response = await httpClient.GetStringAsync($"/getListReport/{Page}");
+        var response = await httpClient.GetStringAsync($"/getListUserReport/{IdUser}");
 
         listReport = JsonConvert.DeserializeObject<List<ReportDTO>>(response);
 
-        var data = await httpClient.GetStringAsync($"/getTotalPageReport");
-        TotalPage = JsonConvert.DeserializeObject<int>(data);
         isLoaded = true;
     }
 
     void NaviGate(string link)
     {
-        NavigationManager.NavigateTo("/postReport/" + link, true);
+        NavigationManager.NavigateTo("/postReportedDetail/" + link, true);
     }
 }

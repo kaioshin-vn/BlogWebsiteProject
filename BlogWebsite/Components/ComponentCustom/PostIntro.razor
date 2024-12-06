@@ -115,7 +115,7 @@ else
                         <a href="/updatePost/@IdPost"><MudMenuItem>Chỉnh sửa</MudMenuItem></a>
                         <MudMenuItem OnClick="DeletePost">Xóa bài viết</MudMenuItem>
                     }
-                    @if (IdUser != Guid.Empty)
+                    @if (IdUser != Guid.Empty && IdUser != IdUserPost)
                     {
                         <MudMenuItem OnClick="() => Report(this.IdPost, this.IdUserPost, this.IdUser)">Báo cáo</MudMenuItem>
                     }

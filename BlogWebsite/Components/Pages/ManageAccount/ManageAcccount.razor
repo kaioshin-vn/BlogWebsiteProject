@@ -1,12 +1,15 @@
 ﻿@page "/ManageAccount"
-
+@page "/ManageAccount/{IdUser:guid}"
 
 @using Client.Components.ComponentCustom
+@using Data.Database.Table
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Identity
 @using System.Text.RegularExpressions
 @using System.ComponentModel.DataAnnotations
 @using Newtonsoft.Json
+@using System.Net.Mail
+@using System.Net
 
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager Navigation
@@ -106,17 +109,20 @@ else
                     }
                 </tbody>
             </MudSimpleTable>
+            <div class="d-flex justify-content-center">
+                <MudPagination Color="Color.Primary" Count="TotalPage" @bind-value="@Page" SelectedChanged="LoadUser" />
+            </div>
         }
     </MudContainer>
 
-    <div class="d-flex justify-content-center">
-        <MudPagination Color="Color.Primary" Count="TotalPage" @bind-value="@Page" SelectedChanged="LoadUser" />
-    </div>
+
 }
 
 
-
 @code {
+    [Parameter]
+    public Guid IdUser { get; set; }
+
     List<UserTrans> ListUser = new List<UserTrans>();
     bool Open;
     bool LoadingSucces = false;
@@ -133,12 +139,36 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadUser();
-        var _http = HttpClientFactory.CreateClient("MyHttpClient");
-        var data = await _http.GetStringAsync($"/GetTotalUserPage/{searchBan}/{Search}");
-        TotalPage = JsonConvert.DeserializeObject<int>(data);
-        TotalPage++;
-        LoadingSucces = true;
+        if (IdUser != Guid.Empty)
+        {
+            var _http = HttpClientFactory.CreateClient("MyHttpClient");
+            var data = await _http.GetStringAsync($"/manage/GetInfoUser/{IdUser}");
+            var userInfo = JsonConvert.DeserializeObject<ApplicationUser>(data);
+
+            var user = new UserTrans();
+            user.Id = userInfo.Id;
+            user.FullName = userInfo.FullName;
+            user.AccountName = userInfo.UserName;
+            user.Email = userInfo.Email;
+            data = await _http.GetStringAsync($"/GetRoleUser/{userInfo.Id}");
+            user.ListRole = JsonConvert.DeserializeObject<List<string>>(data);
+            data = await _http.GetStringAsync($"/GetIdRoleUser/{userInfo.Id}");
+            user.ListIdRole = JsonConvert.DeserializeObject<List<Guid>>(data);
+            user.IsBaned = (userInfo.LockoutEnd != null);
+
+            Search = userInfo.FullName;
+
+            ListUser.Add(user);
+
+            LoadingSucces = true;
+
+        }
+        else
+        {
+            await LoadUser();
+
+            LoadingSucces = true;
+        }
     }
 
     void CheckBoxHanlde(Guid idUser, Guid id)
@@ -183,6 +213,10 @@ else
             user.IsBaned = (item.LockoutEnd != null);
             ListUser.Add(user);
         }
+
+        data = await _http.GetStringAsync($"/GetTotalUserPage/{searchBan}/{Search}");
+        TotalPage = JsonConvert.DeserializeObject<int>(data);
+        TotalPage++;
     }
 
     async Task SaveChange(Guid id)
@@ -242,12 +276,52 @@ else
                     Snackbar.Add("Không thể khóa tài khoản đang sử dụng", Severity.Error);
                     return;
                 }
+
+
                 var user = await UserManager.FindByIdAsync(id.ToString());
 
                 var lockoutEnd = DateTimeOffset.UtcNow.AddYears(100);
                 await UserManager.SetLockoutEndDateAsync(user, lockoutEnd);
+
+
                 Snackbar.Add("Đã khóa tài khoản này", Severity.Info);
                 await LoadUser();
+
+                var from = new MailAddress("trangcthph46782@fpt.edu.vn", "KAIZEN");
+                var to = new MailAddress(user.Email);
+                const string subject = "Tài khoản của bạn đã bị khóa";
+                const string frompass = "xrlz fpkb hjfe lbdw";
+
+                var petition = new Petition();
+                petition.Id = Guid.NewGuid();
+                petition.IdUser = user.Id;
+                petition.State = Data.Enums.WaitState.Pending;
+                petition.Content = "";
+
+                var _http = HttpClientFactory.CreateClient("MyHttpClient");
+
+                var data = await _http.PostAsJsonAsync($"/petition/add", petition);
+
+                var linkPetition = Navigation.BaseUri + "Petition/" + $"{petition.Id}";
+
+                string body = $"Tài khoản của bạn đã bị khóa, hãy truy cập đường dẫn sau để có thể khiếu nại với admin, lưu ý bạn chỉ có thể khiếu nại 1 lần: <a href=\"{linkPetition}\">{linkPetition}</a>";
+                using (var smtpClient = new SmtpClient
+                    {
+                        Host = "smtp.gmail.com",
+                        Port = 587,
+                        EnableSsl = true,
+                        DeliveryMethod = SmtpDeliveryMethod.Network,
+                        Credentials = new NetworkCredential(from.Address, frompass)
+                    })
+                using (var message = new MailMessage(from, to)
+                    {
+                        Subject = subject,
+                        Body = body,
+                        IsBodyHtml = true,
+                    })
+                {
+                    await smtpClient.SendMailAsync(message);
+                }
             }
         }
     }

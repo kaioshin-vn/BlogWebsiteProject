@@ -214,7 +214,7 @@ else
                                         @if (isShowNotice)
                                         {
 
-                                            <div class="" style="overflow:hidden;border-radius:12px;position:fixed;top: 62px; right: 82px;z-index:100; border: 2px solid lightgrey;box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.3); /* Đổ bóng */">
+                                            <div class="" style="overflow:hidden;border-radius:12px;position:fixed;top: 62px; right: 82px;z-index:100; border: 2px solid lightgrey;box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.3); width:440px; /* Đổ bóng */">
                                                 @if (LoadedNotice)
                                                 {
                                                     @if (ListNotice.Count != 0)
@@ -222,14 +222,16 @@ else
                                                         @foreach (var item in ListNotice)
                                                         {
                                                             <div style="background-color:@(item.isRead ? " #fff" : "rgb(230, 230, 230)" );">
-                                                                <MudMenuItem Class="p-2" @onclick="() => GoTo(item.Id, item.Link)">
-                                                                    <div class="d-flex justify-content-start align-items-start ">
+                                                                <MudMenuItem Class="p-1" @onclick="() => GoTo(item.Id, item.Link)">
+                                                                    <div class="d-flex justify-content-start align-items-start " style="font-size:14px;">
                                                                         <MudAvatar Class="hover-border">
                                                                             <MudImage Src="@item.AvatarUserSend"></MudImage>
                                                                         </MudAvatar>
                                                                         <div class="ms-3">
                                                                             <b>@item.UserNameSend</b>
-                                                                            <span>@item.Content</span>
+                                                                            <div style="text-overflow: ellipsis; white-space: normal;">
+                                                                                <span >@item.Content</span>
+                                                                            </div>
                                                                             <p style="color:deepskyblue;" class="mb-0">
                                                                                 @item.Time
                                                                             </p>

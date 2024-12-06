@@ -37,8 +37,8 @@ namespace API.Controllers
                     {
                         Id = a.Id,
                         IdUserSend = a.FromUser,
-                        AvatarUserSend = a.UserSend.Img,
-                        UserNameSend = a.UserSend.FullName,
+                        AvatarUserSend = a.Link.Contains("violation") ? @"\Img\avatar_default1.jpg" : a.UserSend.Img,
+                        UserNameSend = a.Link.Contains("violation") ? "Admin": a.UserSend.FullName,
                         Link = a.Link,
                         Content = a.Content,
                         isRead = a.isRead,

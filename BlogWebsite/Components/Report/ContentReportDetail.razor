@@ -1,0 +1,119 @@
+﻿@using ASM_PH35423.StaticClass
+@using Client.Components.ComponentCustom
+@using Data.DTO.EntitiDTO
+@using System.Net.Http.Headers
+@using HtmlAgilityPack
+@using Newtonsoft.Json
+@using Newtonsoft.Json.Linq
+@using System.Globalization;
+
+@inject IJSRuntime JSRunTime
+@inject IHttpClientFactory HttpClientFactory
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+@inject UserManager<ApplicationUser> UserManager
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<style>
+    .hover-post:hover {
+        background-color: rgb(249, 249, 249);
+        cursor: pointer;
+        transform: translateY(-4px);
+    }
+
+    .hover-post {
+        transform: translateY(0);
+        /* Thêm transition để tạo hiệu ứng mượt khi chuyển đổi */
+        transition: transform 0.3s ease;
+    }
+
+    .hover {
+        transform: translateY(0);
+        /* Thêm transition để tạo hiệu ứng mượt khi chuyển đổi */
+        transition: transform 0.3s ease;
+    }
+
+    .hover-underline:hover {
+        text-decoration: underline;
+        cursor: pointer;
+    }
+
+    .hover-border:hover {
+        border: 2px solid transparent;
+        cursor: pointer;
+    }
+
+    .hover-border {
+        border: 2px solid lightgrey;
+        transition: border 0.3s ease-in-out;
+    }
+
+    .hover-background:hover {
+        cursor: pointer;
+        background-color: rgb(245, 245, 245);
+    }
+
+    .hover-backgroundblue:hover {
+        cursor: pointer;
+        background-color: aliceblue;
+    }
+</style>
+
+@if (!Loaded)
+{
+    <LoadingLocal></LoadingLocal>
+}
+else
+{
+    <div class="d-flex align-items-start  ms-3 my-4">
+        <div>
+            <a href="/other-profile/@IdReport">
+                <MudAvatar Style="height:32px;width:32px;" Class="hover-border">
+                    <MudImage Height="25" Src="@this.Avatar"></MudImage>
+                </MudAvatar>
+            </a>
+        </div>
+
+
+        <div class="flex-grow-1 ms-3">
+            <div class="d-flex align-items-end">
+                <a href="/other-profile/@IdReport">
+                    <MudText Typo="Typo.body1"><b class="hover-underline">@this.UserName</b></MudText>
+                </a>
+            </div>
+            <div>
+                @if (Content != null && Content != "")
+                {
+                    <MudCardContent Class="my-1 p-0">
+                        <div class="content_by_user">
+                            @Content
+                        </div>
+                    </MudCardContent>
+                }
+            </div>
+
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public Guid IdReport { get; set; }
+    [Parameter]
+    public string UserName { get; set; }
+    [Parameter]
+    public string Avatar { get; set; }
+    [Parameter]
+    public string? Content { get; set; }
+
+    bool Loaded { get; set; }
+    
+
+    protected override async Task OnInitializedAsync()
+    {
+        Loaded = true;
+    }
+
+}
+

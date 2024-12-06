@@ -1,13 +1,11 @@
-﻿@page "/postReport/{IdPost:guid}"
+﻿@page "/postReportedDetail/{IdPost:guid}"
 
 @using ASM_PH35423.StaticClass
 @using Client.Components.ComponentCustom
 @using Data.DTO
 @using Data.DTO.EntitiDTO
 @using System.Net.Http.Headers
-@using Data.Database.Table
 @using Data.Enums
-@using Microsoft.AspNetCore.SignalR.Client
 @using Newtonsoft.Json
 @using Newtonsoft.Json.Linq
 @using System.Globalization;
@@ -121,13 +119,9 @@ else
             </MudCardHeader>
 
             <div>
-                <a href="/listUserReport/@this.IdUserPost">
-                    <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.History" Size="Size.Medium" Color="Color.Default">lịch sử báo cáo</MudButton>
-                </a>
                 <a href="/ManageAccount/@this.IdUserPost">
                     <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.RemoveCircle" Size="Size.Medium" Color="Color.Error">Khóa tài khoản</MudButton>
                 </a>
-
             </div>
 
             <MudCardContent Class="mb-2 py-0">
@@ -183,21 +177,7 @@ else
                     </div>
                 }
             }
-            <MudGrid Class="mx-5 my-2">
-                <MudItem xs="6" Class="p-0" sm="6">
-                    <MudButton Variant="Variant.Text" Style="width:75%;padding:0px;" OnClick="() => AccepClick(IdPost)">
-                        <MudIconButton Style="padding:10px;" OnClick="() => AccepClick(IdPost)" Icon="@Icons.Material.Filled.Check" Color="Color.Success" />
-                        <MudText>Xác nhận</MudText>
-                    </MudButton>
-                </MudItem>
-                <MudItem xs="6" Class="p-0" sm="6">
-                    <MudButton Variant="Variant.Text" OnClick="() => DeclineClick(IdPost)" Style="width:75%;padding:0px;">
-                        <MudIconButton OnClick="() => DeclineClick(IdPost)" Style="padding:10px;" Icon="@Icons.Material.Filled.Close" Color="Color.Error" />
-                        <MudText>Từ chối</MudText>
-                    </MudButton>
-                </MudItem>
 
-            </MudGrid>
             <div style="margin-top:24px;">
                 <h4 class="my-3">Nội dung người dùng báo cáo</h4>
                 @foreach (var item in listRp)
@@ -275,7 +255,7 @@ else
     protected override async Task OnInitializedAsync()
     {
         var _httpClient = HttpClientFactory.CreateClient("MyHttpClient");
-        var result = await _httpClient.GetStringAsync($"/report/getReportPost/{IdPost}");
+        var result = await _httpClient.GetStringAsync($"/report/getReportedPost/{IdPost}");
         if (result == null)
         {
             isFail = true;
@@ -360,7 +340,7 @@ else
             ContentHtml = (MarkupString)Content;
         }
 
-        result = await _httpClient.GetStringAsync($"/report/getReporDetail/{IdPost}");
+        result = await _httpClient.GetStringAsync($"/report/getReportedDetail/{IdPost}");
         listRp = JsonConvert.DeserializeObject<List<UserReport>>(result);
 
         Loaded = true;
@@ -398,26 +378,6 @@ else
                 if (response.IsSuccessStatusCode)
                 {
                     await _httpClient.GetStringAsync($"/report/changeStateReport/{IdPost}/{WaitState.Accept}");
-
-                    var hubConnection = new HubConnectionBuilder()
-            .WithUrl(Navigation.ToAbsoluteUri("/hubNotice"))
-            .Build();
-
-                    await hubConnection.StartAsync();
-
-
-                    var notice = new Notice();
-                    notice.Id = Guid.NewGuid();
-                    notice.FromUser = IdUser;
-                    notice.ToUser = IdUserPost;
-                    notice.Content = $"Bài viết {Title} của bạn đã vi phạm tiêu chuẩn cộng đồng nên đã bị xóa";
-                    notice.CreateDate = DateTime.Now;
-                    notice.Link = $"/violation/{notice.Id}";
-                    await _httpClient.PostAsJsonAsync($"/addNewNotice", notice);
-
-                    await hubConnection.SendAsync("SendPrivateMessage", IdUserPost.ToString());
-
-
                     Snackbar.Add("Bài viết đã bị xóa", Severity.Info);
                     Navigation.NavigateTo("/report");
                 }

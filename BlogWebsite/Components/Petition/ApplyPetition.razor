@@ -1,0 +1,233 @@
+﻿@page "/Petition/{Id:guid}"
+@using ASM_PH35423.StaticClass
+@using Client.Components.ComponentCustom
+@using Data.DTO.EntitiDTO
+@using System.Net.Http.Headers
+@using Data.Database.Table
+@using HtmlAgilityPack
+@using Microsoft.AspNetCore.SignalR.Client
+@using Newtonsoft.Json
+@using Newtonsoft.Json.Linq
+@using Radzen
+@using Radzen.Blazor
+@using Blazorise.Video
+
+@inject IJSRuntime JSRunTime
+@inject IHttpClientFactory HttpClientFactory
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+@inject UserManager<ApplicationUser> UserManager
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject IWebHostEnvironment env
+
+@if (!isLoading)
+{
+    <LoadingLocal></LoadingLocal>
+}
+else
+{
+    if (isApply)
+    {
+        <MudText Color="Color.Info">Bạn đã gửi đơn khiếu nại, chúng tôi sẽ phản hồi nhanh nhất có thể</MudText>
+    }
+    else
+    {
+        if (Petition.State == Data.Enums.WaitState.Pending)
+        {
+            <style>
+                .rz-html-editor-content img {
+                    display: block; /* Chuyển ảnh thành khối để dễ căn giữa */
+                    margin: 0 auto; /* Căn giữa theo chiều ngang */
+                    height: 300px; /* Chiều cao của ảnh */
+                    border-radius: 8px; /* Bo góc */
+                }
+            </style>
+
+            <div class="p-5">
+                <MudDivider />
+                <MudTabs Rounded="true" ApplyEffectsToContainer="true" ScrollIconColor="Color.Info" Color="Color.Default" SliderColor="Color.Tertiary" PanelClass="pa-6">
+                    <MudTabPanel Text="Khiếu nại" Icon="@Icons.Material.Filled.DriveFileRenameOutline">
+                        <MudGrid>
+                            <MudItem xs="12">
+                                <RadzenHtmlEditor @bind-Value="@Petition.Content" Execute="@OnExecute" style="min-height:300px; height: auto;max-width:990px;border-radius:12px;overflow:hidden;" UploadUrl="minimalApi/uploadImage">
+                                    <RadzenHtmlEditorUndo Title="Trước" />
+                                    <RadzenHtmlEditorRedo Title="Sau" />
+                                    <RadzenHtmlEditorSeparator />
+                                    <RadzenHtmlEditorBold Title="In đậm" />
+                                    <RadzenHtmlEditorItalic Title="In nghiêng" />
+                                    <RadzenHtmlEditorUnderline Title="Gạch chân" />
+                                    <RadzenHtmlEditorStrikeThrough Title="Xuyên qua" />
+                                    <RadzenHtmlEditorSeparator />
+                                    <RadzenHtmlEditorAlignLeft Title="Căn trái" />
+                                    <RadzenHtmlEditorAlignCenter Title="Căn giữa" />
+                                    <RadzenHtmlEditorAlignRight Title="Căn phải" />
+                                    @* <RadzenHtmlEditorJustify Title="Căn đều" /> *@
+                                    <RadzenHtmlEditorSeparator />
+                                    <RadzenHtmlEditorIndent Title="Thụt lề" />
+                                    <RadzenHtmlEditorOutdent Title="Nhô lề" />
+                                    @* <RadzenHtmlEditorUnorderedList Title="Danh sách" /> *@
+                                    <RadzenHtmlEditorOrderedList Title="Danh sách sắp xếp" />
+                                    <RadzenHtmlEditorSeparator />
+                                    <RadzenHtmlEditorColor Title="Màu chữ" />
+                                    <RadzenHtmlEditorBackground Title="Màu nền" />
+                                    <RadzenHtmlEditorRemoveFormat Title="Bỏ định dạng" />
+                                    <RadzenHtmlEditorSeparator />
+                                    @* <RadzenHtmlEditorSubscript Title="Chữ phía dưới" />
+                        <RadzenHtmlEditorSuperscript Title="Chữ phía trên" /> *@
+                                    @* <RadzenHtmlEditorSeparator /> *@
+                                    <RadzenHtmlEditorLink Title="Thêm link" CancelText="Hủy" LinkText="Hiển thị" OpenInNewWindowText="Mở trong cửa số mới" UrlText="Đường dẫn" />
+                                    <RadzenHtmlEditorUnlink Title="Bỏ đường dẫn" />
+                                    <RadzenHtmlEditorImage Title="Thêm ảnh" ShowHeight="false" ShowWidth="false" ShowAlt="false" UploadChooseText="Tải ảnh lên" AltText="Tên ảnh" CancelText="Hủy" SelectText="Chọn ảnh tải lên" UrlText="Nếu không có sẵn ảnh trên máy, hãy nhập đường dẫn ảnh trên web" HeightText="Chiều cao" WidthText="Chiều rộng" />
+                                    <RadzenHtmlEditorSeparator />
+                                    <RadzenHtmlEditorFontName Title="Phông chữ" Placeholder="Phông chữ" />
+                                    <RadzenHtmlEditorFontSize Title="Kích thước" Placeholder="Cỡ chữ" />
+                                    @* <RadzenHtmlEditorFormatBlock Title="Cỡ chữ" Placeholder="Cỡ chữ" NormalText="Thông thường" Heading1Text="Loại 1" Heading2Text="Loại 2" Heading3Text="Loại 3" Heading4Text="Loại 4" Heading5Text="Loại 5" Heading6Text="Loại 6" /> *@
+                                    <RadzenHtmlEditorSeparator />
+                                    <RadzenHtmlEditorCustomTool CommandName="AddCode" Icon="code" Title="Code" />
+                                </RadzenHtmlEditor>
+
+                                <MudItem xs="11" class="d-flex justify-content-end mt-3">
+                                    <MudButton Class="mt-3 rounded-3" OnClick="(async ()=> await CreatePostSubmit())" Variant="MudBlazor.Variant.Filled" Color="Color.Tertiary">Gửi khiếu nại</MudButton>
+                                </MudItem>
+                            </MudItem>
+                        </MudGrid>
+                    </MudTabPanel>
+                </MudTabs>
+            </div>
+        }
+        else if (Petition.State == Data.Enums.WaitState.Accept)
+        {
+            <MudText Color="Color.Success">Tài khoản của bạn đã được mở khóa, hãy đăng nhập</MudText>
+        }
+        else
+        {
+            <MudText Color="Color.Dark">Tài khoản của bạn đã bị khóa vĩnh viễn, chúng tôi vô cùng thương tiếc báo tin</MudText>
+        }
+    }
+
+}
+
+
+<style>
+    a {
+        color: dodgerblue;
+    }
+</style>
+
+@code {
+
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private MudForm form;
+
+    IBrowserFile imgFile;
+
+    private string fileName { get; set; }
+
+    bool isLoading = false;
+
+    bool isApply { get; set; }
+
+    bool isUpPost = false;
+
+    List<string> listRestricted = new List<string>();
+
+    Petition Petition = new Petition();
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        var _httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+        var response = await _httpClient.GetStringAsync($"/getpetition/{Id}");
+        Petition = JsonConvert.DeserializeObject<Petition>(response);
+
+        if (Petition.Content != "")
+        {
+            isApply = true;
+        }
+
+        isLoading = true;
+    }
+
+
+    async Task OnExecute(HtmlEditorExecuteEventArgs args)
+    {
+        if (args.CommandName == "AddCode")
+        {
+            await AddCode(args.Editor);
+        }
+    }
+
+
+    private void UploadFile()
+    {
+        if (imgFile != null)
+            fileName = imgFile.Name;
+    }
+
+    async Task AddCode(RadzenHtmlEditor editor)
+    {
+        await editor.ExecuteCommandAsync(HtmlEditorCommands.InsertHtml, "<br></br>");
+        await editor.ExecuteCommandAsync(HtmlEditorCommands.InsertHtml, $@"<div style=""background-color:beige;border-radius:5px;"" class=""m-3 pt-3 ps-3 codeContainer""><pre><code>&nbsp;</code></pre></div> <br/>");
+    }
+
+    public async Task CreatePostSubmit()
+    {
+
+        if (string.IsNullOrEmpty(Petition.Content))
+        {
+            Snackbar.Add("Không được bỏ trống", Severity.Info);
+            return;
+        }
+
+
+        var _httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+
+        await _httpClient.PutAsJsonAsync($"/sendpetition/{Petition.Id}", Petition);
+
+        isApply = true;
+        StateHasChanged();
+
+        Snackbar.Add("Đã gửi khiếu nại thành công, chúng tôi sẽ phản hồi bạn sớm nhất", Severity.Success);
+        
+    }
+
+
+    string UpLoadVideo(IFormFile file)
+    {
+        var uploadPath = Path.Combine(env.WebRootPath, "UploadVideo");
+
+
+        var fileName = $"upload-{DateTime.Today.ToString("yyyy-MM-dd")}-{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
+
+        using (var stream = new FileStream(Path.Combine(uploadPath, fileName), FileMode.Create))
+        {
+            // Save the file
+            file.CopyTo(stream);
+
+            // Return the URL of the file
+            var url = @"UploadVideo\" + fileName;
+
+            return url;
+        }
+    }
+
+    async Task<(bool state, string word)> CheckContent(string htmlString)
+    {
+        var doc = new HtmlDocument();
+        doc.LoadHtml(htmlString);
+
+        var content = doc.DocumentNode.InnerText;
+
+        foreach (var item in listRestricted)
+        {
+            if (content.ToLower().Contains(item.ToLower()))
+            {
+                return (false, item);
+            }
+        }
+        return (true, "");
+    }
+}
