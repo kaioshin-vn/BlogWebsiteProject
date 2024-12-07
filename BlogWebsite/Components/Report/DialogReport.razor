@@ -46,7 +46,7 @@
 
         var response = await _httpClient.PostAsJsonAsync($"/addReport", report);
         Snackbar.Add("Đã báo cáo bài viết thành công", Severity.Error);
-        MudDialog.Close();
+        MudDialog.Close(DialogResult.Ok(true));
     }
-    void Cancel() => MudDialog.Close();
+    void Cancel() => MudDialog.Close(DialogResult.Ok(false));
 }

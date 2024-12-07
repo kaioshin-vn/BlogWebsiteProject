@@ -3,6 +3,7 @@
 @using Client.Components.Report
 @using Data.DTO.EntitiDTO
 @using System.Net.Http.Headers
+@using Data.Database.Table
 @using Newtonsoft.Json.Linq
 @using System.Globalization;
 
@@ -92,144 +93,160 @@
 }
 else
 {
-    <MudCard Style="margin-top:52px;" Elevation="3" class="hover-post" @onclick="() => DetailPost(IdPost)">
-        <MudCardHeader>
-            <CardHeaderAvatar>
-                <a href="@this.Link">
-                    <MudAvatar Class="hover-border">
-                        <MudImage Src="@this.Avatar"></MudImage>
-                    </MudAvatar>
-                </a>
-            </CardHeaderAvatar>
+    if (this.isReported)
+    {
+        <MudCard Elevation="3" Style="margin-top:52px;">
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Color="Color.Info">Bài viết này đã được báo cáo</MudText>
+                </CardHeaderContent>
+                <CardHeaderActions>
+                    <MudButton OnClick="UnReport" Variant="Variant.Text" Color="Color.Info">Hoàn tác</MudButton>
+                </CardHeaderActions>
+            </MudCardHeader>
+        </MudCard>
+    }
+    else
+    {
+        <MudCard Style="margin-top:52px;" Elevation="3" class="hover-post" @onclick="() => DetailPost(IdPost)">
+            <MudCardHeader>
+                <CardHeaderAvatar>
+                    <a href="@this.Link">
+                        <MudAvatar Class="hover-border">
+                            <MudImage Src="@this.Avatar"></MudImage>
+                        </MudAvatar>
+                    </a>
+                </CardHeaderAvatar>
 
-            <CardHeaderContent>
-                <MudText Typo="Typo.body1"><a href="@this.Link"><b class="hover-underline">@this.UserName</b></a></MudText>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.body1"><a href="@this.Link"><b class="hover-underline">@this.UserName</b></a></MudText>
 
-                <MudText Typo="Typo.body2"><span class="hover-underline">@this.Date</span></MudText>
-            </CardHeaderContent>
+                    <MudText Typo="Typo.body2"><span class="hover-underline">@this.Date</span></MudText>
+                </CardHeaderContent>
 
-            <CardHeaderActions>
-                <MudMenu Icon="@Icons.Material.Filled.MoreHoriz" ActivationEvent="@MouseEvent.MouseOver" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter" Color="Color.Default" AriaLabel="Open user menu">
-                    @if (IdUser == IdUserPost)
+                <CardHeaderActions>
+                    <MudMenu Icon="@Icons.Material.Filled.MoreHoriz" ActivationEvent="@MouseEvent.MouseOver" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter" Color="Color.Default" AriaLabel="Open user menu">
+                        @if (IdUser == IdUserPost)
+                        {
+                            <a href="/updatePost/@IdPost"><MudMenuItem>Chỉnh sửa</MudMenuItem></a>
+                            <MudMenuItem OnClick="DeletePost">Xóa bài viết</MudMenuItem>
+                        }
+                        @if (IdUser != Guid.Empty && IdUser != IdUserPost)
+                        {
+                            <MudMenuItem OnClick="() => Report(this.IdPost, this.IdUserPost, this.IdUser)">Báo cáo</MudMenuItem>
+                        }
+                    </MudMenu>
+                </CardHeaderActions>
+            </MudCardHeader>
+
+
+            <MudCardContent Class="mb-2 py-0">
+                <MudCardActions Class="py-1 ms-4">
+                    @if (TagNames != null && TagNames.Count > 0)
                     {
-                        <a href="/updatePost/@IdPost"><MudMenuItem>Chỉnh sửa</MudMenuItem></a>
-                        <MudMenuItem OnClick="DeletePost">Xóa bài viết</MudMenuItem>
+                        foreach (var item in TagNames)
+                        {
+                            <a style="background-color:rgb(190, 255, 254) ; border-radius:6px; font-size:small;" class="py-1 px-2 mx-1 hover" href="/search/tags/@item">
+                                <MudIconButton Icon="@Icons.Material.Filled.Tag" Size="Size.Small" />
+                                <span style="margin-left:-6px;">@item</span>
+                            </a>
+                        }
                     }
-                    @if (IdUser != Guid.Empty && IdUser != IdUserPost)
-                    {
-                        <MudMenuItem OnClick="() => Report(this.IdPost, this.IdUserPost, this.IdUser)">Báo cáo</MudMenuItem>
-                    }
-                </MudMenu>
-            </CardHeaderActions>
-        </MudCardHeader>
-
-
-        <MudCardContent Class="mb-2 py-0">
-            <MudCardActions Class="py-1 ms-4">
-                @if (TagNames != null && TagNames.Count > 0)
-                {
-                    foreach (var item in TagNames)
-                    {
-                        <a style="background-color:rgb(190, 255, 254) ; border-radius:6px; font-size:small;" class="py-1 px-2 mx-1 hover" href="/search/tags/@item">
-                            <MudIconButton Icon="@Icons.Material.Filled.Tag" Size="Size.Small" />
-                            <span style="margin-left:-6px;">@item</span>
-                        </a>
-                    }
-                }
-            </MudCardActions>
-            <MudText Typo="Typo.h6">@this.Title</MudText>
-        </MudCardContent>
-
-        @if (Content != null && Content != "")
-        {
-            <MudCardContent Class="my-1 py-0">
-                <div class="limited-lines">
-                    @ContentHtml
-                </div>
+                </MudCardActions>
+                <MudText Typo="Typo.h6">@this.Title</MudText>
             </MudCardContent>
-        }
 
-        @if ((VideoFile != null && VideoFile != "") || ImgFile != null)
-        {
-            if (SrcVideo != null)
+            @if (Content != null && Content != "")
             {
-                <div style="height:420px; background-color:black;overflow:hidden" class="d-flex mt-2 justify-content-center align-items-center" onclick="preventParentClick(event)">
-
-                    <Radzen.Blazor.RadzenHtml>
-                        <Blazorise.Video.Video Source="SrcVideo" AutomaticallyHideControls="true" SeekTime="5" style="height : 350px;">
-                        </Blazorise.Video.Video>
-                    </Radzen.Blazor.RadzenHtml>
-                </div>
+                <MudCardContent Class="my-1 py-0">
+                    <div class="limited-lines">
+                        @ContentHtml
+                    </div>
+                </MudCardContent>
             }
-            else
+
+            @if ((VideoFile != null && VideoFile != "") || ImgFile != null)
             {
-                <div class="d-flex mt-2 py-2 justify-content-center align-items-center" style="overflow-x:hidden;">
-                    <MudImage Src="@this.ImgFile"   Height="350" Alt="Swedish Farm House" Class="rounded-lg" />
+                if (SrcVideo != null)
+                {
+                    <div style="height:420px; background-color:black;overflow:hidden" class="d-flex mt-2 justify-content-center align-items-center" onclick="preventParentClick(event)">
+
+                        <Radzen.Blazor.RadzenHtml>
+                            <Blazorise.Video.Video Source="SrcVideo" AutomaticallyHideControls="true" SeekTime="5" style="height : 350px;">
+                            </Blazorise.Video.Video>
+                        </Radzen.Blazor.RadzenHtml>
+                    </div>
+                }
+                else
+                {
+                    <div class="d-flex mt-2 py-2 justify-content-center align-items-center" style="overflow-x:hidden;">
+                        <MudImage Src="@this.ImgFile" Height="350" Alt="Swedish Farm House" Class="rounded-lg" />
+                    </div>
+                }
+            }
+
+            <MudCardContent Class="d-flex justify-content-between align-items-end p-0 mx-3 my-2">
+                <div>
+                    <MudIconButton Icon="@Icons.Material.Filled.Favorite" Color="Color.Secondary" />
+                    <span class="under-line">
+                        @LikeText
+                    </span>
                 </div>
+
+                <div>
+                    <p @onclick="() => DetailPost(IdPost)" class="under-line">
+                        @this.CommentCount bình luận
+                    </p>
+                </div>
+
+            </MudCardContent>
+
+            <hr class="mx-3 my-0" />
+
+            <MudGrid Class="mx-5 my-2">
+                <MudItem xs="6" Class="p-0" sm="3">
+                    <MudButton Variant="Variant.Text" Style="width:75%;padding:0px;" OnClick="LikeClick">
+                        <MudIconButton Style="padding:10px;" Disabled="@(!isUserLike)" OnClick="LikeClick" Icon="@Icons.Material.Filled.Favorite" Color="Color.Secondary" />
+                        <MudText>Yêu thích</MudText>
+                    </MudButton>
+                </MudItem>
+                <MudItem xs="6" Class="p-0" sm="3">
+                    <MudButton Variant="Variant.Text" OnClick="() => DetailPost(IdPost)" Style="width:75%;padding:0px;">
+                        <MudIconButton Disabled Style="padding:10px;" Icon="@Icons.Material.Filled.ChatBubbleOutline" />
+                        <MudText>Bình luận</MudText>
+                    </MudButton>
+                </MudItem>
+                <MudItem xs="6" Class="p-0" sm="3">
+                    <MudButton Variant="Variant.Text" Style="width:75%;padding:0px;" OnClick="CopyCurrentUrl">
+                        <MudIconButton Disabled Style="padding:10px;" OnClick="CopyCurrentUrl" Icon="@Icons.Material.Filled.InsertLink" />
+                        <MudText>Sao chép</MudText>
+                    </MudButton>
+                </MudItem>
+                <MudItem xs="6" Class="p-0" sm="2">
+                    <MudButton @onclick="async ()=> await OpenDialogSave(IdPost)" Variant="Variant.Text" Style="width:100%;padding:0px;">
+                        <MudIconButton Disabled Icon="@Icons.Material.Filled.Save" />
+                        <MudText>Lưu</MudText>
+                    </MudButton>
+                </MudItem>
+            </MudGrid>
+
+        </MudCard>
+        <script>
+            async function copyToClipboard(text) {
+                try {
+                    await navigator.clipboard.writeText(text);
+                    console.log('Copied to clipboard:', text);
+                } catch (err) {
+                    console.error('Failed to copy: ', err);
+                }
             }
-        }
 
-        <MudCardContent Class="d-flex justify-content-between align-items-end p-0 mx-3 my-2">
-            <div>
-                <MudIconButton Icon="@Icons.Material.Filled.Favorite" Color="Color.Secondary" />
-                <span class="under-line">
-                    @LikeText
-                </span>
-            </div>
-
-            <div>
-                <p @onclick="() => DetailPost(IdPost)" class="under-line">
-                    @this.CommentCount bình luận
-                </p>
-            </div>
-
-        </MudCardContent>
-
-        <hr class="mx-3 my-0" />
-
-        <MudGrid Class="mx-5 my-2">
-            <MudItem xs="6" Class="p-0" sm="3">
-                <MudButton Variant="Variant.Text" Style="width:75%;padding:0px;" OnClick="LikeClick">
-                    <MudIconButton Style="padding:10px;" Disabled="@(!isUserLike)" OnClick="LikeClick" Icon="@Icons.Material.Filled.Favorite" Color="Color.Secondary" />
-                    <MudText>Yêu thích</MudText>
-                </MudButton>
-            </MudItem>
-            <MudItem xs="6" Class="p-0" sm="3">
-                <MudButton Variant="Variant.Text" OnClick="() => DetailPost(IdPost)" Style="width:75%;padding:0px;">
-                    <MudIconButton Disabled Style="padding:10px;" Icon="@Icons.Material.Filled.ChatBubbleOutline" />
-                    <MudText>Bình luận</MudText>
-                </MudButton>
-            </MudItem>
-            <MudItem xs="6" Class="p-0" sm="3">
-                <MudButton Variant="Variant.Text" Style="width:75%;padding:0px;" OnClick="CopyCurrentUrl">
-                    <MudIconButton Disabled Style="padding:10px;" OnClick="CopyCurrentUrl" Icon="@Icons.Material.Filled.InsertLink" />
-                    <MudText>Sao chép</MudText>
-                </MudButton>
-            </MudItem>
-            <MudItem xs="6" Class="p-0" sm="2">
-                <MudButton @onclick="async ()=> await OpenDialogSave(IdPost)" Variant="Variant.Text" Style="width:100%;padding:0px;">
-                    <MudIconButton Disabled Icon="@Icons.Material.Filled.Save" />
-                    <MudText>Lưu</MudText>
-                </MudButton>
-            </MudItem>
-        </MudGrid>
-
-    </MudCard>
-    <script>
-        async function copyToClipboard(text) {
-            try {
-                await navigator.clipboard.writeText(text);
-                console.log('Copied to clipboard:', text);
-            } catch (err) {
-                console.error('Failed to copy: ', err);
+            function preventParentClick(event) {
+                console.log('ji')
+                event.stopPropagation();
             }
-        }
-
-        function preventParentClick(event) {
-            console.log('ji')
-            event.stopPropagation();
-        }
-    </script>
+        </script>
+    }
 }
 
 @code {
@@ -272,6 +289,9 @@ else
     string Date { get; set; }
     private MarkupString ContentHtml { get; set; }
     private Guid IdUser { get; set; }
+
+    bool isReported;
+
 
     protected override async Task OnInitializedAsync()
     {
@@ -457,7 +477,7 @@ else
         }
     }
 
-    async Task Report (Guid IdPost, Guid IdUser, Guid IdUserReport)
+    async Task Report(Guid IdPost, Guid IdUser, Guid IdUserReport)
     {
         var parameters = new DialogParameters<DialogReport>();
         parameters.Add(x => x.IdPost, IdPost);
@@ -467,6 +487,33 @@ else
         var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraLarge };
 
         var result = await DialogService.Show<DialogReport>("Báo cáo", parameters, options).Result;
+
+        if (result.Data != null)
+        {
+            if ((bool)result.Data)
+            {
+                var _httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+                var hidePost = new PostHide();
+                hidePost.IdPost = this.IdPost;
+                hidePost.IdUser = this.IdUser;
+                var response = await _httpClient.PostAsJsonAsync($"/addhidepost", hidePost);
+                this.isReported = true;
+                StateHasChanged();
+            }
+        }
     }
+
+    async Task UnReport()
+    {
+        var _httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+        var response = await _httpClient.DeleteAsync($"/deletereport/{this.IdPost}/{this.IdUser}/{this.IdUserPost}");
+        if (response.IsSuccessStatusCode)
+        {
+            await _httpClient.DeleteAsync($"/deletehidepost/{this.IdPost}/{this.IdUser}");
+            this.isReported = false;
+        }
+    }
+
+
 }
 

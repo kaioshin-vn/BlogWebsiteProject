@@ -154,6 +154,14 @@ namespace API.Controllers
             return notice.Content;
         }
 
+        [HttpDelete("/deletereport/{IdPost}/{IdUserReport}/{IdUser}")]
+        public async Task DeleteReport(Guid IdPost, Guid IdUserReport, Guid IdUser)
+        {
+            var rp = await _context.Reports.FirstOrDefaultAsync(a => a.IdPost == IdPost && a.IdUser == a.IdUser && a.IdUserReport == IdUserReport);
+            _context.Reports.Remove(rp);
+            await _context.SaveChangesAsync();
+        }
+
 
         private async Task<PostIntroDTO> GetPostIntro(Post post)
         {

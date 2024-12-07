@@ -110,7 +110,7 @@ namespace API.Controllers.UserController
             {
                 return null;
             }
-            var isFl = _context.Flower.FirstOrDefault(c => c.IdFlower == id && c.IdUser == idViewer);
+            var isFl = _context.Flower.FirstOrDefault(c => c.IdFlower == idViewer && c.IdUser == id);
             return new UserProfileDto
             {
                 Id = id.ToString(),

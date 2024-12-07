@@ -66,6 +66,9 @@ else
             </div>
         </div>
     }
+    <div class="mt-5">
+
+    </div>
 }
 <script>
     function onScrollToEnd(dotNetHelper) {
@@ -91,12 +94,25 @@ else
 
     int Sort = 0;
 
+    Guid? IdUser;
 
     protected override async Task OnInitializedAsync()
     {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        var userCurrent = UserManager.GetUserId(user);
+        if (userCurrent != null)
+        {
+            IdUser = Guid.Parse(userCurrent);
+        }
+        else
+        {
+            IdUser = null;
+        }
         var _httpClient = HttpClientFactory.CreateClient("MyHttpClient");
 
-        var result = await _httpClient.PostAsJsonAsync($"/GetListPostIntro", new List<Guid>());
+        var result = await _httpClient.PostAsJsonAsync($"/GetListPostIntro/{IdUser}", new List<Guid>());
 
         var resultConverted = JsonConvert.DeserializeObject<List<PostIntroDTO>>(await result.Content.ReadAsStringAsync());
         if (resultConverted != null)
@@ -129,7 +145,7 @@ else
         var _httpClient = HttpClientFactory.CreateClient("MyHttpClient");
         if (Sort == 0)
         {
-            var result = await _httpClient.PostAsJsonAsync($"/GetListPostIntro", new List<Guid>());
+            var result = await _httpClient.PostAsJsonAsync($"/GetListPostIntro/{IdUser}", new List<Guid>());
 
             var resultConverted = JsonConvert.DeserializeObject<List<PostIntroDTO>>(await result.Content.ReadAsStringAsync());
             if (resultConverted != null)
@@ -139,7 +155,7 @@ else
         }
         else
         {
-            var result = await _httpClient.PostAsJsonAsync($"/GetListPostHot", new List<Guid>());
+            var result = await _httpClient.PostAsJsonAsync($"/GetListPostHot/{IdUser}", new List<Guid>());
 
             var resultConverted = JsonConvert.DeserializeObject<List<PostIntroDTO>>(await result.Content.ReadAsStringAsync());
             if (resultConverted != null)
@@ -173,11 +189,11 @@ else
             HttpResponseMessage result;
             if (Sort == 0)
             {
-                result = await _httpClient.PostAsJsonAsync($"/GetListPostIntro", listIdCmt);
+                result = await _httpClient.PostAsJsonAsync($"/GetListPostIntro/{IdUser}", listIdCmt);
             }
             else
             {
-                result = await _httpClient.PostAsJsonAsync($"/GetListPostHot", listIdCmt);
+                result = await _httpClient.PostAsJsonAsync($"/GetListPostHot/{IdUser}", listIdCmt);
             }
 
             if (result.IsSuccessStatusCode)

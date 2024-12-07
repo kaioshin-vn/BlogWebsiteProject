@@ -108,19 +108,29 @@ namespace API.Controllers
             if (string.IsNullOrWhiteSpace(keyword))
                 return Ok(new SearchResultWithPaginationDTO());
 
+            var listIdHide = new List<Guid>();
+
             // Lưu keyword search
             if (idUser != Guid.Empty)
             {
                 await SaveSearchHistory(keyword, idUser);
+                var listHide = _context.PostHides.Where(a => a.IdUser == idUser).Select(a => a.IdPost).ToList();
+                if (listHide.Count != 0)
+                {
+                    listIdHide = listHide;
+                }
             }
 
             // Chuẩn hóa từ khóa tìm kiếm
             var normalizedKeyword = keyword.ToLower().RemoveDiacritics();
             var originalKeyword = keyword.ToLower();
 
+
+
             // POSTS
             var posts = await _context.Posts.Include(a => a.User)
-                .Include(a => a.GroupPost).ThenInclude(a => a.Group).Where(a => a.IsDeleted == false && a.User.LockoutEnd == null && (a.GroupPost.Count == 0 || (a.GroupPost.Any(b => b.IdPost == a.Id && b.WaitState == WaitState.Accept && (b.Group.StateGroup == KindGroup.Public || b.Group.StateGroup == KindGroup.Restricted)))))
+                .Include(a => a.GroupPost).ThenInclude(a => a.Group).Where(a => a.IsDeleted == false && a.User.LockoutEnd == null && !listIdHide.Contains(a.Id)
+                && (a.GroupPost.Count == 0 || (a.GroupPost.Any(b => b.IdPost == a.Id && b.WaitState == WaitState.Accept && (b.Group.StateGroup == KindGroup.Public || b.Group.StateGroup == KindGroup.Restricted)))))
                 .ToListAsync();
 
             // listPost tìm được qua keyword, lấy những title gần nhất với keyword

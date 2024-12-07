@@ -11,6 +11,8 @@
 @using Newtonsoft.Json
 @using Newtonsoft.Json.Linq
 @using System.Globalization;
+@using System.Net.Mail
+@using System.Net
 
 @inject IJSRuntime JSRunTime
 @inject IHttpClientFactory HttpClientFactory
@@ -119,20 +121,20 @@ else
 
             <MudCardContent Class="my-1 py-0">
                 <div class="content_by_user">
-                    ContentHtml
+                    @this.ContentHtml
                 </div>
             </MudCardContent>
 
             <MudGrid Class="mx-5 my-2">
                 <MudItem xs="6" Class="p-0" sm="6">
-                    <MudButton Variant="Variant.Text" Style="width:75%;padding:0px;" OnClick="() => AccepClick(Id)">
-                        <MudIconButton Style="padding:10px;" OnClick="() => AccepClick(Id)" Icon="@Icons.Material.Filled.Check" Color="Color.Success" />
+                    <MudButton Variant="Variant.Text" Style="width:75%;padding:0px;" OnClick="() => AccepClick(Petition.IdUser)">
+                        <MudIconButton Style="padding:10px;" OnClick="() => AccepClick(Petition.IdUser)" Icon="@Icons.Material.Filled.Check" Color="Color.Success" />
                         <MudText>Xác nhận</MudText>
                     </MudButton>
                 </MudItem>
                 <MudItem xs="6" Class="p-0" sm="6">
-                    <MudButton Variant="Variant.Text" OnClick="() => DeclineClick(Id)" Style="width:75%;padding:0px;">
-                        <MudIconButton OnClick="() => DeclineClick(Id)" Style="padding:10px;" Icon="@Icons.Material.Filled.Close" Color="Color.Error" />
+                    <MudButton Variant="Variant.Text" OnClick="() => DeclineClick(Petition.IdUser)" Style="width:75%;padding:0px;">
+                        <MudIconButton OnClick="() => DeclineClick(Petition.IdUser)" Style="padding:10px;" Icon="@Icons.Material.Filled.Close" Color="Color.Error" />
                         <MudText>Từ chối</MudText>
                     </MudButton>
                 </MudItem>
@@ -183,76 +185,109 @@ else
     }
 
 
-    async Task AccepClick(Guid Idpost)
+    async Task AccepClick(Guid IdUser)
     {
-        Console.WriteLine("Hello");
-        // var parameters = new DialogParameters<Dialog>();
-        // parameters.Add(x => x.ContentText, "Xác nhận bài viết này đã vi phạm, sẽ xóa bài viết này và tài khoản sẽ được tính là vi phạm 1 lần?");
-        // parameters.Add(x => x.ButtonText, "Đồng ý");
-        // parameters.Add(x => x.Color, Color.Error);
+        var parameters = new DialogParameters<Dialog>();
+        parameters.Add(x => x.ContentText, "Xác nhận bạn muốn mở khóa tài khoản này?");
+        parameters.Add(x => x.ButtonText, "Xác nhận");
+        parameters.Add(x => x.Color, Color.Success);
 
-        // var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-        // var result = await DialogService.Show<Dialog>("Xác nhận", parameters, options).Result;
-        // if (result.Data != null)
-        // {
-        //     if ((bool)result.Data)
-        //     {
-        //         var _httpClient = HttpClientFactory.CreateClient("MyHttpClient");
-        //         var response = await _httpClient.PostAsJsonAsync($"/deletePost/{IdPost}", IdUserPost);
-        //         if (response.IsSuccessStatusCode)
-        //         {
-        //             await _httpClient.GetStringAsync($"/report/changeStateReport/{IdPost}/{WaitState.Accept}");
+        var result = await DialogService.Show<Dialog>("Xác nhận", parameters, options).Result;
+        if (result.Data != null)
+        {
+            if ((bool)result.Data)
+            {
+                this.Petition.State = WaitState.Accept;
+                var _httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+                var data = await _httpClient.PutAsJsonAsync($"/changepetition" , Petition);
+                /////////
+                var user = await UserManager.FindByIdAsync(IdUser.ToString());
 
-        //             var hubConnection = new HubConnectionBuilder()
-        //     .WithUrl(Navigation.ToAbsoluteUri("/hubNotice"))
-        //     .Build();
+                var lockoutResult = await UserManager.SetLockoutEndDateAsync(user, null);
 
-        //             await hubConnection.StartAsync();
-
-
-        //             var notice = new Notice();
-        //             notice.Id = Guid.NewGuid();
-        //             notice.FromUser = IdUser;
-        //             notice.ToUser = IdUserPost;
-        //             notice.Content = $"Bài viết {Title} của bạn đã vi phạm tiêu chuẩn cộng đồng nên đã bị xóa";
-        //             notice.CreateDate = DateTime.Now;
-        //             notice.Link = $"/violation/{notice.Id}";
-        //             await _httpClient.PostAsJsonAsync($"/addNewNotice", notice);
-
-        //             await hubConnection.SendAsync("SendPrivateMessage", IdUserPost.ToString());
+                var from = new MailAddress("trangcthph46782@fpt.edu.vn", "KAIZEN");
+                var to = new MailAddress(user.Email);
+                const string subject = "Tài khoản đã được mở khóa";
+                const string frompass = "xrlz fpkb hjfe lbdw";
 
 
-        //             Snackbar.Add("Bài viết đã bị xóa", Severity.Info);
-        //             Navigation.NavigateTo("/report");
-        //         }
-        //     }
-        // }
+                string body = $"Tài khoản của bạn đã được chúng tôi mở khóa, hãy rút kinh nghiệm cho những lần sau";
+                using (var smtpClient = new SmtpClient
+                    {
+                        Host = "smtp.gmail.com",
+                        Port = 587,
+                        EnableSsl = true,
+                        DeliveryMethod = SmtpDeliveryMethod.Network,
+                        Credentials = new NetworkCredential(from.Address, frompass)
+                    })
+                using (var message = new MailMessage(from, to)
+                    {
+                        Subject = subject,
+                        Body = body,
+                        IsBodyHtml = true,
+                    })
+                {
+                    await smtpClient.SendMailAsync(message);
+                }
+
+                Snackbar.Add("Mở khóa tài khoản thành công", Severity.Success);
+                Navigation.NavigateTo("/listpetition");
+            }
+        }
+
     }
 
-    async Task DeclineClick(Guid Idpost)
+    async Task DeclineClick(Guid IdUser)
     {
-        Console.WriteLine("Hi");
+        var parameters = new DialogParameters<Dialog>();
+        parameters.Add(x => x.ContentText, "Xác nhận bạn muốn từ chối khiếu nại của tài khoản này, tài khoản sẽ bị khóa vĩnh viễn?");
+        parameters.Add(x => x.ButtonText, "Xác nhận");
+        parameters.Add(x => x.Color, Color.Error);
 
-        // var parameters = new DialogParameters<Dialog>();
-        // parameters.Add(x => x.ContentText, "Xác nhận bài viết này không vi phạm ?");
-        // parameters.Add(x => x.ButtonText, "Đồng ý");
-        // parameters.Add(x => x.Color, Color.Success);
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-        // var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+        var result = await DialogService.Show<Dialog>("Xác nhận", parameters, options).Result;
+        if (result.Data != null)
+        {
+            if ((bool)result.Data)
+            {
+                this.Petition.State = WaitState.Decline;
+                var _httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+                var data = await _httpClient.PutAsJsonAsync($"/changepetition", Petition);
+                /////////
+                var user = await UserManager.FindByIdAsync(IdUser.ToString());
 
-        // var result = await DialogService.Show<Dialog>("Xác nhận", parameters, options).Result;
-        // if (result.Data != null)
-        // {
-        //     if ((bool)result.Data)
-        //     {
-        //         var _httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+                var lockoutResult = await UserManager.SetLockoutEndDateAsync(user, null);
 
-        //         await _httpClient.GetStringAsync($"/report/changeStateReport/{IdPost}/{WaitState.Decline}");
-        //         Snackbar.Add("Xác nhận trạng thái thành công", Severity.Info);
-        //         Navigation.NavigateTo("/report");
-        //     }
-        // }
+                var from = new MailAddress("trangcthph46782@fpt.edu.vn", "KAIZEN");
+                var to = new MailAddress(user.Email);
+                const string subject = "Khiếu nại của bạn đã bị từ chối";
+                const string frompass = "xrlz fpkb hjfe lbdw";
+
+
+                string body = $"Chúng tôi rất tiếc phải thông báo rằng khiếu nại của bạn đã bị từ chối, do đó tài khoản của bạn đã bị ban vĩnh viễn, đây sẽ là lần <b>cuối cùng </b> chúng tôi phản hồi về tài khoản của bạn";
+                using (var smtpClient = new SmtpClient
+                    {
+                        Host = "smtp.gmail.com",
+                        Port = 587,
+                        EnableSsl = true,
+                        DeliveryMethod = SmtpDeliveryMethod.Network,
+                        Credentials = new NetworkCredential(from.Address, frompass)
+                    })
+                using (var message = new MailMessage(from, to)
+                    {
+                        Subject = subject,
+                        Body = body,
+                        IsBodyHtml = true,
+                    })
+                {
+                    await smtpClient.SendMailAsync(message);
+                }
+                Navigation.NavigateTo("/listpetition");
+            }
+        }
     }
 }
 

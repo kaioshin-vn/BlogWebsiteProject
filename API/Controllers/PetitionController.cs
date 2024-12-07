@@ -1,6 +1,7 @@
 ﻿using BlogWebsite.Data;
 using Data.Database.Table;
 using Data.DTO.EntitiDTO;
+using Data.Enums;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -31,6 +32,14 @@ namespace API.Controllers
 
         [HttpPut("/sendpetition/{Id}")]
         public async Task<IActionResult> SendPetition(Guid Id, [FromBody] Petition petition)
+        {
+            _context.Petitions.Update(petition);
+            _context.SaveChanges();
+            return Ok();
+        }
+
+        [HttpPut("/changepetition")]
+        public async Task<IActionResult> ChangePetition([FromBody] Petition petition)
         {
             _context.Petitions.Update(petition);
             _context.SaveChanges();

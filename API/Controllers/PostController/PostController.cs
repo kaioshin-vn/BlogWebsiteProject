@@ -55,12 +55,24 @@ namespace API.Controllers.PostController
 			});
 		}
 
-		[HttpPost("/GetListPostIntro")]
-		public async Task<List<PostIntroDTO>> GetListPostIntro([FromBody] List<Guid> listPostExisted)
+		[HttpPost("/GetListPostIntro/{IdUser?}")]
+		public async Task<List<PostIntroDTO>> GetListPostIntro(Guid? IdUser, [FromBody] List<Guid> listPostExisted)
 		{
+			var listIdHide = new List<Guid>();
+			if (IdUser != null)
+			{
+				var listHide = _context.PostHides.Where(a => a.IdUser == IdUser).Select(a => a.IdPost).ToList();
+				if (listHide.Count != 0)
+				{
+					listIdHide = listHide;
+				}
+			}
+
+
 			var listPost = await _context.Posts.Include(a => a.User).Include(a => a.GroupPost).ThenInclude(a => a.Group).Where(a => a.IsDeleted == false &&  (a.GroupPost.Count == 0 || 
 			(a.GroupPost.Any(b => b.IdPost == a.Id && b.WaitState == WaitState.Accept  && ( b.Group.StateGroup == KindGroup.Public  || b.Group.StateGroup == KindGroup.Restricted))))
-			&& !listPostExisted.Contains(a.Id) && a.User.LockoutEnd == null).OrderByDescending(a => a.CreateDate).Take(20).ToListAsync();
+			&& !listPostExisted.Contains(a.Id) && a.User.LockoutEnd == null && !listIdHide.Contains(a.Id))
+				.OrderByDescending(a => a.CreateDate).Take(20).ToListAsync();
 
             var listIntroPost = new List<PostIntroDTO>();
 			foreach (var item in listPost)
@@ -71,12 +83,23 @@ namespace API.Controllers.PostController
 			return listIntroPost;
 		}
 
-        [HttpPost("/GetListPostHot")]
-        public async Task<List<PostIntroDTO>> GetListPostIntroHot([FromBody] List<Guid> listPostExisted)
+        [HttpPost("/GetListPostHot/{IdUser?}")]
+        public async Task<List<PostIntroDTO>> GetListPostIntroHot(Guid? IdUser, [FromBody] List<Guid> listPostExisted)
         {
+            var listIdHide = new List<Guid>();
+            if (IdUser != null)
+            {
+                var listHide = _context.PostHides.Where(a => a.IdUser == IdUser).Select(a => a.IdPost).ToList();
+                if (listHide.Count != 0)
+                {
+                    listIdHide = listHide;
+                }
+            }
+
             var listPost = await _context.Posts.Include(a => a.User).Include(a => a.GroupPost).ThenInclude(a => a.Group).Where(a => a.IsDeleted == false && (a.GroupPost.Count == 0 ||
             (a.GroupPost.Any(b => b.IdPost == a.Id && b.WaitState == WaitState.Accept && (b.Group.StateGroup == KindGroup.Public || b.Group.StateGroup == KindGroup.Restricted))))
-            && !listPostExisted.Contains(a.Id) && a.User.LockoutEnd == null).OrderByDescending(a => a.Like.Length ).Take(20).ToListAsync();
+            && !listPostExisted.Contains(a.Id) && a.User.LockoutEnd == null && !listIdHide.Contains(a.Id))
+				.OrderByDescending(a => a.Like.Length ).Take(20).ToListAsync();
 
             var listIntroPost = new List<PostIntroDTO>();
             foreach (var item in listPost)

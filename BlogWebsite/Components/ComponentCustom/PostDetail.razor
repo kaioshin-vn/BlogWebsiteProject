@@ -5,6 +5,7 @@
 @using System.Net.Http.Headers
 @using Newtonsoft.Json.Linq
 @using System.Globalization;
+@using Data.Database.Table;
 
 @inject IJSRuntime JSRunTime
 @inject IHttpClientFactory HttpClientFactory
@@ -453,6 +454,18 @@ else
         var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraLarge };
 
         var result = await DialogService.Show<DialogReport>("Báo cáo", parameters, options).Result;
+        if (result.Data != null)
+        {
+            if ((bool)result.Data)
+            {
+                var _httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+                var hidePost = new PostHide();
+                hidePost.IdPost = this.IdPost;
+                hidePost.IdUser = this.IdUser;
+                var response = await _httpClient.PostAsJsonAsync($"/addhidepost", hidePost);
+                
+            }
+        }
     }
 
 }
