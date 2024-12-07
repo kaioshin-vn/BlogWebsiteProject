@@ -199,9 +199,8 @@ else
         {
             if ((bool)result.Data)
             {
-                this.Petition.State = WaitState.Accept;
                 var _httpClient = HttpClientFactory.CreateClient("MyHttpClient");
-                var data = await _httpClient.PutAsJsonAsync($"/changepetition" , Petition);
+                var data = await _httpClient.PutAsJsonAsync($"/changepetition/{Petition.Id}", WaitState.Accept);
                 /////////
                 var user = await UserManager.FindByIdAsync(IdUser.ToString());
 
@@ -253,9 +252,8 @@ else
         {
             if ((bool)result.Data)
             {
-                this.Petition.State = WaitState.Decline;
                 var _httpClient = HttpClientFactory.CreateClient("MyHttpClient");
-                var data = await _httpClient.PutAsJsonAsync($"/changepetition", Petition);
+                var data = await _httpClient.PutAsJsonAsync($"/changepetition/{Petition.Id}", WaitState.Decline);
                 /////////
                 var user = await UserManager.FindByIdAsync(IdUser.ToString());
 

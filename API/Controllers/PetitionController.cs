@@ -38,10 +38,12 @@ namespace API.Controllers
             return Ok();
         }
 
-        [HttpPut("/changepetition")]
-        public async Task<IActionResult> ChangePetition([FromBody] Petition petition)
+        [HttpPut("/changepetition/{Id}")]
+        public async Task<IActionResult> ChangePetition(Guid Id, [FromBody] WaitState State)
         {
-            _context.Petitions.Update(petition);
+            var pt = await _context.Petitions.FirstOrDefaultAsync(a => a.Id == Id);
+            pt.State = State;
+            _context.Petitions.Update(pt);
             _context.SaveChanges();
             return Ok();
         }

@@ -125,7 +125,7 @@ else
                                                                 </MudCardContent>
                                                                 @if (!string.IsNullOrEmpty(post.Like))
                                                                 {
-                                                                    string[] likeCount = post.Like.Split(',');
+                                                                    string[] likeCount = post.Like.Split('|');
                                                                     int toltalLike = likeCount.Distinct().Count();
                                                                     <MudText Style=" font-size:12px; color:gray">@(string.IsNullOrEmpty(Convert.ToString(toltalLike)) ? 0 : toltalLike) lượt thích · @post.CommentCount bình luận </MudText>
                                                                 }
@@ -167,7 +167,7 @@ else
                                                                 </MudCardContent>
                                                                 @if (!string.IsNullOrEmpty(post.Like))
                                                                 {
-                                                                    string[] likeCount = post.Like.Split(',');
+                                                                    string[] likeCount = post.Like.Split('|');
                                                                     int toltalLike = likeCount.Distinct().Count();
                                                                     <MudText Style=" font-size:12px; color:gray">@(string.IsNullOrEmpty(Convert.ToString(toltalLike)) ? 0 : toltalLike) lượt thích · @post.CommentCount bình luận </MudText>
                                                                 }
