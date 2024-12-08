@@ -1,3 +1,71 @@
-﻿@page "/groups/modsdsd"
+﻿@page "/groups/pendingpost/{IdGroup:guid}"
+@using Client.Components.ComponentCustom
+@using Newtonsoft.Json
 
-<h1>duyệt</h1>
+@inject IJSRuntime JSRunTime
+@inject IHttpClientFactory HttpClientFactory
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+@inject UserManager<ApplicationUser> UserManager
+
+    <div>
+        <div class="my-3 ms-4" style="width:70%;">
+            <MudText Color="Color.Success" Typo="Typo.h5">Danh sách bài viết đang chờ duyệt của bạn </MudText>
+            @foreach (var item in listIntroPost)
+            {
+                <PostPending Avatar="@item.Avatar" Content="@item.Content"
+                           CreateDate="@item.CreateDate" IdPost="@item.Id"
+                           CommentCount="@item.CommentCount" Like="@item.Like"
+                           VideoFile="@item.VideoFile" ImgFile="@item.ImgFile"
+                           UserName="@item.UserName" TagNames="@item.ListTag" IdUserPost="@item.IdUser"
+                           Title="@item.Title">
+                </PostPending>
+            }
+        </div>
+    </div>
+
+
+
+@code {
+    [Parameter]
+    public Guid IdGroup { get; set; }
+
+    List<PostIntroDTO> listIntroPost = new List<PostIntroDTO>();
+
+    PostIntroDTO? PostDetail = null;
+    private double ScrollPosition = 0;
+
+    bool isLoaded;
+
+    int PosttCount = 20;
+
+    int Sort = 0;
+
+    Guid? IdUser;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        var userCurrent = UserManager.GetUserId(user);
+        if (userCurrent != null)
+        {
+            IdUser = Guid.Parse(userCurrent);
+        }
+        else
+        {
+            IdUser = null;
+        }
+        var _httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+
+        var result = await _httpClient.GetStringAsync($"/GetListPostPendingGroup/{IdGroup}/{IdUser}");
+
+        var resultConverted = JsonConvert.DeserializeObject<List<PostIntroDTO>>( result);
+        if (resultConverted != null)
+        {
+            listIntroPost = resultConverted;
+        }
+        isLoaded = true;
+    }
+}

@@ -67,7 +67,7 @@ else
                 <MudItem xs="12">
                     <MudGrid Class="p-2" Justify="Justify.SpaceBetween">
                         <MudItem>
-                            <MudIcon Icon="@Icons.Material.Filled.LockPerson"/> Chỉ mình tôi
+                            <MudFab StartIcon="@Icons.Material.Filled.ArrowBack" Label=" " OnClick="Back" DropShadow="false" />
                         </MudItem>
                         <MudItem>
                             <MudMenu Icon="@Icons.Material.Filled.MoreHoriz" Color="Color.Default"
@@ -202,5 +202,10 @@ else
     {
         var dialog = DialogService.Show<CreateSaveDialog>();
         var result = await dialog.Result;
+    }
+
+    void Back ()
+    {
+        Navigation.NavigateTo("");
     }
 }

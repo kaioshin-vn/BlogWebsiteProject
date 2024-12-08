@@ -8,9 +8,17 @@
 
     <div class="d-flex align-items-end">
         <select class="form-select mt-3" style="width:150px;" @onchange="(v) => Change(v)">
-            <option value="2022">2022</option>
-            <option value="2023">2023</option>
-            <option value="2024" selected>2024 </option>
+            @for (int i = 2022; i <= this.CurrentYear; i++)
+            {
+                if (i != this.CurrentYear)
+                {
+                    <option value="@i">@i</option>
+                }
+                else
+                {
+                    <option value="@i" selected>@i</option>
+                }
+            }
         </select>
     </div>
 
@@ -72,11 +80,13 @@ else
 
     ChartType ChartType = ChartType.Bar; 
 
-    int Year = 2024;
+    int Year = DateTime.Now.Year;
 
     string TotalAccount;
     string TotalGroup;
     string TotalPost;
+
+    int CurrentYear = DateTime.Now.Year;
 
     bool isColumn = true;
 

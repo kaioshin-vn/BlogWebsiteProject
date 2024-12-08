@@ -72,6 +72,10 @@ namespace API.Controllers
             if (_context.Topics.Count() != 0)
             {
                 listTopic = _context.Topics.Include(a => a.GroupTopics).ThenInclude(a => a.Group).ThenInclude(a => a.MemberGroups).ToList();
+                foreach (var item in listTopic)
+                {
+                    item.GroupTopics = item.GroupTopics.Where(a => a.Group.isDeleted == false).ToList();
+                }
             }
 
 			return Ok(listTopic);

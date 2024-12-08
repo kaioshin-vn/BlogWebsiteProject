@@ -8,7 +8,7 @@
 @inject NavigationManager Navigation
 @inject IHttpClientFactory HttpClientFactory
 
-<MudGrid Class="mx-5 mt-5">
+<div class="mx-5 mt-5">
 <h4>Khám phá các cộng đồng của chúng tôi</h4>
     @if (listTopic.Count > 0)
     {
@@ -58,7 +58,7 @@
     {
         <Client.Components.ComponentCustom.LoadingLocal></Client.Components.ComponentCustom.LoadingLocal>
     }
-</MudGrid>
+</div>
 
 @code {
 

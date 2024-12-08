@@ -64,7 +64,7 @@
 }
 else
 {
-    <MudCard Style="margin-top:52px;" Elevation="3" class="hover-post" @onclick="() => DetailPost(IdPost)">
+    <MudCard Style="margin-top:52px;" Elevation="3" class="hover-post">
         <MudCardHeader>
             <CardHeaderAvatar>
                 <a href="/other-profile/@IdUserPost">
@@ -139,25 +139,6 @@ else
         }
 
 
-
-        <hr class="mx-3 my-0" />
-
-        <MudGrid Class="mx-5 my-2">
-            <MudItem xs="6" Class="p-0" sm="6">
-                <MudButton Variant="Variant.Text" Style="width:75%;padding:0px;" OnClick="() => AccepClick(IdPost)">
-                    <MudIconButton Style="padding:10px;" OnClick="() => AccepClick(IdPost)" Icon="@Icons.Material.Filled.Check" Color="Color.Success" />
-                    <MudText>Đồng ý</MudText>
-                </MudButton>
-            </MudItem>
-            <MudItem xs="6" Class="p-0" sm="6">
-                <MudButton Variant="Variant.Text" OnClick="() => DeclineClick(IdPost)" Style="width:75%;padding:0px;">
-                    <MudIconButton Style="padding:10px;" Icon="@Icons.Material.Filled.Close" Color="Color.Error" />
-                    <MudText>Từ chối</MudText>
-                </MudButton>
-            </MudItem>
-
-        </MudGrid>
-
     </MudCard>
     <script>
         async function copyToClipboard(text) {
@@ -203,8 +184,6 @@ else
     [Parameter]
     public List<string>? TagNames { get; set; }
 
-    [Parameter]
-    public EventCallback WatchDetailPost { get; set; }
 
     bool isUserLike;
 
@@ -285,46 +264,6 @@ else
         Loaded = true;
     }
 
-    async Task AccepClick(Guid postId)
-    {
-        var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
-        var response = await httpClient.PutAsync($"/updatePostWaistate/{postId}", null);
-        if (response.IsSuccessStatusCode)
-        {
-            if (WatchDetailPost.HasDelegate)
-            {
-                Snackbar.Add("Bài viết đã được duyệt", Severity.Info);
-                await WatchDetailPost.InvokeAsync();
-            }
-            Console.WriteLine("update thành công");
-            StateHasChanged();
-        }
-        else
-        {
-            Console.WriteLine("update thất bại");
-        }
-    }
-
-    private async Task DeclineClick(Guid idPost)
-    {
-        var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
-        var response = await httpClient.PutAsync($"/updatePostWaistate2/{idPost}", null);
-        if (response.IsSuccessStatusCode)
-        {
-            if (WatchDetailPost.HasDelegate)
-            {
-                Snackbar.Add("Bài viết đã bị từ chối", Severity.Info);
-                await WatchDetailPost.InvokeAsync();
-            }
-            Console.WriteLine("update thành công");
-            StateHasChanged();
-        }
-        else
-        {
-            Console.WriteLine("update thất bại");
-        }
-    }
-
     void LikeCount()
     {
         @if (Like == null || Like == "")
@@ -365,13 +304,6 @@ else
         Snackbar.Add("Đã sao chép đường dẫn bài viết vào bộ nhớ", Severity.Success);
     }
 
-    private async Task DetailPost(Guid idPost)
-    {
-        if (WatchDetailPost.HasDelegate)
-        {
-            await WatchDetailPost.InvokeAsync(idPost);
-        }
-    }
 
     public async Task OpenDialogSave(Guid id)
     {
