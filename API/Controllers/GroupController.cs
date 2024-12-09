@@ -154,6 +154,37 @@ namespace API.Controllers
 			return Ok(getAdmin != null);
 		}
 
+		[HttpDelete("is-chief")]
+		public async Task<ActionResult> IsChief([FromQuery] Guid userId, [FromQuery] string groupName)
+		{
+			if (string.IsNullOrEmpty(groupName))
+			{
+				return BadRequest();
+			}
+			if (userId == null)
+			{
+				return Unauthorized("Không tìm thấy người dùng.");
+			}
+
+			Console.WriteLine($"Id tantsadsa: {userId}");
+			// Check thông tin thành viên bị xóa
+			var item = await _context.MemberGroups.Include(mg => mg.Group).FirstOrDefaultAsync(mg => mg.IdMember == userId && mg.Group.Name == groupName);
+			var group = item.Group;
+			if (group == null)
+			{
+				return BadRequest("Không tìm thấy nhóm của thành viên.");
+			}
+
+			Console.WriteLine($"Id nhóm: {group.IdGroup}, Tên nhóm: {group.Name}");
+			if (item == null)
+			{
+				return NotFound("Không tìm thấy thành viên.");
+			}
+			_context.MemberGroups.Remove(item);
+			await _context.SaveChangesAsync();
+			return Ok();
+		}
+
 		[HttpGet("is-member/{groupName}")]
 		public async Task<ActionResult<bool>> IsMember(string groupName, [FromQuery] Guid userId)
 		{

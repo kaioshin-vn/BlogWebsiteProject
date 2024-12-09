@@ -16,6 +16,18 @@
 @inject IJSRuntime JSRuntime
 @inject ISnackbar Snackbar
 <style>
+	.rounded-input {
+		border-radius: 20px;
+		border: 1px solid #ccc;
+		width: 30%;
+		padding: 8px;
+		box-sizing: border-box;
+	}
+
+		.rounded-input:focus {
+			outline: none;
+		}
+
 	.person-list {
 		list-style-type: none;
 		padding: 0;
@@ -40,10 +52,22 @@
 			<MudTabPanel Text="Danh sách">
 				<MudText>
 					<h3>Danh sách Thành viên và Admin của Nhóm: @Name</h3>
+					<MudButton Class="mt-3" OnClick="() => ConfirmOutGroup()" Variant=" Variant.Filled" Color="Color.Error">
+						Rời cộng đồng
+					</MudButton>
+					<div class="d-flex justify-content-end align-center relative mb-3">
+						<!-- Trường nhập liệu -->
+						<input type="text"
+							   placeholder="Tìm kiếm thành viên"
+							   class="rounded-input"
+							   @oninput="OnSearchChanged"
+							   value="@Search" />
+						<MudIconButton Icon="@Icons.Material.Filled.Search" Color="Color.Primary" />
 
-					@if (allMembers != null && allMembers.Any())
+					</div>
+					@if (filteredMembers != null && filteredMembers.Any())
 					{
-						<MudTable Items="@allMembers" Hover="true" Breakpoint="Breakpoint.Sm" LoadingProgressColor="Color.Info">
+						<MudTable Items="@filteredMembers" Hover="true" Breakpoint="Breakpoint.Sm" LoadingProgressColor="Color.Info">
 							<HeaderContent>
 								<MudTh>Tên</MudTh>
 								<MudTh>Chức vụ</MudTh>
@@ -84,6 +108,7 @@
 									<MudIconButton Icon="@Icons.Material.Filled.Create"
 												   OnClick="() => OnclickNavigation(context.Id)"
 												   Disabled="isActionDisabled[context.Id]" />
+
 								</MudTd>
 
 							</RowTemplate>
@@ -91,7 +116,12 @@
 					}
 					else
 					{
-						<p>Không có thành viên hoặc admin nào trong nhóm.</p>
+						<MudItem Class="d-flex align-items-center ">
+							<MudIcon Icon="@Icons.Material.Filled.PriorityHigh" Color="Color.Default" />
+							<MudText Typo="Typo.body1">
+								Không có thành viên hoặc admin nào trong nhóm khớp với tìm kiếm của bạn.
+							</MudText>
+						</MudItem>
 					}
 				</MudText>
 			</MudTabPanel>
@@ -190,9 +220,9 @@
 							@foreach (var item in listIntroPostUser)
 							{
 								<PostIntro Avatar="@item.Avatar" Content="@item.Content"
-											  CreateDate="@item.CreateDate" IdPost="@item.Id"
-											  CommentCount="@item.CommentCount" Like="@item.Like"
-											  VideoFile="@item.VideoFile" ImgFile="@item.ImgFile" UserName="@item.UserName" Title="@item.Title">
+										   CreateDate="@item.CreateDate" IdPost="@item.Id"
+										   CommentCount="@item.CommentCount" Like="@item.Like"
+										   VideoFile="@item.VideoFile" ImgFile="@item.ImgFile" UserName="@item.UserName" Title="@item.Title">
 								</PostIntro>
 							}
 						}
@@ -302,6 +332,10 @@ else
 	private bool isJoined;
 	private List<PostIntroDTO> listIntroPost;
 	private List<PostIntroDTO> listIntroPostUser;
+	private List<MemberDTO> filteredMembers = new List<MemberDTO>(); // Danh sách thành viên được lọc
+	private string Search { get; set; }
+	Guid memberId { get; set; }
+
 
 
 	protected override async Task OnInitializedAsync()
@@ -331,7 +365,7 @@ else
 		group = await DbContext.Groups.FirstOrDefaultAsync(g => g.Name == Name);
 		await LoadMembers();
 		await CheckGroupState();
-		await IsAdminLoad(); 
+		await IsAdminLoad();
 	}
 	private async Task UpdateGroupClick()
 	{
@@ -387,11 +421,32 @@ else
 		if (response.IsSuccessStatusCode)
 		{
 			allMembers = await response.Content.ReadFromJsonAsync<List<MemberDTO>>();
+			filteredMembers = allMembers;
 			Console.WriteLine("Danh sách thành viên đã được tải thành công.");
 		}
 		else
 		{
 			Console.WriteLine("Không thể kiểm tra danh sách nhóm.");
+		}
+	}
+
+	private void OnSearchChanged(ChangeEventArgs e)
+	{
+		Search = e.Value.ToString();  // Cập nhật giá trị Search khi người dùng nhập
+		UpdateFilteredMember();  // Gọi hàm lọc chủ đề
+	}
+
+	private void UpdateFilteredMember()
+	{
+		if (string.IsNullOrWhiteSpace(Search))
+		{
+			filteredMembers = allMembers;  // Nếu không có từ khóa tìm kiếm, hiển thị tất cả chủ đề
+		}
+		else
+		{
+			filteredMembers = allMembers
+				.Where(t => t.FullName.Contains(Search, StringComparison.OrdinalIgnoreCase))
+				.ToList();  // Lọc chủ đề theo tên
 		}
 	}
 
@@ -443,11 +498,22 @@ else
 	private async Task ConfirmDelete(Guid id)
 	{
 		// Hiển thị hộp thoại xác nhận
-		bool confirmed = await JSRuntime.InvokeAsync<bool>("confirm", "Bạn có chắc chắn muốn xóa không?");
+		bool confirmed = await JSRuntime.InvokeAsync<bool>("confirm", "Bạn có chắc chắn muốn rời nhóm không?");
 		if (confirmed)
 		{
 			// Nếu người dùng nhấn "OK", thực hiện xóa
 			await OnclickDelete(id);
+		}
+	}
+
+	private async Task ConfirmOutGroup()
+	{
+		// Hiển thị hộp thoại xác nhận
+		bool confirmed = await JSRuntime.InvokeAsync<bool>("confirm", "Bạn có chắc chắn muốn xóa không?");
+		if (confirmed)
+		{
+			// Nếu người dùng nhấn "OK", thực hiện xóa
+			await OutGroup();
 		}
 	}
 
@@ -488,6 +554,45 @@ else
 		}
 		var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
 		var response = await httpClient.DeleteAsync($"api/group/member/{memberId}?userId={currentUserId}&groupName={Name}");
+		if (response.IsSuccessStatusCode)
+		{
+			Console.WriteLine("Xóa thành công.");
+			await LoadMembers();
+		}
+		else
+		{
+			var errorResponse = await response.Content.ReadAsStringAsync();
+			Console.WriteLine("Error Response: " + errorResponse);
+		}
+		StateHasChanged();
+	}
+
+	private async Task OutGroup()
+	{
+		var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+		var user = authState.User;
+		var userCurrent = UserManager.GetUserId(user);
+		var currentUserId = Guid.Parse(userCurrent);
+		Console.WriteLine($"currentUserId:t {currentUserId}");
+		if (currentUserId == null)
+		{
+			Console.WriteLine("Không tìm thấy người dùng.");
+			return;
+		}
+		// Lấy vai trò của người dùng hiện tại
+		var currentUserRole = allMembers.FirstOrDefault(m => m.Id == currentUserId)?.Position;
+		// Kiểm tra nếu người dùng là phó nhóm và đang cố gắng xóa một phó nhóm khác
+		if (currentUserRole == Data.Enums.Position.Chief)
+		{
+			Snackbar.Add("Chủ nhóm không thể rời nhóm.", Severity.Warning);
+			return;
+		}
+
+		Console.WriteLine($"currentUserId: {currentUserId}, memberId: {memberId}");
+
+
+		var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+		var response = await httpClient.DeleteAsync($"api/group/is-chief?userId={currentUserId}&groupName={Name}");
 		if (response.IsSuccessStatusCode)
 		{
 			Console.WriteLine("Xóa thành công.");
