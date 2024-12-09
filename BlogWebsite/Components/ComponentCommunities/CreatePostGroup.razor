@@ -342,12 +342,22 @@ else
             }
         }
 
+        var _httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+        var datacheck = await _httpClient.GetStringAsync($"/isgroupprivate/{IdGroupUserChoose}");
+
+        var isPrivateGr = JsonConvert.DeserializeObject<bool>(datacheck);
+
+        if (isPrivateGr)
+        {
+            Snackbar.Add("Hiện tại nhóm đang có chế độ là riêng tư nên không thể đăng bài" , Severity.Error);
+            return;
+        }
+
         isUpPost = true;
         StateHasChanged();
 
         var idPost = Guid.NewGuid();
 
-        var _httpClient = HttpClientFactory.CreateClient("MyHttpClient");
 
         var listIdTag = new List<Guid>();
         foreach (var item in ListTag)
@@ -415,16 +425,18 @@ else
             if (result.IsSuccessStatusCode)
             {
                 isUpPost = false;
-                Snackbar.Add("Thêm bài viết thành công", Severity.Success);
                 if (isMember)
                 {
                     // Tạo bài viết thành công, điều hướng đến trang tạo bài
-                    Navigation.NavigateTo("/groups/modsdsd");
+                    Snackbar.Add("Bài viết của bạn đã được đăng tải và chờ admin xét duyệt", Severity.Info);
+                    Navigation.NavigateTo($"/groups/pendingpost/{IdGroupUserChoose}");
                 }
                 else
                 {
+                    var nameGr = ListGroupUser.FirstOrDefault(a => a.IdGroup == IdGroupUserChoose).Name;
                     // Nếu không phải thành viên nhóm Private, điều hướng đến trang lỗi hoặc thông báo
-                    Navigation.NavigateTo("/listPost");
+                    Snackbar.Add("Thêm bài viết thành công", Severity.Success);
+                    Navigation.NavigateTo($"/groups/{nameGr}");
                 }
             }
 

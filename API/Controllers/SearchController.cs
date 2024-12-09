@@ -130,7 +130,7 @@ namespace API.Controllers
             // POSTS
             var posts = await _context.Posts.Include(a => a.User)
                 .Include(a => a.GroupPost).ThenInclude(a => a.Group).Where(a => a.IsDeleted == false && a.User.LockoutEnd == null && !listIdHide.Contains(a.Id)
-                && (a.GroupPost.Count == 0 || (a.GroupPost.Any(b => b.IdPost == a.Id && b.WaitState == WaitState.Accept && (b.Group.StateGroup == KindGroup.Public || b.Group.StateGroup == KindGroup.Restricted)))))
+                && (a.GroupPost.Count == 0 || (a.GroupPost.Any(b => b.IdPost == a.Id && b.WaitState == WaitState.Accept && (b.Group.StateGroup == KindGroup.Public )))))
                 .ToListAsync();
 
             // listPost tìm được qua keyword, lấy những title gần nhất với keyword

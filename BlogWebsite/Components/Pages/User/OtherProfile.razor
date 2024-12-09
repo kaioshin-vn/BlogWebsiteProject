@@ -20,127 +20,134 @@
 }
 else
 {
-    <div class="mt-4 mb-5">
-        <MudCard>
-            <MudCardMedia Image="/Img/univer.png" Height="300" />
-        </MudCard>
-        <div class="d-flex justify-space-between align-center" style="margin-top: -26px;">
-            <div class="d-flex align-center">
-                <MudAvatar Style="width: 160px; height: 160px; border: 4px solid white;" Class="mb-3 mb-md-0">
-                    <MudImage @onclick="OpenAvatarViewer" Src="@(_avatarUrl ?? "/Img/avatar_default.jpg")" Style="cursor: pointer;" />
-                </MudAvatar>
-                <div class="ms-2 text-start">
-                    <MudText Typo="Typo.h4">@model.FullName</MudText>
-                    <MudText Typo="Typo.body1" Class="mb-2">Người theo dõi: @model.CountFollow.ToString("N0", System.Globalization.CultureInfo.InvariantCulture)</MudText>
+    if (NotFound)
+    {
+        <MudText Color="Color.Error">Tài khoản không tồn tại hoặc đã bị xóa</MudText>
+    }
+    else
+    {
+        <div class="mt-4 mb-5">
+            <MudCard>
+                <MudCardMedia Image="/Img/univer.png" Height="300" />
+            </MudCard>
+            <div class="d-flex justify-space-between align-center" style="margin-top: -26px;">
+                <div class="d-flex align-center">
+                    <MudAvatar Style="width: 160px; height: 160px; border: 4px solid white;" Class="mb-3 mb-md-0">
+                        <MudImage @onclick="OpenAvatarViewer" Src="@(_avatarUrl ?? "/Img/avatar_default.jpg")" Style="cursor: pointer;" />
+                    </MudAvatar>
+                    <div class="ms-2 text-start">
+                        <MudText Typo="Typo.h4">@model.FullName</MudText>
+                        <MudText Typo="Typo.body1" Class="mb-2">Người theo dõi: @model.CountFollow.ToString("N0", System.Globalization.CultureInfo.InvariantCulture)</MudText>
+                    </div>
+                </div>
+                <div>
+                    @if (model.IsFollowing)
+                    {
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ToggleFollowUser">Bỏ theo dõi</MudButton>
+                    }
+                    else
+                    {
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ToggleFollowUser">Theo dõi</MudButton>
+                    }
                 </div>
             </div>
-            <div>
-                @if (model.IsFollowing)
-                {
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ToggleFollowUser">Bỏ theo dõi</MudButton>
-                }
-                else
-                {
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ToggleFollowUser">Theo dõi</MudButton>
-                }
-            </div>
-        </div>
-        <div class="mt-4 d-flex align-items-start" style="width: calc(100% - 160px);">
-            <div class="sticky" style=" position: sticky;top: 90px;" id="replaceHidden">
-                <MudCard>
-                    @if (!string.IsNullOrEmpty(model.Descript))
-                    {
+            <div class="mt-4 d-flex align-items-start" style="width: calc(100% - 160px);">
+                <div class="sticky" style=" position: sticky;top: 90px;" id="replaceHidden">
+                    <MudCard>
+                        @if (!string.IsNullOrEmpty(model.Descript))
+                        {
+                            <MudCardHeader>
+                                <CardHeaderContent>
+                                    <MudText Typo="Typo.h6">Giới thiệu</MudText>
+                                </CardHeaderContent>
+                            </MudCardHeader>
+                            <MudCardContent>
+                                <MudText Typo="Typo.body1">@model.Descript</MudText>
+                            </MudCardContent>
+                        }
                         <MudCardHeader>
                             <CardHeaderContent>
-                                <MudText Typo="Typo.h6">Giới thiệu</MudText>
+                                <MudText Typo="Typo.h6">Thông tin cá nhân</MudText>
                             </CardHeaderContent>
                         </MudCardHeader>
                         <MudCardContent>
-                            <MudText Typo="Typo.body1">@model.Descript</MudText>
+                            <MudList T="string">
+                                @if (!string.IsNullOrEmpty(model.Address))
+                                {
+                                    <MudListItem Icon="@Icons.Material.Filled.LocationOn" Text="@($"Địa chỉ: {model.Address}")" />
+                                }
+                                @if (!string.IsNullOrEmpty(model.PhoneNumber))
+                                {
+                                    <MudListItem Icon="@Icons.Material.Filled.Phone" Text="@($"Điện thoại: {model.PhoneNumber}")" />
+                                }
+                                @if (!string.IsNullOrEmpty(model.Email))
+                                {
+                                    <MudListItem Icon="@Icons.Material.Filled.Email" Text="@($"Email: {model.Email}")" />
+                                }
+                            </MudList>
                         </MudCardContent>
-                    }
-                    <MudCardHeader>
-                        <CardHeaderContent>
-                            <MudText Typo="Typo.h6">Thông tin cá nhân</MudText>
-                        </CardHeaderContent>
-                    </MudCardHeader>
-                    <MudCardContent>
-                        <MudList T="string">
-                            @if (!string.IsNullOrEmpty(model.Address))
-                            {
-                                <MudListItem Icon="@Icons.Material.Filled.LocationOn" Text="@($"Địa chỉ: {model.Address}")" />
-                            }
-                            @if (!string.IsNullOrEmpty(model.PhoneNumber))
-                            {
-                                <MudListItem Icon="@Icons.Material.Filled.Phone" Text="@($"Điện thoại: {model.PhoneNumber}")" />
-                            }
-                            @if (!string.IsNullOrEmpty(model.Email))
-                            {
-                                <MudListItem Icon="@Icons.Material.Filled.Email" Text="@($"Email: {model.Email}")" />
-                            }
-                        </MudList>
-                    </MudCardContent>
-                </MudCard>
-            </div>
-            <div class="" style="margin-top:-52px; width:72%;">
-                @if (listIntroPost.Count != 0)
-                {
-                    <div>
-                        <div class="ms-4" style="width:100%; display: @(PostDetail == null?"block":"none");">
-                            @foreach (var item in listIntroPost)
-                            {
-                                <PostIntro Avatar="@item.Avatar" Content="@item.Content"
-                                           CreateDate="@item.CreateDate" IdPost="@item.Id"
-                                           CommentCount="@item.CommentCount" Like="@item.Like"
-                                           VideoFile="@item.VideoFile" ImgFile="@item.ImgFile"
-                                           UserName="@item.UserName" TagNames="@item.ListTag" IdUserPost="@item.IdUser"
-                                           Title="@item.Title" WatchDetailPost="DetailPost">
-                                </PostIntro>
-                            }
-                        </div>
-                    </div>
-
-                    @if (PostDetail != null)
+                    </MudCard>
+                </div>
+                <div class="" style="margin-top:-52px; width:72%;">
+                    @if (listIntroPost.Count != 0)
                     {
                         <div>
-                            <div class="mt-3 ms-4" style="width:70%;">
-                                <PostDetail Avatar="@PostDetail.Avatar" Content="@PostDetail.Content"
-                                            CreateDate="@PostDetail.CreateDate" IdPost="@PostDetail.Id"
-                                            CommentCount="@PostDetail.CommentCount" Like="@PostDetail.Like"
-                                            VideoFile="@PostDetail.VideoFile" IdUserPost="@PostDetail.IdUser"
-                                            UserName="@PostDetail.UserName" TagNames="@PostDetail.ListTag"
-                                            Title="@PostDetail.Title" GoBack="GoBack">
-                                </PostDetail>
+                            <div class="ms-4" style="width:100%; display: @(PostDetail == null?"block":"none");">
+                                @foreach (var item in listIntroPost)
+                                {
+                                    <PostIntro Avatar="@item.Avatar" Content="@item.Content"
+                                               CreateDate="@item.CreateDate" IdPost="@item.Id"
+                                               CommentCount="@item.CommentCount" Like="@item.Like"
+                                               VideoFile="@item.VideoFile" ImgFile="@item.ImgFile"
+                                               UserName="@item.UserName" TagNames="@item.ListTag" IdUserPost="@item.IdUser"
+                                               Title="@item.Title" WatchDetailPost="DetailPost">
+                                    </PostIntro>
+                                }
                             </div>
                         </div>
-                    }
-                    <script>
-                        function removeHiddenOverflow() {
-                            const element = document.querySelector('#replaceHidden');
 
-                            let currentElement = element.parentElement;
-
-                            // Lặp qua tất cả các thẻ cha của thẻ được chọn
-                            while (currentElement) {
-                                const overflowStyle = window.getComputedStyle(currentElement).overflow;
-
-
-                                // Kiểm tra nếu overflow là hidden
-                                console.log(overflowStyle)
-                                if (overflowStyle === 'hidden' || overflowStyle === 'auto' || overflowStyle === 'scroll' || overflowStyle === 'hidden auto') {
-                                    currentElement.style.overflow = 'visible'; // Hoặc một giá trị phù hợp khác
-                                }
-
-                                // Chuyển sang thẻ cha tiếp theo
-                                currentElement = currentElement.parentElement;
-                            }
+                        @if (PostDetail != null)
+                        {
+                            <div>
+                                <div class="mt-3 ms-4" style="width:70%;">
+                                    <PostDetail Avatar="@PostDetail.Avatar" Content="@PostDetail.Content"
+                                                CreateDate="@PostDetail.CreateDate" IdPost="@PostDetail.Id"
+                                                CommentCount="@PostDetail.CommentCount" Like="@PostDetail.Like"
+                                                VideoFile="@PostDetail.VideoFile" IdUserPost="@PostDetail.IdUser"
+                                                UserName="@PostDetail.UserName" TagNames="@PostDetail.ListTag"
+                                                Title="@PostDetail.Title" GoBack="GoBack">
+                                    </PostDetail>
+                                </div>
+                            </div>
                         }
-                        removeHiddenOverflow();
-                    </script>
-                }
+                        <script>
+                            function removeHiddenOverflow() {
+                                const element = document.querySelector('#replaceHidden');
+
+                                let currentElement = element.parentElement;
+
+                                // Lặp qua tất cả các thẻ cha của thẻ được chọn
+                                while (currentElement) {
+                                    const overflowStyle = window.getComputedStyle(currentElement).overflow;
+
+
+                                    // Kiểm tra nếu overflow là hidden
+                                    console.log(overflowStyle)
+                                    if (overflowStyle === 'hidden' || overflowStyle === 'auto' || overflowStyle === 'scroll' || overflowStyle === 'hidden auto') {
+                                        currentElement.style.overflow = 'visible'; // Hoặc một giá trị phù hợp khác
+                                    }
+
+                                    // Chuyển sang thẻ cha tiếp theo
+                                    currentElement = currentElement.parentElement;
+                                }
+                            }
+                            removeHiddenOverflow();
+                        </script>
+                    }
+                </div>
             </div>
         </div>
-    </div>
+    }
 }
 
 @code {
@@ -152,6 +159,8 @@ else
     private string _avatarUrl;
     private bool IsCurrentUser = false;
     private bool isAvatarViewerVisible = false;
+
+    bool NotFound;
 
     PostIntroDTO? PostDetail = null;
     bool Loaded;
@@ -206,8 +215,16 @@ else
         var response = await client.GetAsync($"api/users/{id}/{idViewer}");
         if (response.IsSuccessStatusCode)
         {
-            model = await response.Content.ReadFromJsonAsync<PersonalInfoModel>();
-            _avatarUrl = model.Img;
+            if (!string.IsNullOrEmpty( await response.Content.ReadAsStringAsync()))
+            {
+                model = await response.Content.ReadFromJsonAsync<PersonalInfoModel>();
+                _avatarUrl = model.Img;
+            }
+            else
+            {
+                NotFound = true;
+            }
+
         }
         else
         {

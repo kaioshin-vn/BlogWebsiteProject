@@ -1,0 +1,88 @@
+﻿@page "/groups/historypost/{Name}"
+
+@using Client.Components.Pages.Post
+@using Data.Database.Table
+@using Microsoft.EntityFrameworkCore
+@using Newtonsoft.Json
+@using Data.DTO.EntitiDTO
+@using Data.DTO
+@using Client.Components.ComponentCustom
+@using Data.Enums
+
+@inject UserManager<ApplicationUser> UserManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+@inject IHttpClientFactory HttpClientFactory
+@inject IJSRuntime JSRuntime
+@inject ISnackbar Snackbar
+
+@if (!isLoaded)
+{
+    <LoadingLocal></LoadingLocal>
+}
+else
+{
+    <MudText>
+
+        <div style="width:68% ; margin-top:-10px; margin-left: 50px " class="mb-4">
+            <MudText Typo="Typo.h5" Color="Color.Info">Danh sách bài viết bạn đã đăng tải</MudText>
+
+            @if (listIntroPostUser != null && listIntroPostUser.Any())
+            {
+                @foreach (var item in listIntroPostUser)
+                {
+                    <a href="/postDetail/@item.Id">
+                        <PostIntro Avatar="@item.Avatar" Content="@item.Content" IdUserPost="@item.IdUser"
+                                   CreateDate="@item.CreateDate" IdPost="@item.Id"
+                                   CommentCount="@item.CommentCount" Like="@item.Like"
+                                   VideoFile="@item.VideoFile" ImgFile="@item.ImgFile" UserName="@item.UserName" Title="@item.Title">
+                        </PostIntro>
+                    </a>
+                }
+            }
+            else
+            {
+                <p style="margin-top: 200px; margin-left: 250px">Chưa có bài viết nào trong nhóm này.</p>
+            }
+        </div>
+    </MudText>
+}
+@code {
+    [Parameter]
+    public string Name { get; set; }
+
+    private List<PostIntroDTO> listIntroPostUser;
+
+    bool isLoaded;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetPostGroupUser();
+        isLoaded = true;
+    }
+
+
+    private async Task GetPostGroupUser()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        var userCurrent = UserManager.GetUserId(user);
+        var currentUserId = Guid.Parse(userCurrent);
+        Console.WriteLine($"cunetddg: {currentUserId}");
+        var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+
+        var response = await httpClient.GetAsync($"api/Post/getListPostIntroGroupForUser?groupName={Name}&userId={currentUserId}");
+        Console.WriteLine($"Request URL: api/Post/getListPostIntroGroupUser?groupName={Name}&userId={currentUserId}");
+
+        if (response.IsSuccessStatusCode)
+        {
+            listIntroPostUser = await response.Content.ReadFromJsonAsync<List<PostIntroDTO>>();
+            Console.WriteLine("Kiểm tra trạng thái danh sách thành công.");
+            StateHasChanged();
+        }
+        else
+        {
+            Console.WriteLine("Không thể kiểm tra trạng thái danh sách.");
+        }
+    }
+}

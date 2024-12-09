@@ -19,7 +19,7 @@ namespace Data.Database.Table
         public Guid IdUserReceive { get; set; }
         public bool isDeleted { get; set; }
 
-        [ForeignKey("IdUserSend")]
+        [ForeignKey("IdUser")]
         public ApplicationUser? UserSend { get; set; }
         [ForeignKey("IdUserReceive")]
         public ApplicationUser? UserReceive { get; set; }

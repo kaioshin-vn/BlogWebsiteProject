@@ -1,0 +1,274 @@
+﻿@page "/ManageComunities"
+@* @page "/ManageAccount/{IdUser:guid}" *@
+
+@using Client.Components.ComponentCustom
+@using Data.DTO
+@using Data.Database.Table
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
+@using System.Text.RegularExpressions
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.SignalR.Client
+@using Newtonsoft.Json
+@using System.Net.Mail
+@using System.Net
+
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+@inject IDialogService DialogService
+@inject IHttpClientFactory HttpClientFactory
+@inject ISnackbar Snackbar
+
+@inject UserManager<ApplicationUser> UserManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+
+@if (!LoadingSucces)
+{
+    <Client.Components.ComponentCustom.LoadingLocal></Client.Components.ComponentCustom.LoadingLocal>
+}
+else
+{
+
+    <div class="top-row px-4 d-flex justify-content-center">
+        <input type="text" @bind-value="Search" class="form-control" style="width : 550px" id="search" placeholder="Nhập tên cộng đồng " aria-label="Recipient's username" aria-describedby="basic-addon2">
+        <button @onclick="SearchAction" class="input-group-text fw-lagre mx-3" style="background-color: rgb(42, 198, 255);border:solid 2px grey" id=""> Tìm kiếm</button>
+    </div>
+    <MudContainer Class="mb-5" MaxWidth="MaxWidth.Large">
+        @if (ListGr.Count == 0)
+        {
+            <p class="mt-3">Không tìm thấy cộng đồng nào</p>
+        }
+        else
+        {
+            <MudSimpleTable Class="my-10" Elevation="3" Style="overflow-x: auto;">
+                <thead>
+                    <tr>
+                        <th>Tên cộng đồng</th>
+                        <th>Số thành viên</th>
+                        <th>Số bài viết</th>
+                        <th>Số bài viết vi phạm</th>
+                        <th>Chức năng</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var row in ListGr)
+                    {
+                        <tr>
+                            <td><a href="/groups/@row.Name"><b>@row.Name</b></a></td>
+                            <td>@row.MemberCount</td>
+                            <td>@row.PostCount</td>
+                            <td>@row.ViolenceCount</td>
+
+                            <td>
+                                <MudButton Color="Color.Error" OnClick="() => DeleteGroup(row.Id, row.Name)">Giải tán</MudButton>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </MudSimpleTable>
+            <div class="d-flex justify-content-center">
+                <MudPagination Color="Color.Primary" Count="TotalPage" @bind-value="@Page" SelectedChanged="LoadUser" />
+            </div>
+        }
+    </MudContainer>
+
+
+}
+
+
+@code {
+    [Parameter]
+    public Guid IdUser { get; set; }
+
+    List<ComunitiesDTO> ListGr = new List<ComunitiesDTO>();
+    bool Open;
+    bool LoadingSucces = false;
+    List<IdentityRole<Guid>> listRole;
+    List<Guid> ListIdRoleUser = new List<Guid>();
+
+    string Search = "";
+
+    bool searchBan;
+
+    int Page = 1;
+
+    int TotalPage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUser();
+
+        LoadingSucces = true;
+    }
+
+    async Task SearchBan()
+    {
+        searchBan = !searchBan;
+        await LoadUser();
+    }
+
+    async Task LoadUser()
+    {
+        var _http = HttpClientFactory.CreateClient("MyHttpClient");
+        var data = await _http.GetStringAsync($"/getListComunities/{Page}/{Search}");
+
+        ListGr = JsonConvert.DeserializeObject<List<ComunitiesDTO>>(data);
+
+        data = await _http.GetStringAsync($"/GetTotalComunities/{Search}");
+        TotalPage = JsonConvert.DeserializeObject<int>(data);
+        TotalPage++;
+    }
+
+    async Task DeleteGroup (Guid Id, string Name)
+    {
+        var parameters = new DialogParameters<Dialog>();
+        parameters.Add(x => x.ContentText, "Xác nhận bạn muốn xóa cộng động, sẽ xóa cộng đồng vĩnh viễn");
+        parameters.Add(x => x.ButtonText, "Xóa");
+        parameters.Add(x => x.Color, Color.Error);
+
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+        var result = await DialogService.Show<Dialog>("Xác nhận", parameters, options).Result;
+        if (result.Data != null)
+        {
+            if ((bool)result.Data)
+            {
+                var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+                var user = authState.User;
+                var userCurrent = UserManager.GetUserId(user);
+                var currentUserId = Guid.Parse(userCurrent);
+                var _httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+                var response = await _httpClient.DeleteAsync($"/deleteGroup/{Id}");
+                if (response.IsSuccessStatusCode)
+                {
+                    var data = await _httpClient.GetStringAsync($"/GetIdAdminComunities/{Id}");
+
+                    var IdChief = JsonConvert.DeserializeObject<Guid>(data);
+
+                    var hubConnection = new HubConnectionBuilder()
+            .WithUrl(Navigation.ToAbsoluteUri("/hubNotice"))
+            .Build();
+
+                    await hubConnection.StartAsync();
+
+                        var notice = new Notice();
+                        notice.Id = Guid.NewGuid();
+                        notice.FromUser = IdChief;
+                        notice.ToUser = IdChief;
+                        notice.Content = $"Nhóm {Name} của bạn đã bị quản trị viên xóa do vi phạm";
+                        notice.CreateDate = DateTime.Now;
+                        notice.Link = $"/groups/{Name}";
+                        await _httpClient.PostAsJsonAsync($"/addNewNotice", notice);
+
+                    await hubConnection.SendAsync("SendPrivateMessage", IdChief.ToString());
+
+                    Snackbar.Add("Đã xóa cộng đồng ", Severity.Info);
+                    Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
+                }
+            }
+        }
+    }
+    async Task BanUser(Guid id)
+    {
+        var parameters = new DialogParameters<Dialog>();
+        parameters.Add(x => x.ContentText, "Xác nhận bạn muốn khóa tài khoản này?");
+        parameters.Add(x => x.ButtonText, "Khóa");
+        parameters.Add(x => x.Color, Color.Error);
+
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+        var result = await DialogService.Show<Dialog>("Xác nhận", parameters, options).Result;
+        if (result.Data != null)
+        {
+            if ((bool)result.Data)
+            {
+                var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+                var userCurent = authState.User;
+                var idUserCurrent = UserManager.GetUserId(userCurent);
+                var idUser = Guid.Parse(idUserCurrent);
+                if (id.ToString() == idUser.ToString())
+                {
+                    Snackbar.Add("Không thể khóa tài khoản đang sử dụng", Severity.Error);
+                    return;
+                }
+
+
+                var user = await UserManager.FindByIdAsync(id.ToString());
+
+                var lockoutEnd = DateTimeOffset.UtcNow.AddYears(100);
+                await UserManager.SetLockoutEndDateAsync(user, lockoutEnd);
+
+
+                Snackbar.Add("Đã khóa tài khoản này", Severity.Info);
+                await LoadUser();
+
+                var from = new MailAddress("trangcthph46782@fpt.edu.vn", "KAIZEN");
+                var to = new MailAddress(user.Email);
+                const string subject = "Tài khoản của bạn đã bị khóa";
+                const string frompass = "xrlz fpkb hjfe lbdw";
+
+                var petition = new Petition();
+                petition.Id = Guid.NewGuid();
+                petition.IdUser = user.Id;
+                petition.State = Data.Enums.WaitState.Pending;
+                petition.Content = "";
+
+                var _http = HttpClientFactory.CreateClient("MyHttpClient");
+
+                var data = await _http.PostAsJsonAsync($"/petition/add", petition);
+
+                var linkPetition = Navigation.BaseUri + "Petition/" + $"{petition.Id}";
+
+                string body = $"Tài khoản của bạn đã bị khóa, hãy truy cập đường dẫn sau để có thể khiếu nại với admin, lưu ý bạn chỉ có thể khiếu nại 1 lần: <a href=\"{linkPetition}\">{linkPetition}</a>";
+                using (var smtpClient = new SmtpClient
+                    {
+                        Host = "smtp.gmail.com",
+                        Port = 587,
+                        EnableSsl = true,
+                        DeliveryMethod = SmtpDeliveryMethod.Network,
+                        Credentials = new NetworkCredential(from.Address, frompass)
+                    })
+                using (var message = new MailMessage(from, to)
+                    {
+                        Subject = subject,
+                        Body = body,
+                        IsBodyHtml = true,
+                    })
+                {
+                    await smtpClient.SendMailAsync(message);
+                }
+            }
+        }
+    }
+    public async Task UnbanUser(string userId)
+    {
+        var parameters = new DialogParameters<Dialog>();
+        parameters.Add(x => x.ContentText, "Xác nhận bạn muốn mở khóa tài khoản này?");
+        parameters.Add(x => x.ButtonText, "Xác nhận");
+        parameters.Add(x => x.Color, Color.Success);
+
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+        var result = await DialogService.Show<Dialog>("Xác nhận", parameters, options).Result;
+        if (result.Data != null)
+        {
+            if ((bool)result.Data)
+            {
+                var user = await UserManager.FindByIdAsync(userId);
+
+                var lockoutResult = await UserManager.SetLockoutEndDateAsync(user, null);
+                Snackbar.Add("Mở khóa tài khoản thành công", Severity.Success);
+                await LoadUser();
+            }
+        }
+
+
+    }
+
+
+    async Task SearchAction()
+    {
+        await LoadUser();
+    }
+}

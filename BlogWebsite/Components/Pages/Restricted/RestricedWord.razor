@@ -15,7 +15,7 @@
         </MudItem>
         <MudItem xs="12" sm="6" md="4"> </MudItem>
         <MudItem xs="12" sm="6" md="4" Class="d-flex justify-content-end">
-            <MudButton StartIcon="@Icons.Material.Filled.Add" Variant="Variant.Filled" Color="Color.Primary" OnClick="@(async () => await OpenAddDialog())">Thêm từ khóa hạn chế</MudButton>
+            <MudButton StartIcon="@Icons.Material.Filled.Add" Variant="Variant.Filled" Color="Color.Info" OnClick="@(async () => await OpenAddDialog())">Thêm từ khóa hạn chế</MudButton>
         </MudItem>
     </MudGrid>
     <MudTable Items="@_topics" ServerData="@(new Func<TableState,CancellationToken, Task<TableData<RestrictedWordDto>>>(ServerReload))"
@@ -29,7 +29,7 @@
             <MudTd DataLabel="ID">@context.Id</MudTd>
             <MudTd DataLabel="Tên chủ đề">@context.Word</MudTd>
             <MudTd DataLabel="Thao tác">
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => OpenEditDialog(context))">Sửa</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Tertiary" OnClick="@(() => OpenEditDialog(context))">Sửa</MudButton>
                 <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="@(() => OpenDeleteDialog(context))">Xóa</MudButton>
             </MudTd>
         </RowTemplate>
