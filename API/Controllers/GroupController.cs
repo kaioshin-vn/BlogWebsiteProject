@@ -382,7 +382,7 @@ namespace API.Controllers
             {
                 return BadRequest("Tên nhóm không được để trống.");
             }
-            bool nameExists = await _context.Groups.AnyAsync(g => g.Name == name);
+            bool nameExists = await _context.Groups.AnyAsync(g => g.Name == name && g.isDeleted == false);
             return Ok(nameExists);
         }
 

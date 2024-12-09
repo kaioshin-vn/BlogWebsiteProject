@@ -31,11 +31,13 @@ else
             {
                 @foreach (var item in listIntroPostUser)
                 {
-                    <PostIntro Avatar="@item.Avatar" Content="@item.Content"
-                               CreateDate="@item.CreateDate" IdPost="@item.Id"
-                               CommentCount="@item.CommentCount" Like="@item.Like"
-                               VideoFile="@item.VideoFile" ImgFile="@item.ImgFile" UserName="@item.UserName" Title="@item.Title">
-                    </PostIntro>
+                    <a href="/postDetail/@item.Id">
+                        <PostIntro Avatar="@item.Avatar" Content="@item.Content" IdUserPost="@item.IdUser"
+                                   CreateDate="@item.CreateDate" IdPost="@item.Id"
+                                   CommentCount="@item.CommentCount" Like="@item.Like"
+                                   VideoFile="@item.VideoFile" ImgFile="@item.ImgFile" UserName="@item.UserName" Title="@item.Title">
+                        </PostIntro>
+                    </a>
                 }
             }
             else

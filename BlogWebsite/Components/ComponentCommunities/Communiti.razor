@@ -613,7 +613,7 @@ else
                 var response = await _httpClient.DeleteAsync($"/deleteGroup/{group.IdGroup}");
                 if (response.IsSuccessStatusCode)
                 {
-                    Snackbar.Add("Đã xóa nhóm ", Severity.Info);
+                    Snackbar.Add("Đã xóa cộng đồng ", Severity.Info);
                     Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
                 }
             }
