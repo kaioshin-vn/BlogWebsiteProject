@@ -120,6 +120,9 @@ else
         TotalPage++;
     }
 
+
+
+
     async Task DeleteGroup (Guid Id, string Name)
     {
         var parameters = new DialogParameters<Dialog>();
@@ -152,14 +155,14 @@ else
 
                     await hubConnection.StartAsync();
 
-                        var notice = new Notice();
-                        notice.Id = Guid.NewGuid();
-                        notice.FromUser = IdChief;
-                        notice.ToUser = IdChief;
-                        notice.Content = $"Nhóm {Name} của bạn đã bị quản trị viên xóa do vi phạm";
-                        notice.CreateDate = DateTime.Now;
-                        notice.Link = $"/groups/{Name}";
-                        await _httpClient.PostAsJsonAsync($"/addNewNotice", notice);
+                    var notice = new Notice();
+                    notice.Id = Guid.NewGuid();
+                    notice.FromUser = IdChief;
+                    notice.ToUser = IdChief;
+                    notice.Content = $"Nhóm {Name} của bạn đã bị quản trị viên xóa do vi phạm";
+                    notice.CreateDate = DateTime.Now;
+                    notice.Link = $"/groups/{Name}";
+                    await _httpClient.PostAsJsonAsync($"/addNewNotice", notice);
 
                     await hubConnection.SendAsync("SendPrivateMessage", IdChief.ToString());
 
@@ -269,6 +272,7 @@ else
 
     async Task SearchAction()
     {
+        Page = 1;
         await LoadUser();
     }
 }
