@@ -97,7 +97,20 @@ else
         }
     </style>
     <MudFab StartIcon="@Icons.Material.Filled.ArrowBack" Label=" " OnClick="Back" DropShadow="false" />
-
+    if (this.isReported)
+    {
+        <MudCard Elevation="3" Style="margin-top:52px;">
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Color="Color.Info">Bài viết này đã được báo cáo</MudText>
+                </CardHeaderContent>
+                <CardHeaderActions>
+                    <MudButton OnClick="UnReport" Variant="Variant.Text" Color="Color.Info">Hoàn tác</MudButton>
+                </CardHeaderActions>
+            </MudCardHeader>
+        </MudCard>
+    }
+    else {
     <div>
         <MudCardHeader>
             <CardHeaderAvatar>
@@ -201,7 +214,7 @@ else
         </div>
 
     </div>
-
+    }
 
 
     <script>
@@ -249,6 +262,8 @@ else
     ListComment ListCommentComponent { get; set; }
 
     List<string> ListVideo { get; set; } = new List<string>();
+
+    bool isReported;
 
     bool isUserLike;
 
@@ -463,8 +478,20 @@ else
                 hidePost.IdPost = this.IdPost;
                 hidePost.IdUser = this.IdUser;
                 var response = await _httpClient.PostAsJsonAsync($"/addhidepost", hidePost);
-                
+                this.isReported = true;
+                StateHasChanged();
             }
+        }
+    }
+
+    async Task UnReport()
+    {
+        var _httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+        var response = await _httpClient.DeleteAsync($"/deletereport/{this.IdPost}/{this.IdUser}/{this.IdUserPost}");
+        if (response.IsSuccessStatusCode)
+        {
+            await _httpClient.DeleteAsync($"/deletehidepost/{this.IdPost}/{this.IdUser}");
+            this.isReported = false;
         }
     }
 

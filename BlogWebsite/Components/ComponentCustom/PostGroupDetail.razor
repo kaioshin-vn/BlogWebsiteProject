@@ -1,9 +1,12 @@
-﻿@using ASM_PH35423.StaticClass
+﻿@page "/detatilPostGroup/{Name}/{IdPost:guid}"
+
+@using ASM_PH35423.StaticClass
 @using Client.Components.ComponentCustom
 @using Client.Components.Report
 @using Data.DTO.EntitiDTO
 @using System.Net.Http.Headers
 @using Data.Database.Table
+@using Newtonsoft.Json
 @using Newtonsoft.Json.Linq
 @using System.Globalization;
 
@@ -14,16 +17,31 @@
 @inject UserManager<ApplicationUser> UserManager
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
-
-
 <style>
-    .limited-lines {
-        display: -webkit-box; /* Đặt display là -webkit-box để sử dụng line clamping */
-        -webkit-box-orient: vertical; /* Đặt box-orient là vertical để giới hạn theo chiều dọc */
-        overflow: hidden; /* Ẩn phần nội dung tràn */
-        -webkit-line-clamp: 5; /* Giới hạn số dòng là 6 */
-        line-height: 20px; /* Chiều cao mỗi dòng */
-        text-overflow: ellipsis; /* Hiển thị dấu "..." khi bị cắt */
+    html {
+        scroll-behavior: auto !important;
+    }
+
+    .content_by_user img {
+        display: block; /* Chuyển ảnh thành khối để dễ căn giữa */
+        margin: 0 auto; /* Căn giữa theo chiều ngang */
+        height: 300px; /* Chiều cao của ảnh */
+        border-radius: 8px; /* Bo góc */
+    }
+
+    .rz-html-editor:focus-within {
+        outline: none !important;
+    }
+
+    .rz-html-editor-content img {
+        display: block; /* Chuyển ảnh thành khối để dễ căn giữa */
+        margin: 0 auto; /* Căn giữa theo chiều ngang */
+        height: 300px; /* Chiều cao của ảnh */
+        border-radius: 8px; /* Bo góc */
+    }
+
+    .pointer:hover {
+        cursor: pointer;
     }
 
     .hover:hover {
@@ -49,36 +67,23 @@
         transition: transform 0.3s ease;
     }
 
-    .limited-lines img {
-        display: none;
-    }
-
-    .limited-lines * {
-        font-size: 16px !important;
-        padding: 0px !important;
-        margin: 0px !important;
-    }
-
-    .limited-lines br {
-        display: none;
-    }
-
     .hover-underline:hover {
         text-decoration: underline;
+        cursor: pointer;
     }
 
     .hover-border:hover {
         border: 2px solid transparent;
+        cursor: pointer;
+    }
+
+    .codeContainer {
+        display: block !important;
     }
 
     .hover-border {
         border: 2px solid lightgrey;
         transition: border 0.3s ease-in-out;
-    }
-
-
-    .codeContainer {
-        display: none;
     }
 
     .under-line:hover {
@@ -93,25 +98,29 @@
 }
 else
 {
-    if (this.isReported)
+
+    if(!isFail)
     {
-        <MudCard Elevation="3" Style="margin-top:52px;">
-            <MudCardHeader>
-                <CardHeaderContent>
-                    <MudText Color="Color.Info">Bài viết này đã được báo cáo</MudText>
-                </CardHeaderContent>
-                <CardHeaderActions>
-                    <MudButton OnClick="UnReport" Variant="Variant.Text" Color="Color.Info">Hoàn tác</MudButton>
-                </CardHeaderActions>
-            </MudCardHeader>
-        </MudCard>
-    }
-    else
-    {
-        <MudCard Style="margin-top:52px;" Elevation="3" class="hover-post" @onclick="() => DetailPost(IdPost)">
+        <MudFab StartIcon="@Icons.Material.Filled.ArrowBack" Label=" " OnClick="Back" DropShadow="false" />
+
+        if (this.isReported)
+        {
+            <MudCard Elevation="3" Style="margin-top:52px;width:78%;">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Color="Color.Info">Bài viết này đã được báo cáo</MudText>
+                    </CardHeaderContent>
+                    <CardHeaderActions>
+                        <MudButton OnClick="UnReport" Variant="Variant.Text" Color="Color.Info">Hoàn tác</MudButton>
+                    </CardHeaderActions>
+                </MudCardHeader>
+            </MudCard>
+        }
+        else{
+        <div style="width:78%;">
             <MudCardHeader>
                 <CardHeaderAvatar>
-                    <a href="/other-profile/@this.IdUser">
+                    <a href="@this.Link">
                         <MudAvatar Class="hover-border">
                             <MudImage Src="@this.Avatar"></MudImage>
                         </MudAvatar>
@@ -119,8 +128,8 @@ else
                 </CardHeaderAvatar>
 
                 <CardHeaderContent>
-                    <MudText Typo="Typo.body1"><a href="/other-profile/@this.IdUser"><b class="hover-underline">@this.UserName</b></a></MudText>
 
+                    <MudText Typo="Typo.body1"><a href="@this.Link"><b class="hover-underline">@this.UserName</b></a></MudText>
                     <MudText Typo="Typo.body2"><span class="hover-underline">@this.Date</span></MudText>
                 </CardHeaderContent>
 
@@ -130,13 +139,13 @@ else
                         {
                             <a href="/updatePost/@IdPost"><MudMenuItem>Chỉnh sửa</MudMenuItem></a>
                         }
-                        @if (IdUser == IdUserPost || isAdmin)
+                        @if (IdUser == IdUserPost || IsAdmin)
                         {
                             <MudMenuItem OnClick="DeletePost">Xóa bài viết</MudMenuItem>
                         }
                         @if (IdUser != Guid.Empty && IdUser != IdUserPost)
                         {
-                            <MudMenuItem OnClick="() => Report(this.IdPost, this.IdUserPost, this.IdUser)">Báo cáo</MudMenuItem>
+                            <MudMenuItem OnClick="() => this.Report(this.IdPost, this.IdUserPost, this.IdUser)">Báo cáo</MudMenuItem>
                         }
                     </MudMenu>
                 </CardHeaderActions>
@@ -162,78 +171,58 @@ else
             @if (Content != null && Content != "")
             {
                 <MudCardContent Class="my-1 py-0">
-                    <div class="limited-lines">
+                    <div class="content_by_user">
                         @ContentHtml
                     </div>
                 </MudCardContent>
             }
 
-            @if ((VideoFile != null && VideoFile != "") || ImgFile != null)
+            @if (ListVideo.Count != 0)
             {
-                if (SrcVideo != null)
+                if (ListVideo.Count == 1)
                 {
-                    <div style="height:420px; background-color:black;overflow:hidden" class="d-flex mt-2 justify-content-center align-items-center" onclick="preventParentClick(event)">
-
+                    <div style="height:400px; background-color:black;overflow:hidden" class="d-flex mt-2 justify-content-center rounded-3 align-items-center">
                         <Radzen.Blazor.RadzenHtml>
-                            <Blazorise.Video.Video Source="SrcVideo" AutomaticallyHideControls="true" SeekTime="5" style="height : 350px;">
+                            <Blazorise.Video.Video Source="ListVideo[0]" AutomaticallyHideControls="true" SeekTime="5" style="height : 350px;">
                             </Blazorise.Video.Video>
                         </Radzen.Blazor.RadzenHtml>
                     </div>
                 }
                 else
                 {
-                    <div class="d-flex mt-2 py-2 justify-content-center align-items-center" style="overflow-x:hidden;">
-                        <MudImage Src="@this.ImgFile" Height="350" Alt="Swedish Farm House" Class="rounded-lg" />
+                    <div style="height:400px; background-color:black;overflow:hidden" class="d-flex mt-2 justify-content-center rounded-3 align-items-center">
+                        <MudCarousel Class="mud-width-full" TData="object" AutoCycle="false" ShowBullets="false" BulletsColor="Color.Tertiary" Style="height:100%;">
+                            @foreach (var item in ListVideo)
+                            {
+                                <MudCarouselItem>
+                                    <Radzen.Blazor.RadzenHtml>
+                                        <Blazorise.Video.Video Source="item" AutomaticallyHideControls="true" SeekTime="5" style="height : 400px;">
+                                        </Blazorise.Video.Video>
+                                    </Radzen.Blazor.RadzenHtml>
+                                </MudCarouselItem>
+                            }
+                        </MudCarousel>
                     </div>
                 }
             }
 
-            <MudCardContent Class="d-flex justify-content-between align-items-end p-0 mx-3 my-2">
-                <div>
-                    <MudIconButton Icon="@Icons.Material.Filled.Favorite" Color="Color.Secondary" />
-                    <span class="under-line">
-                        @LikeText
-                    </span>
+
+
+            <div class="d-flex align-items-center mt-4 ms-3">
+                <div @onclick="LikeClick" class="hover">
+                    <MudIconButton Style="padding:10px;" @onclick="LikeClick" Disabled="@(!isUserLike)" Icon="@Icons.Material.Filled.Favorite" Color="Color.Secondary" />
                 </div>
+                <MudText Class="ms-2">@LikeText</MudText>
+            </div>
 
-                <div>
-                    <p @onclick="() => DetailPost(IdPost)" class="under-line">
-                        @this.CommentCount bình luận
-                    </p>
-                </div>
+            <AddComment IdPost="IdPost" UserAddComment="UserAddNewComment"></AddComment>
 
-            </MudCardContent>
+            <div style="margin-top:24px;">
+                <ListComment IdUserPost="IdUserPost" IdPost="IdPost" @ref="ListCommentComponent"></ListComment>
+            </div>
 
-            <hr class="mx-3 my-0" />
-
-            <MudGrid Class="mx-5 my-2">
-                <MudItem xs="6" Class="p-0" sm="3">
-                    <MudButton Variant="Variant.Text" Style="width:75%;padding:0px;" OnClick="LikeClick">
-                        <MudIconButton Style="padding:10px;" Disabled="@(!isUserLike)" OnClick="LikeClick" Icon="@Icons.Material.Filled.Favorite" Color="Color.Secondary" />
-                        <MudText>Yêu thích</MudText>
-                    </MudButton>
-                </MudItem>
-                <MudItem xs="6" Class="p-0" sm="3">
-                    <MudButton Variant="Variant.Text" OnClick="() => DetailPost(IdPost)" Style="width:75%;padding:0px;">
-                        <MudIconButton Disabled Style="padding:10px;" Icon="@Icons.Material.Filled.ChatBubbleOutline" />
-                        <MudText>Bình luận</MudText>
-                    </MudButton>
-                </MudItem>
-                <MudItem xs="6" Class="p-0" sm="3">
-                    <MudButton Variant="Variant.Text" Style="width:75%;padding:0px;" OnClick="CopyCurrentUrl">
-                        <MudIconButton Disabled Style="padding:10px;" OnClick="CopyCurrentUrl" Icon="@Icons.Material.Filled.InsertLink" />
-                        <MudText>Sao chép</MudText>
-                    </MudButton>
-                </MudItem>
-                <MudItem xs="6" Class="p-0" sm="2">
-                    <MudButton @onclick="async ()=> await OpenDialogSave(IdPost)" Variant="Variant.Text" Style="width:100%;padding:0px;">
-                        <MudIconButton Disabled Icon="@Icons.Material.Filled.Save" />
-                        <MudText>Lưu</MudText>
-                    </MudButton>
-                </MudItem>
-            </MudGrid>
-
-        </MudCard>
+        </div>
+        }
         <script>
             async function copyToClipboard(text) {
                 try {
@@ -243,52 +232,57 @@ else
                     console.error('Failed to copy: ', err);
                 }
             }
-
-            function preventParentClick(event) {
-                console.log('ji')
-                event.stopPropagation();
-            }
         </script>
+    }
+    else
+    {
+        <div class="my-5 mx-auto">
+            <h3>Oops</h3>
+            <p>Có vẻ như bài viết này đã bị xóa</p>
+        </div>
     }
 }
 
 @code {
     [Parameter]
     public Guid IdPost { get; set; }
+
     [Parameter]
+    public string Name { get; set; }
+
     public Guid IdUserPost { get; set; }
-    [Parameter]
+
     public string UserName { get; set; }
-    [Parameter]
+
     public string Avatar { get; set; }
-    [Parameter]
+
     public string Title { get; set; }
-    [Parameter]
+
     public string? Content { get; set; }
-    [Parameter]
+
     public string? VideoFile { get; set; }
-    [Parameter]
-    public string? ImgFile { get; set; }
-    [Parameter]
+
     public string Like { get; set; }
-    [Parameter]
+
     public string Link { get; set; }
-    [Parameter]
+
     public int CommentCount { get; set; }
-    [Parameter]
+
     public DateTime? CreateDate { get; set; }
 
-    [Parameter]
     public List<string>? TagNames { get; set; }
 
-    [Parameter]
-    public string GroupName { get; set; }
+    bool isReported;
 
-    [Parameter]
-    public bool isAdmin { get; set; }
+    bool IsAdmin;
 
+    ListComment ListCommentComponent { get; set; }
+
+    List<string> ListVideo { get; set; } = new List<string>();
 
     bool isUserLike;
+
+    PostCommentDTO Comment { get; set; } = new PostCommentDTO();
 
     bool Loaded { get; set; }
     string LikeText { get; set; }
@@ -297,16 +291,37 @@ else
     private MarkupString ContentHtml { get; set; }
     private Guid IdUser { get; set; }
 
-    bool isReported;
-
+    private bool isFail;
 
     protected override async Task OnInitializedAsync()
     {
+        var _httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+        var result = await _httpClient.GetStringAsync($"/post/getPost/{IdPost}");
+        if (result == null)
+        {
+            isFail = true;
+            Loaded = true;
+            return;
+        }
+        var postIntro = JsonConvert.DeserializeObject<PostIntroDTO>(result);
+
+        Title = postIntro.Title;
+        IdUserPost = postIntro.IdUser;
+        UserName = postIntro.UserName;
+        Avatar = postIntro.Avatar;
+        Content = postIntro.Content;
+        VideoFile = postIntro.VideoFile;
+        Like = postIntro.Like;
+        CommentCount = postIntro.CommentCount;
+        CreateDate = postIntro.CreateDate;
+        TagNames = postIntro.ListTag;
+        Link = postIntro.Link;
+
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
 
         var userCurrent = UserManager.GetUserId(user);
-        if (userCurrent != null)
+        if(userCurrent != null)
         {
             IdUser = Guid.Parse(userCurrent);
         }
@@ -350,7 +365,7 @@ else
             Date = "Vừa xong";
         }
 
-        if (VideoFile != null && VideoFile != "")
+        if (VideoFile != null)
         {
             SrcVideo = VideoFile.Split("|")[0];
         }
@@ -361,6 +376,10 @@ else
         {
             Like = response;
         }
+        if (VideoFile != null && VideoFile != "")
+        {
+            ListVideo = VideoFile.Split('|').ToList();
+        }
 
         LikeCount();
 
@@ -370,6 +389,13 @@ else
             ContentHtml = (MarkupString)Content;
         }
 
+        var data = await httpClient.GetAsync($"api/group/is-adminOrChief/{Name}?userId={IdUser}");
+        if (data.IsSuccessStatusCode)
+        {
+            // Gán kết quả trả về vào biến adminOrChief
+            IsAdmin = await data.Content.ReadFromJsonAsync<bool>();
+        }
+
         Loaded = true;
     }
 
@@ -377,9 +403,9 @@ else
     {
         if (IdUser == Guid.Empty)
         {
-            var parameters = new DialogParameters<DialogLogin>();
+            var parameter = new DialogParameters<DialogLogin>();
             var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
-            await DialogService.Show<DialogLogin>("Yêu cầu đăng nhập", parameters, options).Result;
+            await DialogService.Show<DialogLogin>("Yêu cầu đăng nhập", parameter, options).Result;
             return;
         }
         var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
@@ -408,7 +434,7 @@ else
             {
                 if (ListLike.Count == 1)
                 {
-                    LikeText = $"Bạn";
+                    LikeText = $"1";
                 }
                 else
                 {
@@ -421,39 +447,20 @@ else
                 LikeText = ListLike.Count().ToString("N0", customCulture);
                 isUserLike = false;
             }
-
         }
     }
 
     private async Task CopyCurrentUrl()
     {
-        var currentUrl = Navigation.BaseUri; // Lấy URL hiện tại
-        currentUrl += $"detailPost/{IdPost}";
+        var currentUrl = Navigation.Uri; // Lấy URL hiện tại
+                                         //currentUrl =
         await JSRunTime.InvokeVoidAsync("copyToClipboard", currentUrl);
         Snackbar.Add("Đã sao chép đường dẫn bài viết vào bộ nhớ", Severity.Success);
     }
 
-
-    private async Task DetailPost(Guid idPost)
+    async Task UserAddNewComment(PostCommentDTO commentDTO)
     {
-        Navigation.NavigateTo($"/detatilPostGroup/{GroupName}/{idPost}");
-    }
-
-    public async Task OpenDialogSave(Guid id)
-    {
-        if (IdUser == Guid.Empty)
-        {
-            var parameter = new DialogParameters<DialogLogin>();
-            var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
-            await DialogService.Show<DialogLogin>("Yêu cầu đăng nhập", parameter, options).Result;
-            return;
-        }
-        var parameters = new DialogParameters
-        {
-            { "idPost", id }
-        };
-        var dialog = DialogService.Show<AddPostSaveDialog>(string.Empty, parameters);
-        var result = await dialog.Result;
+        ListCommentComponent.AddNewComment(commentDTO);
     }
 
     async Task DeletePost()
@@ -474,12 +481,18 @@ else
                 var response = await _httpClient.PostAsJsonAsync($"/deletePost/{IdPost}", IdUser);
                 if (response.IsSuccessStatusCode)
                 {
-                    Snackbar.Add("Đã xóa bài viết", Severity.Info);
-                    Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
+                    Snackbar.Add("Cập nhật bài viết thành công", Severity.Info);
+                    Navigation.NavigateTo("");
                 }
-            }
+            } 
         }
     }
+
+    async Task Back ()
+    {
+        Navigation.NavigateTo($"/groups/{Name}");
+    }
+
 
     async Task Report(Guid IdPost, Guid IdUser, Guid IdUserReport)
     {
@@ -517,7 +530,6 @@ else
             this.isReported = false;
         }
     }
-
 
 }
 

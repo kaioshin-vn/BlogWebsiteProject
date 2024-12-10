@@ -2,8 +2,10 @@
 
 @using ASM_PH35423.StaticClass
 @using Client.Components.ComponentCustom
+@using Client.Components.Report
 @using Data.DTO.EntitiDTO
 @using System.Net.Http.Headers
+@using Data.Database.Table
 @using Newtonsoft.Json
 @using Newtonsoft.Json.Linq
 @using System.Globalization;
@@ -99,6 +101,20 @@ else
 
     if(!isFail)
     {
+        if (this.isReported)
+        {
+            <MudCard Elevation="3" Style="margin-top:52px;">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Color="Color.Info">Bài viết này đã được báo cáo</MudText>
+                    </CardHeaderContent>
+                    <CardHeaderActions>
+                        <MudButton OnClick="UnReport" Variant="Variant.Text" Color="Color.Info">Hoàn tác</MudButton>
+                    </CardHeaderActions>
+                </MudCardHeader>
+            </MudCard>
+        }
+        else {
         <div>
             <MudCardHeader>
                 <CardHeaderAvatar>
@@ -201,6 +217,7 @@ else
             </div>
 
         </div>
+        }
 
         <script>
             async function copyToClipboard(text) {
@@ -248,6 +265,7 @@ else
 
     public List<string>? TagNames { get; set; }
 
+    bool isReported;
 
     ListComment ListCommentComponent { get; set; }
 
@@ -454,5 +472,43 @@ else
             } 
         }
     }
+
+    async Task Report(Guid IdPost, Guid IdUser, Guid IdUserReport)
+    {
+        var parameters = new DialogParameters<DialogReport>();
+        parameters.Add(x => x.IdPost, IdPost);
+        parameters.Add(x => x.IdUserReport, IdUserReport);
+        parameters.Add(x => x.IdUser, IdUser);
+
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraLarge };
+
+        var result = await DialogService.Show<DialogReport>("Báo cáo", parameters, options).Result;
+
+        if (result.Data != null)
+        {
+            if ((bool)result.Data)
+            {
+                var _httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+                var hidePost = new PostHide();
+                hidePost.IdPost = this.IdPost;
+                hidePost.IdUser = this.IdUser;
+                var response = await _httpClient.PostAsJsonAsync($"/addhidepost", hidePost);
+                this.isReported = true;
+                StateHasChanged();
+            }
+        }
+    }
+
+    async Task UnReport()
+    {
+        var _httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+        var response = await _httpClient.DeleteAsync($"/deletereport/{this.IdPost}/{this.IdUser}/{this.IdUserPost}");
+        if (response.IsSuccessStatusCode)
+        {
+            await _httpClient.DeleteAsync($"/deletehidepost/{this.IdPost}/{this.IdUser}");
+            this.isReported = false;
+        }
+    }
+
 }
 

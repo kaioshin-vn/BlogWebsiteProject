@@ -15,7 +15,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Remove="Components\ComponentCustom\PostIntroGroup.razor" />
     <Content Remove="Components\Pages\Post\PostIntro.razor" />
   </ItemGroup>
 
@@ -27,7 +26,6 @@
 
   <ItemGroup>
     <None Include="Components\ComponentCustom\PostIntro.razor" />
-    <None Include="Components\ComponentCustom\PostIntroGroup.razor" />
     <None Include="Components\Pages\Post\CreatePost.razor" />
     <None Include="wwwroot\ForgotPassword.css" />
   </ItemGroup>

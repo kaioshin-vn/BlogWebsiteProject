@@ -140,42 +140,60 @@ else
 
                 <div class="d-flex justify-content-between">
                     <div class="ms-4 mb-4" style="width:68% ; margin-top:-52px;">
-                        @foreach (var item in listIntroPost)
+                        @if (group.StateGroup == KindGroup.Public || isJoined || IsAdminOrChief)
                         {
-                            <PostIntro Avatar="@item.Avatar" Content="@item.Content"
-                                       CreateDate="@item.CreateDate" IdPost="@item.Id"
-                                       CommentCount="@item.CommentCount" Like="@item.Like"
-                                       VideoFile="@item.VideoFile" ImgFile="@item.ImgFile" UserName="@item.UserName" Title="@item.Title">
-                            </PostIntro>
-                        }
-                        @if (listIntroPost.Count > 2)
-                        {
-                            <script>
-                                function removeHiddenOverflow() {
-                                    const element = document.querySelector('#replaceHidden');
+                            @foreach (var item in listIntroPost)
+                            {
+                                <PostIntroGroup Avatar="@item.Avatar" Content="@item.Content" Link="@item.Link"
+                                                CreateDate="@item.CreateDate" IdPost="@item.Id" isAdmin="@this.IsAdminOrChief"
+                                                CommentCount="@item.CommentCount" Like="@item.Like"
+                                                VideoFile="@item.VideoFile" ImgFile="@item.ImgFile" GroupName="@this.Name"
+                                                UserName="@item.UserName" TagNames="@item.ListTag" IdUserPost="@item.IdUser"
+                                                Title="@item.Title">
+                                </PostIntroGroup>
+                            }
+                            @if (listIntroPost.Count > 2)
+                            {
+                                <script>
+                                    function removeHiddenOverflow() {
+                                        const element = document.querySelector('#replaceHidden');
 
-                                    let currentElement = element.parentElement;
+                                        let currentElement = element.parentElement;
 
-                                    // Lặp qua tất cả các thẻ cha của thẻ được chọn
-                                    while (currentElement) {
-                                        const overflowStyle = window.getComputedStyle(currentElement).overflow;
+                                        // Lặp qua tất cả các thẻ cha của thẻ được chọn
+                                        while (currentElement) {
+                                            const overflowStyle = window.getComputedStyle(currentElement).overflow;
 
 
-                                        // Kiểm tra nếu overflow là hidden
-                                        console.log(overflowStyle)
-                                        if (overflowStyle === 'hidden' || overflowStyle === 'auto' || overflowStyle === 'scroll' || overflowStyle === 'hidden auto') {
-                                            currentElement.style.overflow = 'visible'; // Hoặc một giá trị phù hợp khác
+                                            // Kiểm tra nếu overflow là hidden
+                                            console.log(overflowStyle)
+                                            if (overflowStyle === 'hidden' || overflowStyle === 'auto' || overflowStyle === 'scroll' || overflowStyle === 'hidden auto') {
+                                                currentElement.style.overflow = 'visible'; // Hoặc một giá trị phù hợp khác
+                                            }
+
+                                            // Chuyển sang thẻ cha tiếp theo
+                                            currentElement = currentElement.parentElement;
                                         }
-
-                                        // Chuyển sang thẻ cha tiếp theo
-                                        currentElement = currentElement.parentElement;
                                     }
-                                }
-                                removeHiddenOverflow();
-                            </script>
+                                    removeHiddenOverflow();
+                                </script>
+                            }
+                            else
+                            {
+                                <script>
+                                    function removeHiddenOverflow() {
+                                        const allArticles = document.querySelector('article.content');
+
+                                        allArticles.style.overflow = 'hidden'; // Hoặc một giá trị phù hợp khác
+
+                                    }
+                                    removeHiddenOverflow();
+                                </script>
+                            }
                         }
                         else
                         {
+                            <MudAlert Severity="Severity.Info" Style="margin-top:52px;">Hãy tham gia cộng đồng để xem bài viết</MudAlert>
                             <script>
                                 function removeHiddenOverflow() {
                                     const allArticles = document.querySelector('article.content');
@@ -187,6 +205,8 @@ else
                             </script>
                         }
                     </div>
+
+
                     <div style="width:27%; height : 200px; position: sticky;top: 120px; border:none;" id="replaceHidden">
                         <div id="another_unique_identifier">
                             <div style="width:270px; background: #f4f8f5;border-radius:12px; margin-top: -16px" class="p-3">
@@ -395,6 +415,45 @@ else
             return;
         }
 
+        if (isJoined)
+        {
+            var parameters = new DialogParameters<Dialog>();
+            parameters.Add(x => x.ContentText, "Xác nhận bạn muốn rời khỏi cộng đồng này?");
+            parameters.Add(x => x.ButtonText, "Xác nhận");
+            parameters.Add(x => x.Color, Color.Info);
+
+            var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+            var result = await DialogService.Show<Dialog>("Xác nhận", parameters, options).Result;
+
+            if (result.Data != null)
+            {
+                if (!(bool)result.Data)
+                {
+                    return;
+                }
+            }
+        }
+        else
+        {
+            var parameters = new DialogParameters<Dialog>();
+            parameters.Add(x => x.ContentText, "Xác nhận bạn muốn tham gia cộng đồng này?");
+            parameters.Add(x => x.ButtonText, "Xác nhận");
+            parameters.Add(x => x.Color, Color.Success);
+
+            var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+            var result = await DialogService.Show<Dialog>("Xác nhận", parameters, options).Result;
+
+            if (result.Data != null)
+            {
+                if (!(bool)result.Data)
+                {
+                    return;
+                }
+            }
+        }
+
         var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
         var response = await httpClient.PostAsJsonAsync("api/group/memberGroup", new
         {
@@ -415,6 +474,7 @@ else
             var errorContent = await response.Content.ReadAsStringAsync();
             Console.WriteLine($"Lỗi xảy ra: {response.StatusCode}. Chi tiết: {errorContent}");
         }
+        Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
 
     }
 

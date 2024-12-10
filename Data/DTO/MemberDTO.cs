@@ -11,6 +11,8 @@ namespace Data.DTO
 	{
 		public Guid Id { get; set; }
 		public string FullName { get; set; }
-		public Position Position { get; set; }
+		public string Avatar { get; set; }
+        public string Email { get; set; }
+        public Position Position { get; set; }
 	}
 }

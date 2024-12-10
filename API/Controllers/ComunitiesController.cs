@@ -21,7 +21,7 @@ namespace API.Controllers
 
             var listGroup = new List<Group>();
 
-            if (Search != null)
+            if (!string.IsNullOrEmpty(Search))
             {
                 listGroup = _context.Groups.Include(a => a.MemberGroups).Where(a => a.isDeleted == false && a.Name.ToLower().Contains(Search.ToLower())).Skip(page * 10).Take(10).ToList();
             }
@@ -55,7 +55,7 @@ namespace API.Controllers
         [HttpGet("/GetTotalComunities/{Search?}")]
         public async Task<int> GetTotalComunitiesDTO( string? Search)
         {
-            if (Search != null)
+            if (!string.IsNullOrEmpty(Search))
             {
                 return _context.Groups.Include(a => a.MemberGroups).Where(a => a.isDeleted == false && a.Name.ToLower().Contains(Search.ToLower())).Count() / 10;
             }
