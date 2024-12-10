@@ -169,29 +169,60 @@ namespace API.Controllers
             return Ok(getAdmin != null);
         }
 
-        [HttpGet("is-member/{groupName}")]
-        public async Task<ActionResult<bool>> IsMember(string groupName, [FromQuery] Guid userId)
-        {
-            if (string.IsNullOrEmpty(groupName))
-            {
-                return BadRequest();
-            }
-            // Tìm nhóm trong bảng Groups
-            var group = await _context.Groups.FirstOrDefaultAsync(g => g.Name == groupName);
-            if (group == null)
-            {
-                return NotFound("Không tìm thấy nhóm");
-            }
-            var currentUser = userId;
-            // Lấy IdGroup từ bảng Groups
-            var idGroup = group.IdGroup;
-            // Kiểm tra xem người dùng có phải là thành viên của nhóm hay không
-            var getMember = await _context.MemberGroups
-                .Where(a => a.IdGroup == idGroup && a.IdMember == userId
-                        && a.Position == Position.Member)
-                .FirstOrDefaultAsync();
-            return Ok(getMember != null);
-        }
+		[HttpDelete("is-chief")]
+		public async Task<ActionResult> IsChief([FromQuery] Guid userId, [FromQuery] string groupName)
+		{
+			if (string.IsNullOrEmpty(groupName))
+			{
+				return BadRequest();
+			}
+			if (userId == null)
+			{
+				return Unauthorized("Không tìm thấy người dùng.");
+			}
+
+			Console.WriteLine($"Id tantsadsa: {userId}");
+			// Check thông tin thành viên bị xóa
+			var item = await _context.MemberGroups.Include(mg => mg.Group).FirstOrDefaultAsync(mg => mg.IdMember == userId && mg.Group.Name == groupName);
+			var group = item.Group;
+			if (group == null)
+			{
+				return BadRequest("Không tìm thấy nhóm của thành viên.");
+			}
+
+			Console.WriteLine($"Id nhóm: {group.IdGroup}, Tên nhóm: {group.Name}");
+			if (item == null)
+			{
+				return NotFound("Không tìm thấy thành viên.");
+			}
+			_context.MemberGroups.Remove(item);
+			await _context.SaveChangesAsync();
+			return Ok();
+		}
+
+		[HttpGet("is-member/{groupName}")]
+		public async Task<ActionResult<bool>> IsMember(string groupName, [FromQuery] Guid userId)
+		{
+			if (string.IsNullOrEmpty(groupName))
+			{
+				return BadRequest();
+			}
+			// Tìm nhóm trong bảng Groups
+			var group = await _context.Groups.FirstOrDefaultAsync(g => g.Name == groupName);
+			if (group == null)
+			{
+				return NotFound("Không tìm thấy nhóm");
+			}
+			var currentUser = userId;
+			// Lấy IdGroup từ bảng Groups
+			var idGroup = group.IdGroup;
+			// Kiểm tra xem người dùng có phải là thành viên của nhóm hay không
+			var getMember = await _context.MemberGroups
+				.Where(a => a.IdGroup == idGroup && a.IdMember == userId
+						&& a.Position == Position.Member)
+				.FirstOrDefaultAsync();
+			return Ok(getMember != null);
+		}
 
         [HttpGet("is-member-creatPost/{groupId}")]
         public async Task<ActionResult<bool>> IsMemberCreatePost(Guid groupId, [FromQuery] Guid userId)
