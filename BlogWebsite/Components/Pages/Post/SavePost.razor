@@ -10,6 +10,29 @@
 @inject UserManager<ApplicationUser> UserManager
 @inject NavigationManager Navigation
 
+<style>
+    .result-container {
+        margin-top: 20px;
+    }
+
+    .custom-tabs .mud-tab {
+        text-transform: none;
+    }
+
+    .truncate-text {
+        white-space: nowrap; /* Không cho nội dung xuống dòng */
+        overflow: hidden; /* Ẩn phần nội dung bị tràn */
+        text-overflow: ellipsis; /* Hiển thị dấu '...' khi nội dung bị tràn */
+    }
+
+    .hover-underline:hover {
+        text-decoration: underline;
+    }
+
+    .bold-text {
+        font-weight: bold;
+</style>
+
 @if (lstPostSave == null || lstPost == null)
 {
     <MudText>loadding...</MudText>
@@ -17,7 +40,7 @@
 else
 {
     <MudDrawerContainer Class="mud-height-full">
-        <MudDrawer Open="true" Width="300px" Fixed="true" Elevation="1" Class="pt-4">
+        <MudDrawer Open="true" Width="300px" Style="max-height:700px" Fixed="true" Elevation="1" Class="pt-4">
             <MudGrid Class="px-2" Justify="Justify.SpaceBetween">
                 <MudItem>
                     <MudText Typo="Typo.h5">Đã lưu</MudText>
@@ -36,15 +59,11 @@ else
                 <MudDivider />
             </MudItem>
             <MudText Class="p-2">Bộ sưu tập của tôi</MudText>
-            <MudList T="string">
+            <MudList T="string" Style="overflow:scroll; max-height:450px">
                 @foreach (var item in lstPostSave)
                 {
                     <MudListItem OnClick="() => GetPostInSave(item.Id)">
                         <AvatarContent>
-                               @*  @if (!string.IsNullOrWhiteSpace(item.SaveName))
-                                    {
-                                    <MudImage Src="" ObjectFit="ObjectFit.Cover" Height="40" Width="40" Class="rounded-2" />
-                                } *@
                                 <MudAvatar Color="Color.Primary" Class="rounded-2">
                                     @item.SaveName[0]
                                 </MudAvatar>
@@ -72,36 +91,39 @@ else
                         <MudItem>
                             <MudMenu Icon="@Icons.Material.Filled.MoreHoriz" Color="Color.Default"
                                      AriaLabel="Open user menu">
-                                <MudMenuItem OnClick="DeletePostSave">Delete</MudMenuItem>
+                                <MudMenuItem OnClick="DeletePostSave">Xóa bộ sưu tập</MudMenuItem>
                             </MudMenu>
                         </MudItem>
                     </MudGrid>
                 </MudItem>
-                @foreach (var item in lstPost)  
-                {
-                    <MudItem xs="12">
-                        <MudCard Style="border-radius:10px" Class="mt-2">
-                            <MudGrid Class="p-3" Style="">
-                                <MudItem xs="2">
-                                    <MudImage Style="border-radius:10px;" ObjectFit="ObjectFit.Cover" Src="@(string.IsNullOrEmpty(item.ImgFile) ? "0cdea890-2ed5-4b5e-9192-c7d5de3dc9cb.jpg" : item.ImgFile)" Height="150" Width="150" />
-                                </MudItem>
-                                <MudItem xs="10">
-                                    <MudGrid Class="d-flex align-content-between flex-wrap flex-grow-1 gap-4 ">
-                                        <MudItem xs="12">
-                                            <a href="/postDetail/@item.Id"><MudText Typo="Typo.h5">@item.Title</MudText></a>
-                                            <MudText Typo="Typo.body2">Bài viết - đã lưu từ</MudText>
-                                        </MudItem>
-                                        <MudItem xs="12">
-                                            <MudButton Variant="Variant.Filled" OnClick="async () => await OpenAddPostSaveDialog(item.Id)">Thêm vào bộ sưu tập</MudButton>
-                                            <MudIconButton Class="mx-2" Icon="@Icons.Material.Filled.Share" Variant="Variant.Filled" />
-                                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Variant="Variant.Filled" OnClick="async () => await DeletePostInSave(item.Id)" />
-                                        </MudItem>
-                                    </MudGrid>
-                                </MudItem>
-                            </MudGrid>
-                        </MudCard>
-                    </MudItem>
-                }
+                <MudList T="string" Style="overflow:scroll; max-height:630px; width:100%">
+                    @foreach (var item in lstPost)
+                    {
+                        <MudListItem>
+                            <MudCard Style="border-radius:10px" Class="mt-2">
+                                <MudGrid Class="p-3" Style="">
+                                    <MudItem xs="2">
+                                        <MudImage Style="border-radius:10px;" ObjectFit="ObjectFit.Cover" Src="@(string.IsNullOrEmpty(item.ImgFile) ? "0cdea890-2ed5-4b5e-9192-c7d5de3dc9cb.jpg" : item.ImgFile)" Height="140" Width="140" />
+                                    </MudItem>
+                                    <MudItem xs="10">
+                                        <MudGrid Class="d-flex align-content-between flex-wrap flex-grow-1 gap-4">
+                                            <MudItem xs="12">
+                                                <a href="/postDetail/@item.Id"><MudText Class="truncate-text hover-underline bold-text" Typo="Typo.h5">@item.Title</MudText></a>
+                                                <MudText Typo="Typo.body2">Bài viết - đã lưu từ <a class="bold-text hover-underline">@item.UserName</a></MudText>
+                                            </MudItem>
+                                            <MudItem xs="12">
+                                                <MudButton Variant="Variant.Filled" OnClick="async () => await OpenAddPostSaveDialog(item.Id)">Thêm vào bộ sưu tập</MudButton>
+                                                <MudIconButton Class="mx-2" Icon="@Icons.Material.Filled.Share" Variant="Variant.Filled" />
+                                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Variant="Variant.Filled" OnClick="async () => await DeletePostInSave(item.Id)" />
+                                            </MudItem>
+                                        </MudGrid>
+                                    </MudItem>
+                                </MudGrid>
+                            </MudCard>
+                        </MudListItem>
+                    }
+                </MudList>
+               
             </MudGrid>
         </MudMainContent>
     </MudDrawerContainer>
@@ -109,7 +131,7 @@ else
    
 @code {
     List<SaveDTO> lstPostSave = new List<SaveDTO>();
-    List<PostDTO> lstPost = new List<PostDTO>();
+    List<PostIntroDTO> lstPost = new List<PostIntroDTO>();
 
     private Guid idSave { get; set; }
 
@@ -134,7 +156,7 @@ else
         if (idSave != Guid.Empty)
         {
             var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
-            lstPost = await httpClient.GetFromJsonAsync<List<PostDTO>>($"/api/postsave/getPostInSave/{idSave}");
+            lstPost = await httpClient.GetFromJsonAsync<List<PostIntroDTO>>($"/api/postsave/getPostInSave/{idSave}");
             StateHasChanged();
         }
     }
