@@ -32,7 +32,14 @@ namespace API.Controllers
             var post = await _context.PostSaves
                 .Where(p => p.IdSave == idSave)
                 .Include(p => p.Post)
-                .Select(p => p.Post)
+                .Include(p => p.Post.User)
+                .Select(p => new PostIntroDTO {
+                    Title = p.Post.Title,
+                    Content = p.Post.Content,
+                    ImgFile = p.Post.ImgFile,
+                    Avatar = p.Post.User.UserName,
+                    UserName = p.Post.User.FullName,
+                })
                 .ToListAsync();
             if (post == null)
             {
