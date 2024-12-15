@@ -1,5 +1,5 @@
 ﻿@page "/violation/{Id:guid}"
-
+@attribute [Authorize]
 @inject IHttpClientFactory HttpClientFactory
 
 @if (isLoaded)

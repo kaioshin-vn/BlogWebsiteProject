@@ -8,6 +8,7 @@
 @using Data.DTO
 @using Client.Components.ComponentCustom
 @using Data.Enums
+@attribute [Authorize]
 @inject ApplicationDbContext DbContext
 @inject UserManager<ApplicationUser> UserManager
 @inject AuthenticationStateProvider AuthenticationStateProvider

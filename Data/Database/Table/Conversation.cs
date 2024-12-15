@@ -16,7 +16,9 @@ namespace Data.Database.Table
 
         public Guid IdUser { get; set; }
 
-        public Guid IdUserReceive { get; set; }
+        public Guid? IdUserReceive { get; set; }
+        public bool isRead { get; set; }
+        public bool isAdminRead { get; set; }
         public bool isDeleted { get; set; }
 
         [ForeignKey("IdUser")]

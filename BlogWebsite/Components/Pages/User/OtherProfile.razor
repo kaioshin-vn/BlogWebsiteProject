@@ -14,7 +14,7 @@
 @inject UserManager<ApplicationUser> UserManager
 @inject IDialogService DialogService
 
-@if(!Loaded)
+@if (!Loaded)
 {
     <LoadingLocal></LoadingLocal>
 }
@@ -36,7 +36,14 @@ else
                         <MudImage @onclick="OpenAvatarViewer" Src="@(_avatarUrl ?? "/Img/avatar_default.jpg")" Style="cursor: pointer;" />
                     </MudAvatar>
                     <div class="ms-2 text-start">
-                        <MudText Typo="Typo.h4">@model.FullName</MudText>
+                        <MudText Typo="Typo.h4">
+                            @model.FullName
+                            @if (@model.CountLike >= 10)
+                            {
+                                <MudIcon Class="ms-3" Icon="@Icons.Material.Filled.Verified" Color="Color.Info" Title="Favorite" />
+                            }
+                        </MudText>
+                        <MudText Typo="Typo.body1" Class="mb-2">Lượt thích: @model.CountLike.ToString("N0", System.Globalization.CultureInfo.InvariantCulture)</MudText>
                         <MudText Typo="Typo.body1" Class="mb-2">Người theo dõi: @model.CountFollow.ToString("N0", System.Globalization.CultureInfo.InvariantCulture)</MudText>
                     </div>
                 </div>
@@ -215,7 +222,7 @@ else
         var response = await client.GetAsync($"api/users/{id}/{idViewer}");
         if (response.IsSuccessStatusCode)
         {
-            if (!string.IsNullOrEmpty( await response.Content.ReadAsStringAsync()))
+            if (!string.IsNullOrEmpty(await response.Content.ReadAsStringAsync()))
             {
                 model = await response.Content.ReadFromJsonAsync<PersonalInfoModel>();
                 _avatarUrl = model.Img;
@@ -304,6 +311,7 @@ else
         public string Email { get; set; }
         public string Id { get; set; }
         public int CountFollow { get; set; }
+        public int CountLike { get; set; }
         public bool IsFollowing { get; set; }
         public string IdViewer { get; set; }
     }

@@ -9,6 +9,7 @@
 @using Client.Components.ComponentCustom
 @using Data.Enums
 
+@attribute [Authorize]
 @inject UserManager<ApplicationUser> UserManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager Navigation

@@ -38,7 +38,7 @@ namespace API.Controllers
                         Id = a.Id,
                         IdUserSend = a.FromUser,
                         AvatarUserSend = a.Link.Contains("violation") || a.FromUser == a.ToUser ? @"\Img\avatar_default1.jpg" : a.UserSend.Img,
-                        UserNameSend = a.Link.Contains("violation") || a.FromUser == a.ToUser ? "Admin": a.UserSend.FullName,
+                        UserNameSend = a.Link.Contains("violation") || a.FromUser == a.ToUser ? "Admin" : a.UserSend.FullName,
                         Link = a.Link,
                         Content = a.Content,
                         isRead = a.isRead,
@@ -49,7 +49,7 @@ namespace API.Controllers
             return new List<NoticeDTO>();
         }
 
-       private string ProcessTime (DateTime? CreateDate)
+        private string ProcessTime(DateTime? CreateDate)
         {
             string Date;
 
@@ -91,15 +91,50 @@ namespace API.Controllers
             {
                 Date = "Vừa xong";
             }
-            return Date ;
+            return Date;
         }
 
         [HttpPost("/addNewNotice")]
         public async Task AddNewNotice([FromBody] Notice Notice)
         {
-            Console.WriteLine("Checkkkk");
             _context.Notices.Add(Notice);
             await _context.SaveChangesAsync();
+        }
+
+        [HttpPost("/addNewPostNoticeUser")]
+        public async Task<bool> AddNewNoticePost([FromBody] Notice Notice)
+        {
+            var noticeExisted = _context.Notices.FirstOrDefault(a => a.Link == Notice.Link && a.Content == "Đã bình luận về bài viết của bạn");
+            if (noticeExisted != null)
+            {
+                if ((DateTime.Now - noticeExisted.CreateDate).TotalMinutes >= 5)
+                {
+                    noticeExisted.FromUser = Notice.FromUser;
+                    noticeExisted.isSeen = false;
+                    noticeExisted.isRead = false;
+                    noticeExisted.CreateDate = Notice.CreateDate;
+                    _context.Notices.Update(noticeExisted);
+                    await _context.SaveChangesAsync();
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                _context.Notices.Add(Notice);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+        }
+
+        [HttpGet("/getIdUserPost/{IdPost}")]
+        public async Task<string> getIdUserPost(Guid IdPost)
+        {
+            var post = _context.Posts.FirstOrDefault(a => a.Id == IdPost);
+            return post.IdUser.ToString();
         }
 
         [HttpGet("/ClearNotice/{IdUser}")]

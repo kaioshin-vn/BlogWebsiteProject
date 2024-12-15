@@ -1,6 +1,6 @@
 ﻿@page "/statistical"
 @using Newtonsoft.Json
-
+@attribute [Authorize(Roles = "Admin")]
 @inject IHttpClientFactory HttpClientFactory
 @inject IJSRuntime JSRuntime
 

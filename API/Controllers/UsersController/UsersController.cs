@@ -106,6 +106,42 @@ namespace API.Controllers.UserController
         public async Task<ActionResult<UserProfileDto>> GetUserViewr(Guid id, Guid idViewer)
         {
             var user = await _userManager.FindByIdAsync(id.ToString());
+            if (user == null)
+            {
+                return null;
+            }
+
+            var TotalLike = 0;
+            var listLikePost = _context.Posts.Where(a => a.IsDeleted == false && a.IdUser == id).Select(a => a.Like);
+            foreach (var item in listLikePost)
+            {
+                if (item != "")
+                {
+                    var listLike = item.Split('|');
+                    TotalLike += listLike.Count();
+                }
+            }
+
+            var listLikeCmt = _context.Responses.Where(a => a.IsDeleted == false && a.IdUser == id).Select(a => a.Likes);
+            foreach (var item in listLikeCmt)
+            {
+                if (item != "")
+                {
+                    var listLike = item.Split('|');
+                    TotalLike += listLike.Count();
+                }
+            }
+
+            var listLikeReply = _context.ReplyResponses.Where(a => a.IsDeleted == false && a.IdUser == id).Select(a => a.Likes);
+            foreach (var item in listLikeReply)
+            {
+                if (item != "")
+                {
+                    var listLike = item.Split('|');
+                    TotalLike += listLike.Count();
+                }
+            }
+
             if (user == null || user.LockoutEnd != null)
             {
                 return null;
@@ -122,7 +158,8 @@ namespace API.Controllers.UserController
                 PhoneNumber = user.PhoneNumber,
                 Email = user.Email,
                 FullName = user.FullName,
-                CountFollow = _context.Flower.Where(c => c.IdUser == idViewer && c.IsFollowing == true).Count(),
+                CountLike = TotalLike,
+                CountFollow = _context.Flower.Where(c => c.IdUser == id && c.IsFollowing == true).Count(),
                 IsFollowing = isFl == null ? false : isFl.IsFollowing,
             };
         }

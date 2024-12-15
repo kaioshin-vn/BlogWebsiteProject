@@ -1,0 +1,209 @@
+﻿@page "/messenger"
+
+
+@using Data.DTO
+@using Microsoft.AspNetCore.SignalR.Client
+@using Newtonsoft.Json
+@attribute [Authorize(Roles = "Admin")]
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserManager<ApplicationUser> UserManager
+@inject IJSRuntime JS
+@inject ApplicationDbContext DbContext
+@inject IHttpClientFactory HttpClientFactory
+
+@if (Loaded)
+{
+    <style>
+        .hover-back:hover {
+            background-color: rgb(230, 230, 230);
+            cursor: pointer;
+        }
+
+        .single-line-admin {
+            display: inline-block; /* Hoặc dùng block nếu cần span có kích thước cố định */
+            white-space: nowrap; /* Không cho phép xuống dòng */
+            overflow: hidden; /* Ẩn phần nội dung tràn ra */
+            text-overflow: ellipsis; /* Thêm dấu "..." cho nội dung bị cắt */
+            width: 80%;
+        }
+    </style>
+
+    <MudTabs Outlined="true" Style="position:relative;">
+        <MudTabPanel OnClick="LoadListConver" Icon="@Icons.Material.Filled.Message" ToolTip="Tin nhắn">
+            <div class="p-3" style="overflow:hidden;border-radius:12px;position:absolute;top: 20px; left: 0px;z-index:100; border: 2px solid lightgrey;box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.3);overflow-x:hidden; width:650px;height:500px;background-color:#fff; /* Đổ bóng */">
+
+                <h4 style="" class="my-2">Đoạn chat</h4>
+                @if (IsMessengerDetail)
+                {
+                    <Client.Components.Messenger.ConversationAdminDetail GoBack="BackToListConver" IdConversation="IdConversation"></Client.Components.Messenger.ConversationAdminDetail>
+                }
+                else
+                {
+                    if (ListConversation.Count != 0)
+                    {
+                        <div style="overflow-y:scroll;height: 400px;overflow-x: hidden;">
+                        @foreach (var item in ListConversation)
+                        {
+                            <div style="font-size:14px;border-radius:10px;" @onclick="() => MesDetail(item.Id)" class="p-1 m-1 hover-back">
+                                <div style="height:68px;" class="d-flex justify-content-between align-items-center">
+                                    <MudAvatar Class="hover-border">
+                                        <MudImage Src="@(item.Avatar==null?@"\Img\avatar_default1.jpg":item.Avatar)"></MudImage>
+                                    </MudAvatar>
+
+                                    <div class="flex-grow-1 ms-3">
+                                        <p class="mb-1"><b>@(item.FullName == null ? "Admin" : item.FullName)</b></p>
+                                        <div class="d-flex align-items-end ">
+                                            @if (item.isRead)
+                                            {
+                                                <span class="single-line-admin">@item.LastestMes</span>
+                                            }
+                                            else
+                                            {
+                                                <b class="single-line-admin">@item.LastestMes</b>
+                                            }
+                                            <span class="ms-2">• @item.Time</span>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                        }
+                        </div>
+
+                    }
+                    else
+                    {
+                        <MudAlert Severity="Severity.Info" Class="mt-2">Không có cuộc trò chuyện nào</MudAlert>
+                    }
+                }
+            </div>
+        </MudTabPanel>
+        <MudTabPanel OnClick="WaitMessage" ToolTip="Tin nhắn chờ" Icon="@Icons.Material.Filled.Cached">
+            <div class="p-3" style="overflow:hidden;border-radius:12px;position:absolute;top: 20px; left: 0px;z-index:100; border: 2px solid lightgrey;box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.3);overflow-x:hidden; width:650px;height:500px;background-color:#fff; /* Đổ bóng */">
+
+                <h4 style="" class="my-2">Tin nhắn chờ</h4>
+                @if (IsMessengerDetail)
+                {
+                    <Client.Components.Messenger.ConversationWaitDetail GoBack="BackToListConver" IdConversation="IdConversation"></Client.Components.Messenger.ConversationWaitDetail>
+                }
+                else
+                {
+                    if (ListConversation.Count != 0)
+                    {
+                        <div style="overflow-y:scroll;height: 400px;overflow-x: hidden;">
+
+                        @foreach (var item in ListConversation)
+                        {
+                            <div style="font-size:14px;border-radius:10px;" @onclick="() => MesDetail(item.Id)" class="p-1 m-1 hover-back">
+                                <div style="height:68px;" class="d-flex justify-content-between align-items-center">
+                                    <MudAvatar Class="hover-border">
+                                        <MudImage Src="@(item.Avatar==null?@"\Img\avatar_default1.jpg":item.Avatar)"></MudImage>
+                                    </MudAvatar>
+
+                                    <div class="flex-grow-1 ms-3">
+                                        <p class="mb-1"><b>@(item.FullName == null ? "Admin" : item.FullName)</b></p>
+                                        <div class="d-flex align-items-end ">
+                                            @if (item.isRead)
+                                            {
+                                                <span class="single-line-admin">@item.LastestMes</span>
+                                            }
+                                            else
+                                            {
+                                                <b class="single-line-admin">@item.LastestMes</b>
+                                            }
+                                            <span class="ms-2">• @item.Time</span>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                        }
+                        </div>
+
+                    }
+                    else
+                    {
+                        <MudAlert Severity="Severity.Info" Class="mt-2">Không có cuộc trò chuyện nào</MudAlert>
+                    }
+                }
+            </div>
+        </MudTabPanel>
+
+    </MudTabs>
+}
+else
+{
+    <Client.Components.ComponentCustom.LoadingLocal></Client.Components.ComponentCustom.LoadingLocal>
+}
+@code {
+
+    private List<ConversationDTO> ListConversation = new List<ConversationDTO>();
+
+    Guid IdUser;
+    Guid IdConversation;
+
+    bool IsMessengerDetail;
+
+    bool isListConver = true;
+
+    bool isListWait;
+
+    bool Loaded;
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        var userCurrent = UserManager.GetUserId(user);
+        if (userCurrent != null)
+        {
+            IdUser = Guid.Parse(userCurrent);
+        }
+
+        await LoadListConver();
+
+
+        Loaded = true;
+    }
+
+    async Task LoadListConver()
+    {
+        isListConver = true;
+        isListWait = false;
+
+        IsMessengerDetail = false;
+        var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+        var data = await httpClient.GetStringAsync($"/getalladminaccountconversation/{IdUser}");
+        ListConversation = JsonConvert.DeserializeObject<List<ConversationDTO>>(data);
+    }
+
+    async Task MesDetail(Guid Id)
+    {
+        IsMessengerDetail = true;
+        IdConversation = Id;
+    }
+
+    async Task WaitMessage()
+    {
+        IsMessengerDetail = false;
+        isListConver = false;
+        isListWait = true;
+        var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+        var data = await httpClient.GetStringAsync($"/getallwaitconversation");
+        ListConversation = JsonConvert.DeserializeObject<List<ConversationDTO>>(data);
+    }
+
+    async Task BackToListConver()
+    {
+        IsMessengerDetail = false;
+        if (isListConver)
+        {
+            await LoadListConver();
+        }
+        else
+        {
+            await WaitMessage();
+        }
+    }
+}

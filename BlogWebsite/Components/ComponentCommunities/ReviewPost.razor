@@ -1,7 +1,7 @@
 ﻿@page "/groups/pendingpost/{IdGroup:guid}"
 @using Client.Components.ComponentCustom
 @using Newtonsoft.Json
-
+@attribute [Authorize]
 @inject IJSRuntime JSRunTime
 @inject IHttpClientFactory HttpClientFactory
 @inject AuthenticationStateProvider AuthenticationStateProvider

@@ -14,7 +14,7 @@ namespace Data.Database.Table
         [Key]
         public Guid Id { get; set; }
         public Guid IdUserSend { get; set; }
-        public Guid IdUserReceive { get; set; }
+        public Guid? IdUserReceive { get; set; }
 
         public Guid IdConversation { get;set; }
         public Guid? IdReply { get; set; }

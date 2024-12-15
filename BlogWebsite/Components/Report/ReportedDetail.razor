@@ -10,6 +10,7 @@
 @using Newtonsoft.Json.Linq
 @using System.Globalization;
 
+@attribute [Authorize(Roles = "Admin")]
 @inject IJSRuntime JSRunTime
 @inject IHttpClientFactory HttpClientFactory
 @inject AuthenticationStateProvider AuthenticationStateProvider

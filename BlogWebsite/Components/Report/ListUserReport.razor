@@ -4,6 +4,7 @@
 @using Data.DTO
 @using Newtonsoft.Json
 
+@attribute [Authorize(Roles = "Admin")]
 @inject IHttpClientFactory HttpClientFactory
 @inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider AuthenticationStateProvider

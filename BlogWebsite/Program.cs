@@ -63,7 +63,7 @@ builder.Services.AddRazorComponents()
 
 builder.Services.AddHttpClient("MyHttpClient", client =>
 {
-    client.BaseAddress = new Uri("https://localhost:7272/"); // Địa chỉ cơ bản của API
+    client.BaseAddress = new Uri("https://apikaizen.azurewebsites.net/"); // Địa chỉ cơ bản của API
 });
 builder.Services.AddCors(options =>
 {
@@ -160,7 +160,8 @@ app.UseAntiforgery();
 //app.UseSession();
 
 app.MapHub<NoticeHub>("/hubNotice");
-
+app.MapHub<MessageHub>("/hubMessage");
+app.MapHub<ConversationHub>("/hubConver");
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();

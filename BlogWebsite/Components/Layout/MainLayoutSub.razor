@@ -22,42 +22,42 @@
 @inject IJSRuntime JS
 @inject ISnackbar Snackbar
 
+<style>
+    a:hover {
+        color: unset;
+    }
+
+    .scrollbar {
+        overflow: hidden; /* Ẩn thanh cuộn khi không hover */
+        border: 1px solid #ccc;
+        transition: overflow 0.5s ease; /* Thêm hiệu ứng chuyển đổi */
+    }
+
+        .scrollbar:hover {
+            overflow-y: auto; /* Hiện thanh cuộn khi hover */
+        }
+
+    .avatar {
+        transition: border-width 0.2s ease;
+    }
+
+        .avatar:hover {
+            border-width: 2px; /* Độ dày border khi hover */
+            border-color: lightgray;
+        }
+
+    .truncate-text {
+        white-space: nowrap; /* Không cho nội dung xuống dòng */
+        overflow: hidden; /* Ẩn phần nội dung bị tràn */
+        text-overflow: ellipsis; /* Hiển thị dấu '...' khi nội dung bị tràn */
+    }
+</style>
 @if (lstPostUserTop == null)
 {
     <Client.Components.ComponentCustom.LoadingLocal></Client.Components.ComponentCustom.LoadingLocal>
 }
 else
 {
-    <style>
-        a:hover {
-            color: unset;
-        }
-
-        .scrollbar {
-            overflow: hidden; /* Ẩn thanh cuộn khi không hover */
-            border: 1px solid #ccc;
-            transition: overflow 0.5s ease; /* Thêm hiệu ứng chuyển đổi */
-        }
-
-            .scrollbar:hover {
-                overflow-y: auto; /* Hiện thanh cuộn khi hover */
-            }
-
-        .avatar {
-            transition: border-width 0.2s ease;
-        }
-
-            .avatar:hover {
-                border-width: 2px; /* Độ dày border khi hover */
-                border-color: lightgray;
-            }
-
-        .truncate-text {
-            white-space: nowrap; /* Không cho nội dung xuống dòng */
-            overflow: hidden; /* Ẩn phần nội dung bị tràn */
-            text-overflow: ellipsis; /* Hiển thị dấu '...' khi nội dung bị tràn */
-        }
-    </style>
     <div class="page" @onclick="Hide">
         <MudLayout>
             <MudAppBar Elevation="1">
@@ -103,9 +103,8 @@ else
                                             <hr />
                                         </MudItem>
                                         <MudItem Class="pt-0 mt-0" xs="12">
-                                            <MudItem Class="d-flex justify-content-sm-between">
-                                                <MudText Class="m-2">Bài Viết HOT</MudText>
-                                                <MudButton Href="/searchPost" Class="m-2">Xem Thêm</MudButton>
+                                            <MudItem Class="d-flex justify-content-start">
+                                                <MudText Class="pb-2 px-2"><MudIcon Icon="@Icons.Material.Filled.TrendingUp" /> Bài Viết HOT</MudText>
                                             </MudItem>
                                             <MudDivider Style="border-color:black; border-width:1px" />
                                             <MudList T="string" Style="overflow:scroll; max-height:370px">
@@ -113,7 +112,7 @@ else
                                                 {
                                                     <MudListItem OnClick="() => NaviGate(post.Id.ToString())">
                                                         <MudGrid Justify="Justify.SpaceBetween">
-                                                            <MudItem xs="6">
+                                                            <MudItem xs="8">
                                                                 <MudCardHeader Class="p-0 m-0">
                                                                     <MudAvatar>
                                                                         <MudImage ObjectFit="ObjectFit.Cover" Src="@post.Avatar"></MudImage>
@@ -130,7 +129,7 @@ else
                                                                     <MudText Style=" font-size:12px; color:gray">@(string.IsNullOrEmpty(Convert.ToString(toltalLike)) ? 0 : toltalLike) lượt thích · @post.CommentCount bình luận </MudText>
                                                                 }
                                                             </MudItem>
-                                                            <MudItem xs="6" Class="d-flex justify-content-end">
+                                                            <MudItem xs="4" Class="d-flex justify-content-end">
                                                                 @if (!string.IsNullOrEmpty(post.ImgFile) || !string.IsNullOrEmpty(post.VideoFile))
                                                                 {
                                                                     <MudImage Style="border-radius:20px" Src="@(string.IsNullOrEmpty(post.ImgFile) ? post.VideoFile : post.ImgFile)" ObjectFit="ObjectFit.Cover" Width="150" Height="100" />
@@ -198,8 +197,92 @@ else
                                 <div class="d-flex justify-content-end">
                                     <div class="d-flex justify-content-between align-items-center me-4">
 
-                                        <MudIconButton Class="mx-1" Icon="@Icons.Material.Filled.Chat"></MudIconButton>
+                                        <MudIconButton Class="mx-1" Icon=""></MudIconButton>
 
+                                        @if (isUserNullRole)
+                                        {
+                                            <MudIconButton @onclick="ClickMesLabel" Style="overflow:visible;">
+                                                <MudBadge Color="Color.Tertiary" Overlap="true" Visible="this.isHasNewMes" Class="">
+                                                    <MudIcon Icon="@Icons.Material.Filled.Chat">
+                                                    </MudIcon>
+                                                </MudBadge>
+                                            </MudIconButton>
+                                        }
+
+                                        @if (isShowMessenger)
+                                        {
+                                            <style>
+                                                .hover-back:hover {
+                                                    background-color: rgb(230, 230, 230);
+                                                    cursor: pointer;
+                                                }
+
+                                                .single-line {
+                                                    display: inline-block; /* Hoặc dùng block nếu cần span có kích thước cố định */
+                                                    white-space: nowrap; /* Không cho phép xuống dòng */
+                                                    overflow: hidden; /* Ẩn phần nội dung tràn ra */
+                                                    text-overflow: ellipsis; /* Thêm dấu "..." cho nội dung bị cắt */
+                                                    width: 50%;
+                                                }
+                                            </style>
+                                            <div class="p-3" @onclick="DoNothing" style="overflow:hidden;border-radius:12px;position:fixed;top: 62px; right: 122px;z-index:100; border: 2px solid lightgrey;box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.3);overflow:hidden; width:400px;height:500px;background-color:#fff; /* Đổ bóng */">
+                                                @if (LoadedMes)
+                                                {
+                                                    <h4 style="" class="my-2">Đoạn chat</h4>
+                                                    @if (IsMessengerDetail)
+                                                    {
+                                                        <Client.Components.Messenger.ConversationDetail GoBack="BackToListConver" IdConversation="IdConversation"></Client.Components.Messenger.ConversationDetail>
+                                                    }
+                                                    else
+                                                    {
+                                                        <div>
+                                                            <MudTooltip Text="Tạo cuộc trò chuyện mới">
+                                                                <MudIconButton OnClick="AddNewMesAdmin" Icon="@Icons.Material.Filled.AddCircle" Size="Size.Small" />
+                                                            </MudTooltip>
+                                                        </div>
+                                                        if (ListConversation.Count != 0)
+                                                        {
+                                                            <div style="overflow-y:scroll;height:390px;overflow-x: hidden;">
+                                                                @foreach (var item in ListConversation)
+                                                                {
+                                                                    <div style="font-size:14px;border-radius:10px;" @onclick="() => MesDetail(item.Id)" class="p-1 m-1 hover-back">
+                                                                        <div style="height:68px;" class="d-flex justify-content-between align-items-center">
+                                                                            <MudAvatar Class="hover-border">
+                                                                                <MudImage Src="@(item.Avatar==null?@"\Img\avatar_default1.jpg":item.Avatar)"></MudImage>
+                                                                            </MudAvatar>
+
+                                                                            <div class="flex-grow-1 ms-3">
+                                                                                <p class="mb-1"><b>@(item.FullName == null ? "Admin" : item.FullName)</b></p>
+                                                                                <div class="d-flex align-items-end ">
+                                                                                    @if (item.isRead)
+                                                                                    {
+                                                                                        <span class="single-line">@item.LastestMes</span>
+                                                                                    }
+                                                                                    else
+                                                                                    {
+                                                                                        <b class="single-line">@item.LastestMes</b>
+                                                                                    }
+                                                                                    <span class="ms-2">• @item.Time</span>
+                                                                                </div>
+                                                                            </div>
+
+                                                                        </div>
+                                                                    </div>
+                                                                }
+                                                            </div>
+                                                        }
+                                                        else
+                                                        {
+                                                            <MudAlert Severity="Severity.Info" Class="mt-2">Không có cuộc trò chuyện nào</MudAlert>
+                                                        }
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    <Client.Components.ComponentCustom.LoadingLocal></Client.Components.ComponentCustom.LoadingLocal>
+                                                }
+                                            </div>
+                                        }
                                         <MudTooltip Class="mx-1" Text="Thêm mới bài viết">
                                             <MudFab Class="mx-1" StartIcon="@Icons.Material.Filled.Add" @onclick="CreatePost" Size="Size.Medium" Style="border:none;box-shadow:none;background-color:none;" Label="Tạo mới" />
                                         </MudTooltip>
@@ -213,8 +296,7 @@ else
 
                                         @if (isShowNotice)
                                         {
-
-                                            <div class="" style="overflow:hidden;border-radius:12px;position:fixed;top: 62px; right: 82px;z-index:100; border: 2px solid lightgrey;box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.3); /* Đổ bóng */">
+                                            <div class="" style="overflow:hidden;border-radius:12px;position:fixed;top: 62px; right: 82px;z-index:100; border: 2px solid lightgrey;box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.3); width:440px; /* Đổ bóng */">
                                                 @if (LoadedNotice)
                                                 {
                                                     @if (ListNotice.Count != 0)
@@ -222,14 +304,16 @@ else
                                                         @foreach (var item in ListNotice)
                                                         {
                                                             <div style="background-color:@(item.isRead ? " #fff" : "rgb(230, 230, 230)" );">
-                                                                <MudMenuItem Class="p-2" @onclick="() => GoTo(item.Id, item.Link)">
-                                                                    <div class="d-flex justify-content-start align-items-start ">
+                                                                <MudMenuItem Class="p-1" @onclick="() => GoTo(item.Id, item.Link)">
+                                                                    <div class="d-flex justify-content-start align-items-start " style="font-size:14px;">
                                                                         <MudAvatar Class="hover-border">
                                                                             <MudImage Src="@item.AvatarUserSend"></MudImage>
                                                                         </MudAvatar>
                                                                         <div class="ms-3">
                                                                             <b>@item.UserNameSend</b>
-                                                                            <span>@item.Content</span>
+                                                                            <div style="text-overflow: ellipsis; white-space: normal;">
+                                                                                <span>@item.Content</span>
+                                                                            </div>
                                                                             <p style="color:deepskyblue;" class="mb-0">
                                                                                 @item.Time
                                                                             </p>
@@ -262,7 +346,6 @@ else
                                                     </div>
                                                 }
                                             </div>
-
                                         }
 
                                     </div>
@@ -358,39 +441,47 @@ else
         function playAudio() {
             var audioPlayer = document.getElementById('audioPlayer');
             if (audioPlayer) {
-                        audioPlayer.play();
+                audioPlayer.play();
             }
-                }
+        }
     </script>
 
     <script>
         function saveScrollPosition() {
-                return window.scrollY; // Lấy vị trí cuộn dọc hiện tại
-                }
+            return window.scrollY; // Lấy vị trí cuộn dọc hiện tại
+        }
 
-                function restoreScrollPosition(position) {
-                    window.scrollTo({
-                        top: position,
-                        left: 0,
-                        behavior: 'auto' // Cuộn ngay lập tức
-                    });
-                }
+        function restoreScrollPosition(position) {
+            window.scrollTo({
+                top: position,
+                left: 0,
+                behavior: 'auto' // Cuộn ngay lập tức
+            });
+        }
     </script>
 }
 @code {
     bool isShowNotice;
+    bool isShowMessenger;
+
+    bool IsMessengerDetail;
 
     string Search;
+
+    Guid? IdConversation;
 
     private string AntiforgeryToken;
 
     bool isPreValid;
     bool isNextValid;
 
+    bool isHasNewMes;
+
     private bool _isDarkMode = false;
     private MudTheme? _theme = null;
 
     private HubConnection? hubNotice;
+    private HubConnection? hubMessage;
 
     protected int NoticeCount = 0;
     public string Avatar;
@@ -399,6 +490,7 @@ else
     int CurrentCountNotice = 0;
 
     private List<NoticeDTO> ListNotice = new List<NoticeDTO>();
+    private List<ConversationDTO> ListConversation = new List<ConversationDTO>();
 
     private bool isStatusHistory = false;
 
@@ -412,6 +504,7 @@ else
     Guid IdUser;
 
     bool LoadedNotice;
+    bool LoadedMes;
 
     protected override async Task OnInitializedAsync()
     {
@@ -453,6 +546,21 @@ else
                 await JS.InvokeVoidAsync("playAudio");
             });
 
+
+            hubMessage = new HubConnectionBuilder()
+            .WithUrl(Navigation.ToAbsoluteUri("/hubMessage"))
+            .Build();
+
+            hubMessage.On("ReceiveNoticeMes", async () =>
+            {
+                if (!isShowMessenger)
+                {
+                    isHasNewMes = true;
+                    await InvokeAsync(StateHasChanged);
+                    await JS.InvokeVoidAsync("playAudio");
+                }
+            });
+
             var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
             var response = await httpClient.GetStringAsync($"/getAmountNoticeUser/{userId}");
             if (response != null)
@@ -464,6 +572,10 @@ else
 
             await hubNotice.SendAsync("RegisterConnection", userId);
 
+            await hubMessage.StartAsync();
+
+            await hubMessage.SendAsync("RegisterConnection", userId);
+
             if (currentUser != null)
             {
                 Avatar = currentUser.Img;
@@ -471,7 +583,7 @@ else
             await LoadSearchHistory();
 
 
-
+            await CheckUserRole();
         }
     }
 
@@ -534,7 +646,7 @@ else
 
     void NaviGate(string link)
     {
-        Navigation.NavigateTo("/postDetail/" + link , true);
+        Navigation.NavigateTo("/postDetail/" + link, true);
     }
 
     private List<PostIntroDTO> lstPostUserTop = new List<PostIntroDTO>();
@@ -544,7 +656,15 @@ else
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
         var idUserCurrent = UserManager.GetUserId(user);
-        var idUser = Guid.Parse(idUserCurrent);
+        Guid idUser;
+        if (idUserCurrent != null)
+        {
+            idUser = Guid.Parse(idUserCurrent);
+        }
+        else
+        {
+            return;
+        }
 
         var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
         var result = await httpClient.GetStringAsync($"/api/search/getListPostTop/{idUser}");
@@ -664,11 +784,20 @@ else
 
     private void Hide()
     {
-        isShowNotice = false;
+        if (!isInteract)
+        {
+            isShowMessenger = false;
+            isShowNotice = false;
+        }
+        else
+        {
+            isInteract = false;
+        }
     }
 
     private async Task ClickNoticeLabel()
     {
+        isShowMessenger = false;
         LoadedNotice = false;
         isShowNotice = !isShowNotice;
         if (!isShowNotice)
@@ -693,7 +822,13 @@ else
         return list;
     }
 
+    bool isInteract;
 
+    void DoNothing()
+    {
+        isInteract = true;
+        return;
+    }
 
     private async Task GoTo(Guid Id, string link)
     {
@@ -736,5 +871,64 @@ else
             ListNotice = listNotice;
         }
     }
+
+    async Task ClickMesLabel()
+    {
+        isShowNotice = false;
+
+        isShowMessenger = !isShowMessenger;
+        if (!isShowMessenger)
+        {
+            return;
+        }
+        isHasNewMes = false;
+        IsMessengerDetail = false;
+        IdConversation = null;
+        var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+        var data = await httpClient.GetStringAsync($"/getallconversation/{IdUser}");
+        ListConversation = JsonConvert.DeserializeObject<List<ConversationDTO>>(data);
+        LoadedMes = true;
+    }
+
+    async Task AddNewMesAdmin()
+    {
+        IsMessengerDetail = true;
+        IdConversation = null;
+    }
+
+    async Task MesDetail(Guid Id)
+    {
+        IsMessengerDetail = true;
+        IdConversation = Id;
+    }
+
+    async Task BackToListConver()
+    {
+        IsMessengerDetail = false;
+        IdConversation = null;
+        var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+        var data = await httpClient.GetStringAsync($"/getallconversation/{IdUser}");
+        ListConversation = JsonConvert.DeserializeObject<List<ConversationDTO>>(data);
+    }
+
+    private bool isUserNullRole = false;
+
+
+    async Task CheckUserRole()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity is not null && user.Identity.IsAuthenticated)
+        {
+            var identityUser = await UserManager.GetUserAsync(user);
+            if (identityUser != null)
+            {
+                var userRoles = await UserManager.GetRolesAsync(identityUser);
+                isUserNullRole = !userRoles.Any(); // Hiển thị nút nếu người dùng không có quyền nào
+            }
+        }
+    }
+
 }
 

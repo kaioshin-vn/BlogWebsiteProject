@@ -1,5 +1,6 @@
 ﻿@page "/restrictedword"
 @using Data.Database.Table
+@attribute [Authorize(Roles = "Admin")]
 @inject IHttpClientFactory _httpClientFactory;
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService

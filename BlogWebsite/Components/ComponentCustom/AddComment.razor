@@ -1,9 +1,13 @@
-﻿@using HtmlAgilityPack;
+﻿@using Data.Database.Table
+@using HtmlAgilityPack;
+@using Microsoft.AspNetCore.SignalR.Client
+@using Newtonsoft.Json
 @inject IHttpClientFactory HttpClientFactory
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject UserManager<ApplicationUser> UserManager
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
+@inject NavigationManager Navigation
 
 @if (isAddComment)
 {
@@ -61,6 +65,7 @@ else
 @code {
     [Parameter]
     public Guid IdPost { get; set; }
+
     [Parameter]
     public EventCallback<PostCommentDTO> UserAddComment { get; set; }
 
@@ -129,6 +134,41 @@ else
             if (UserAddComment.HasDelegate)
             {
                 Comment.Content = "";
+
+                var idstring = await httpClient.GetStringAsync($"getIdUserPost/{IdPost}");
+
+                var idUserPost = Guid.Parse(idstring);
+
+                if (idUser != idUserPost)
+                {
+                    
+                    var notice = new Notice();
+                    notice.Id = Guid.NewGuid();
+                    notice.FromUser = idUser;
+                    notice.ToUser = idUserPost;
+                    notice.Content = "Đã bình luận về bài viết của bạn";
+                    notice.CreateDate = DateTime.Now;
+                    notice.Link = $"/postDetail/{IdPost}";
+
+                    var datacheck = await httpClient.PostAsJsonAsync($"/addNewPostNoticeUser", notice);
+                    var sendNotice = JsonConvert.DeserializeObject<bool>( await datacheck.Content.ReadAsStringAsync());
+
+                    if (sendNotice)
+                    {
+                        var hubConnection = new HubConnectionBuilder()
+                                    .WithUrl(Navigation.ToAbsoluteUri("/hubNotice"))
+                                    .Build();
+
+                        await hubConnection.StartAsync();
+                        await hubConnection.SendAsync("SendPrivateMessage", idUserPost.ToString());
+                    }
+                }
+
+
+                var data = await httpClient.PostAsJsonAsync("comment/addNewComment", Comment);
+                
+                
+
                 await UserAddComment.InvokeAsync(Comment);
             }
             ToggleComment();

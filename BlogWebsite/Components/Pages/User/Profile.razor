@@ -4,7 +4,9 @@
 @using Client.Components.Layout
 @using Newtonsoft.Json
 
+
 @layout MainLayoutSub
+@attribute [Authorize]
 @inject ISnackbar Snackbar
 @inject IHttpClientFactory ClientFactory
 @inject AuthenticationStateProvider AuthenticationStateProvider

@@ -1,4 +1,6 @@
 ﻿@page "/topics"
+
+@attribute [Authorize(Roles = "Admin")]
 @inject IHttpClientFactory _httpClientFactory;
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService

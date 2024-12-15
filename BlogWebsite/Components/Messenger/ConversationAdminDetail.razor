@@ -1,0 +1,227 @@
+﻿@using Data.Database.Table
+@using Microsoft.AspNetCore.SignalR.Client
+@using System.Security.Claims
+@using Mes = Data.Database.Table.Messenger;
+
+@implements IDisposable
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserManager<ApplicationUser> UserManager
+@inject IJSRuntime JS
+@inject ApplicationDbContext DbContext
+@inject IHttpClientFactory HttpClientFactory
+
+@if (isLoaded)
+{
+    <style>
+        /* Container for chat messages */
+        .chat-container {
+            width: 100%;
+            margin: 0 auto;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        /* General message styling */
+        .message {
+            display: inline-flex;
+            flex-direction: column;
+            max-width: 60%;
+            padding: 10px;
+            border-radius: 12px;
+            position: relative;
+        }
+
+        /* Sent message styling (aligned to the right) */
+        .message-sent {
+            background-color: #007bff;
+            color: white;
+            align-self: flex-end; /* Align to the right */
+        }
+
+        /* Received message styling (aligned to the left) */
+        .message-received {
+            background-color: #e1e1e1;
+            color: #333;
+            align-self: flex-start; /* Align to the left */
+        }
+
+        /* Message content */
+        .message-content {
+            font-size: 14px;
+            line-height: 1.4;
+            margin-bottom: 5px;
+        }
+
+        /* Message time */
+        .message-time {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.7);
+            text-align: right;
+        }
+
+        /* Time styling for received messages */
+        .message-received .message-time {
+            color: rgba(0, 0, 0, 0.5);
+        }
+    </style>
+    <MudFab StartIcon="@Icons.Material.Filled.ArrowBack" Class="mb-1" Size="Size.Small" Label=" " OnClick="Back" DropShadow="false" />
+
+    <div class="chat-container" style="height:315px; overflow-y:scroll;overflow-x:hidden;">
+
+        @foreach (var item in ListMes)
+        {
+            if (item.IdUserSend == IdUser)
+            {
+                <div class="message message-sent">
+                    <span class="message-content">@item.Content</span>
+                    <span class="message-time">@item.CreateTime.ToString("dd/MM/yyyy hh:mm tt")</span>
+                </div>
+            }
+            else
+            {
+                <div class="message message-received">
+                    <span class="message-content">@item.Content</span>
+                    <span class="message-time">@item.CreateTime.ToString("dd/MM/yyyy hh:mm tt")</span>
+                </div>
+            }
+        }
+    </div>
+
+    <div class="d-flex align-items-center" style="position:absolute;bottom: 20px;width:95%;">
+        <MudTextField Style="margin-top:8px;" Variant="Variant.Filled" Class="m-0" @bind-Value="this.Text" AutoGrow />
+        <MudIcon Class="mx-2" Size="Size.Small" Icon="@Icons.Material.Filled.Send" @onclick="SendMessage" Color="Color.Success" />
+    </div>
+}
+else
+{
+    <Client.Components.ComponentCustom.LoadingLocal></Client.Components.ComponentCustom.LoadingLocal>
+}
+
+@code {
+    [Parameter]
+    public Guid IdConversation { get; set; }
+
+    Conversation Conversation { get; set; }
+
+    List<Mes> ListMes = new List<Mes>();
+
+    string Text { get; set; } = "";
+
+    bool isLoaded;
+
+    [Parameter]
+    public EventCallback GoBack { get; set; }
+
+    Guid IdUser;
+
+    private HubConnection? hubMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        var userCurrent = UserManager.GetUserId(user);
+        if (userCurrent != null)
+        {
+            IdUser = Guid.Parse(userCurrent);
+        }
+
+        if (IdConversation != null)
+        {
+
+            hubMessage = new HubConnectionBuilder()
+    .WithUrl(Navigation.ToAbsoluteUri("/hubConver"))
+    .Build();
+
+            hubMessage.On<string>("ReceiveMessage", async (IdMessage) =>
+            {
+                var idMes = Guid.Parse(IdMessage);
+                var mes = DbContext.Messengers.FirstOrDefault(a => a.Id == idMes);
+                ListMes.Add(mes);
+                var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+                var response = await httpClient.GetAsync($"/converReadedByAdmin/{Conversation.Id}");
+                await InvokeAsync(StateHasChanged);
+            });
+            await hubMessage.StartAsync();
+
+            var conectionString = IdUser.ToString() + "/" + IdConversation.ToString();
+
+            await hubMessage.SendAsync("RegisterConnection", conectionString);
+
+            ListMes = DbContext.Messengers.Where(a => a.IdConversation == IdConversation).OrderBy(a => a.CreateTime).ToList();
+
+            Conversation = DbContext.Conversations.FirstOrDefault(a => a.Id == IdConversation);
+
+            var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+            var response = await httpClient.GetAsync($"/converReadedByAdmin/{Conversation.Id}");
+        }
+        isLoaded = true;
+    }
+
+    async Task SendMessage()
+    {
+        if (string.IsNullOrEmpty(Text))
+        {
+            return;
+        }
+
+        var mes = new Mes();
+        mes.Id = Guid.NewGuid();
+        mes.IdConversation = this.IdConversation;
+
+        mes.IdUserSend = IdUser;
+        mes.IdUserReceive = Conversation.IdUser;
+        mes.Content = Text;
+        mes.CreateTime = DateTime.Now;
+        mes.IsDeleted = false;
+
+        var httpClients = HttpClientFactory.CreateClient("MyHttpClient");
+        var data = await httpClients.GetAsync($"/converAdminSendMes/{Conversation.Id}");
+ 
+        DbContext.Messengers.Add(mes);
+        await DbContext.SaveChangesAsync();
+
+        ListMes.Add(mes);
+
+        var hubConnection = new HubConnectionBuilder()
+                    .WithUrl(Navigation.ToAbsoluteUri("/hubConver"))
+                    .Build();
+
+        await hubConnection.StartAsync();
+
+        var conectionString = Conversation.IdUser.ToString() + "/" + IdConversation.ToString();
+
+        await hubConnection.SendAsync("SendPrivateMessage", conectionString, mes.Id.ToString());
+
+        var hubConnectionMes = new HubConnectionBuilder()
+                    .WithUrl(Navigation.ToAbsoluteUri("/hubMessage"))
+                    .Build();
+
+        await hubConnectionMes.StartAsync();
+
+
+        await hubConnectionMes.SendAsync("SendPrivateMessage", Conversation.IdUser);
+
+        Text = "";
+    }
+
+    private async Task Back()
+    {
+        if (GoBack.HasDelegate)
+        {
+            await GoBack.InvokeAsync();
+        }
+    }
+
+    public async void Dispose()
+    {
+        if (hubMessage != null)
+        {
+            await hubMessage.DisposeAsync();
+        }
+    }
+}

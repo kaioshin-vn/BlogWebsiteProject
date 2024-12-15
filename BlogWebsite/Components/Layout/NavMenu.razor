@@ -77,6 +77,11 @@
                     <MudText>Quản lý tài khoản</MudText>
                 </MudNavLink>
 
+                <MudNavLink Match="NavLinkMatch.Prefix" Href="/messenger" Class="rounded-3 overflow-hidden m-3">
+                    <MudIcon Icon="@Icons.Material.Filled.ContactSupport"></MudIcon>
+                    <MudText>Liên hệ</MudText>
+                </MudNavLink>
+
                 <MudNavLink Match="NavLinkMatch.Prefix" Href="/report" Class="rounded-3 overflow-hidden m-3">
                     <MudIcon Icon="@Icons.Material.Filled.Report"></MudIcon>
                     <MudText>Báo cáo</MudText>
@@ -107,16 +112,14 @@
                     <MudText>Từ khóa hạn chế</MudText>
                 </MudNavLink>
 
+
             </AuthorizeView>
 
         </Authorized>
     </AuthorizeView>
 
     <MudNavGroup Title="Tài nguyên" Icon="@Icons.Material.Filled.Settings" Expanded="false" Class="rounded-3 overflow-hidden m-3 py-3" Style="width:200px;">
-        <MudNavLink Href="/users" Icon="@Icons.Material.Filled.People" IconColor="Color.Success" Class="rounded-3 overflow-hidden m-3">About Kaizen</MudNavLink>
         <MudNavLink Href="/rules" Icon="@Icons.Material.Filled.Rule" IconColor="Color.Info" Class="rounded-3 overflow-hidden m-3">Tiêu chuẩn cộng đồng</MudNavLink>
-        <MudNavLink Href="/security" Icon="@Icons.Material.Filled.Security" IconColor="Color.Info" Class="rounded-3 overflow-hidden m-3">Liên hệ </MudNavLink>
-        <MudNavLink Href="/security" Icon="@Icons.Material.Filled.Security" IconColor="Color.Info" Class="rounded-3 overflow-hidden m-3">Best of Kaizen</MudNavLink>
     </MudNavGroup>
 </MudNavMenu>
 

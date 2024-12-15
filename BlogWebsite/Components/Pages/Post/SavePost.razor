@@ -1,7 +1,7 @@
 ﻿@page "/savepost"
 @using Client.Components.ComponentCustom
 @using Client.Components.Layout
-
+@attribute [Authorize]
 @inject IHttpClientFactory HttpClientFactory 
 @inject IDialogService DialogService
 @layout SaveLayout

@@ -14,6 +14,7 @@
 @using System.Net.Mail
 @using System.Net
 
+@attribute [Authorize(Roles = "Admin")]
 @inject IJSRuntime JSRunTime
 @inject IHttpClientFactory HttpClientFactory
 @inject AuthenticationStateProvider AuthenticationStateProvider
