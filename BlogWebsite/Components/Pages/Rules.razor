@@ -1,47 +1,55 @@
 ﻿@page "/rules"
-<header>
-    <h1>Tiêu Chuẩn Cộng Đồng - Kaizen</h1>
-</header>
-<main>
-    <section>
-        <h2>Giới Thiệu</h2>
-        <p>
-            Chúng tôi mong muốn Kaizen trở thành nơi mà mọi người có thể giao tiếp tự tin và thoải mái, nhưng đồng thời cam kết ngăn chặn lạm dụng dịch vụ của mình. Dưới đây là Tiêu chuẩn cộng đồng nhằm hướng dẫn bạn về những nội dung được phép và không được phép trên nền tảng của chúng tôi.
-        </p>
-    </section>
-    <section>
-        <h2>Nội Dung Có Khả Năng Vi Phạm</h2>
-        <p>Những loại nội dung mà chúng tôi dự đoán có thể vi phạm Tiêu chuẩn cộng đồng bao gồm:</p>
-        <ul>
-            <li>Nội dung từ tài khoản giả.</li>
-            <li>Nội dung mang tính thù ghét.</li>
-            <li>Hành vi bắt nạt và quấy rối.</li>
-            <li>Spam hoặc hình ảnh phản cảm.</li>
-            <li>Nội dung về hoạt động tình dục hoặc ảnh khỏa thân người lớn.</li>
-            <li>Thông tin sai lệch về COVID-19 có thể gây hại.</li>
-            <li>Mua bán, quảng cáo hàng hóa bị hạn chế.</li>
-        </ul>
-        <p>Khi xác nhận vi phạm, nội dung sẽ bị gỡ khỏi Kaizen.</p>
-    </section>
-    <section>
-        <h2>Nội Dung Trên Lằn Ranh</h2>
-        <p>Các nội dung gần chạm ngưỡng vi phạm nhưng chưa thực sự vi phạm bao gồm:</p>
-        <ul>
-            <li>Hình ảnh gợi dục hoặc khiêu khích nhưng không vi phạm chính sách ảnh khỏa thân.</li>
-            <li>Nội dung bạo lực, phản cảm nhưng không quá mức quy định.</li>
-            <li>Ngôn từ giật gân, gây hiểu nhầm về vaccine hoặc COVID-19.</li>
-        </ul>
-    </section>
-    <section>
-        <h2>Nguyên Tắc Đối Với Người Nhiều Lần Vi Phạm</h2>
-        <p>
-            Những người vi phạm lặp lại có thể bị hạn chế quyền đăng bài hoặc giảm mức độ tiếp cận nội dung. Nếu tiếp tục không tuân thủ, tài khoản có thể bị đình chỉ tạm thời hoặc vĩnh viễn.
-        </p>
-    </section>
-</main>
-<footer>
-    <p>&copy; 2024 Kaizen. Mọi quyền được bảo lưu.</p>
-</footer>
-@code {
+@inject ISnackbar Snackbar
 
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-16">
+    <MudText Typo="Typo.h3" Align="Align.Center" GutterBottom="true">Tiêu Chuẩn Cộng Đồng - Kaizen</MudText>
+    <MudText Align="Align.Center" Class="mb-8">Chúng tôi mong muốn Kaizen trở thành nơi mà mọi người có thể giao tiếp tự tin và thoải mái, nhưng đồng thời cam kết ngăn chặn lạm dụng dịch vụ của mình.</MudText>
+
+    <MudGrid>
+        <MudItem xs="12">
+            <MudPaper Elevation="3" Class="pa-4">
+                <MudText Typo="Typo.h5" Color="Color.Error">Nội Dung Không Được Phép</MudText>
+                <MudList T="string" Dense="true">
+                    <MudListItem Icon="@Icons.Material.Filled.Block">Nội dung từ tài khoản giả</MudListItem>
+                    <MudListItem Icon="@Icons.Material.Filled.Block">Nội dung mang tính thù ghét</MudListItem>
+                    <MudListItem Icon="@Icons.Material.Filled.Block">Hành vi bắt nạt và quấy rối</MudListItem>
+                    <MudListItem Icon="@Icons.Material.Filled.Block">Spam hoặc hình ảnh phản cảm</MudListItem>
+                    <MudListItem Icon="@Icons.Material.Filled.Block">Nội dung về hoạt động tình dục hoặc ảnh khỏa thân người lớn</MudListItem>
+                    <MudListItem Icon="@Icons.Material.Filled.Block">Thông tin sai lệch về COVID-19 có thể gây hại</MudListItem>
+                    <MudListItem Icon="@Icons.Material.Filled.Block">Mua bán, quảng cáo hàng hóa bị hạn chế</MudListItem>
+                </MudList>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" Class="mt-4">
+            <MudPaper Elevation="3" Class="pa-4">
+                <MudText Typo="Typo.h5" Color="Color.Warning">Nội Dung Cần Chú Ý</MudText>
+                <MudList T="string" Dense="true">
+                    <MudListItem Icon="@Icons.Material.Filled.Warning">Hình ảnh gợi dục hoặc khiêu khích nhưng không vi phạm chính sách ảnh khỏa thân</MudListItem>
+                    <MudListItem Icon="@Icons.Material.Filled.Warning">Nội dung bạo lực, phản cảm nhưng không quá mức quy định</MudListItem>
+                    <MudListItem Icon="@Icons.Material.Filled.Warning">Ngôn từ giật gân, gây hiểu nhầm về vaccine hoặc COVID-19</MudListItem>
+                </MudList>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" Class="mt-4">
+            <MudPaper Elevation="3" Class="pa-4">
+                <MudText Typo="Typo.h5">Nguyên Tắc Đối Với Người Nhiều Lần Vi Phạm</MudText>
+                <MudText>
+                    Những người vi phạm lặp lại có thể bị hạn chế quyền đăng bài hoặc giảm mức độ tiếp cận nội dung. 
+                    Nếu tiếp tục không tuân thủ, tài khoản có thể bị đình chỉ tạm thời hoặc vĩnh viễn.
+                </MudText>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+
+    <MudText Align="Align.Center" Class="mt-8">© 2024 Kaizen. Mọi quyền được bảo lưu.</MudText>
+</MudContainer>
+
+@code {
+    protected override void OnInitialized()
+    {
+        Snackbar.Configuration.PositionClass = Defaults.Classes.Position.TopEnd;
+        Snackbar.Add("Vui lòng đọc kỹ tiêu chuẩn cộng đồng của chúng tôi", Severity.Info);
+    }
 }
