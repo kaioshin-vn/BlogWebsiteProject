@@ -71,6 +71,12 @@ else
         var userId = userCurrent.Id;
         savePost.IdUser = userId;
 
+        if (string.IsNullOrWhiteSpace(savePost.SaveName))
+        {
+            Snackbar.Add("Vui lòng nhập tên bộ sưu tập!", Severity.Warning);
+            return;
+        }
+
         var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
         var result = await httpClient.PostAsJsonAsync("/api/save/create_savepost", savePost);
         if (result.IsSuccessStatusCode)
