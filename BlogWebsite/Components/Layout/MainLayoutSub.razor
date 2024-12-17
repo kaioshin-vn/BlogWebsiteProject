@@ -350,7 +350,7 @@ else
 
                                     </div>
 
-                                    <MudMenu Class="pt-2 pb-3" ActivationEvent="@MouseEvent.MouseOver" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.BottomRight">
+                                    <MudMenu Class="pt-2 pb-3" ActivationEvent="@MouseEvent.LeftClick" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.BottomRight">
                                         <ActivatorContent>
                                             <MudAvatar Class="avatar" Variant="Variant.Outlined">
                                                 <MudImage Src="@Avatar"></MudImage>
@@ -377,7 +377,7 @@ else
                                             </MudMenuItem>
                                             <MudMenuItem>
                                                 <form action="Account/Logout" class="p-0" method="post">
-                                                    <input type="hidden" name="__RequestVerificationToken" value="@AntiforgeryToken" />
+                                                    <AntiforgeryToken />
                                                     <input type="hidden" name="ReturnUrl" value="Account/Login" />
                                                     <button type="submit" style="width:230px;" class="d-flex justify-content-start ">
                                                         <MudFab class="p-0 me-3" StartIcon="@Icons.Material.Filled.Logout" Color="Color.Tertiary" Size="Size.Small" />
@@ -387,6 +387,14 @@ else
                                             </MudMenuItem>
                                         </ChildContent>
                                     </MudMenu>
+                                    <form action="Account/Logout" class="p-0" method="post" style="display:none;">
+                                        <AntiforgeryToken />
+                                        <input type="hidden" name="ReturnUrl" value="Account/Login" />
+                                        <button type="submit" style="width:230px;" class="d-flex justify-content-start ">
+                                            <MudFab class="p-0 me-3" StartIcon="@Icons.Material.Filled.Logout" Color="Color.Tertiary" Size="Size.Small" />
+                                            <b>Đăng xuất</b>
+                                        </button>
+                                    </form>
                                 </div>
                             </Authorized>
 
@@ -515,8 +523,14 @@ else
                 LayoutProperties = new LayoutProperties()
             };
 
-        var tokens = Antiforgery.GetAndStoreTokens(HttpContextAccessor.HttpContext);
-        AntiforgeryToken = tokens.RequestToken;
+        if (HttpContextAccessor.HttpContext != null)
+        {
+            var tokens = Antiforgery.GetAndStoreTokens(HttpContextAccessor.HttpContext);
+            if (tokens != null)
+            {
+                AntiforgeryToken = tokens.RequestToken;
+            }
+        }
 
         // Lấy trạng thái xác thực
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();

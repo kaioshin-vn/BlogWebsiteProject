@@ -63,7 +63,7 @@ builder.Services.AddRazorComponents()
 
 builder.Services.AddHttpClient("MyHttpClient", client =>
 {
-    client.BaseAddress = new Uri("https://apikaizen.azurewebsites.net/"); // Địa chỉ cơ bản của API
+    client.BaseAddress = new Uri("https://localhost:7272/"); // Địa chỉ cơ bản của API
 });
 builder.Services.AddCors(options =>
 {
@@ -83,6 +83,9 @@ builder.Services.AddScoped<UserManager<ApplicationUser>>();
 
 builder.Services.AddServerSideBlazor()
         .AddCircuitOptions(options => { options.DetailedErrors = true; });
+
+builder.Services.AddHttpContextAccessor();
+
 
 builder.Services.AddAuthentication(options =>
 {
