@@ -52,11 +52,6 @@
         <MudChart ChartType="ChartType" ChartSeries="@Series" XAxisLabels="@XAxisLabels" Width="100%" Height="350px" ChartOptions="@Options" />
     </div>
 
-    <div class="my-3">
-        <MudText>Tổng số tài khoản : @TotalAccount</MudText>
-        <MudText>Tổng số bài viết : @TotalPost</MudText>
-        <MudText>Tổng số nhóm : @TotalGroup</MudText>
-    </div>
 }
 else
 {
@@ -81,10 +76,6 @@ else
     ChartType ChartType = ChartType.Bar; 
 
     int Year = DateTime.Now.Year;
-
-    string TotalAccount;
-    string TotalGroup;
-    string TotalPost;
 
     int CurrentYear = DateTime.Now.Year;
 
@@ -134,9 +125,6 @@ else
         result = await _httpClient.GetStringAsync($"/getStatisTotal");
 
         var data = JsonConvert.DeserializeObject<Dictionary<string,string>>(result);
-        TotalAccount = data["Account"];
-        TotalPost = data["Post"];
-        TotalGroup = data["Group"];
         isLoaded = true;
     }
 
