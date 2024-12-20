@@ -5,7 +5,6 @@ using BlogWebsite.Components.Account;
 using BlogWebsite.Data;
 using Client.Components;
 using Client.StaticClass;
-using Client.VNPayService;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -129,7 +128,7 @@ builder.Services.AddIdentityCore<ApplicationUser>(options => { })
 	.AddUserManager<UserManager<ApplicationUser>>()
 	.AddRoleManager<RoleManager<IdentityRole<Guid>>>();
 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
-builder.Services.AddScoped<VnPayService>();
+//builder.Services.AddScoped<VnPayService>();
 builder.Services.AddRadzenComponents();
 builder.Services.AddControllers();
 builder.Services.AddMemoryCache();

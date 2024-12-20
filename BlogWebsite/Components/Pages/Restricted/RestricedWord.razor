@@ -1,10 +1,11 @@
 ﻿@page "/restrictedword"
+@using Client.Components.Admin
 @using Data.Database.Table
 @attribute [Authorize(Roles = "Admin")]
 @inject IHttpClientFactory _httpClientFactory;
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
-
+@layout AdminLayout
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-16">
     <h2>Quản lý từ ngữ hạn chế</h2>
 

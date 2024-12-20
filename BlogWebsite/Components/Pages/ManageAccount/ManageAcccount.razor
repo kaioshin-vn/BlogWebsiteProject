@@ -1,6 +1,7 @@
 ﻿@page "/ManageAccount"
 @page "/ManageAccount/{IdUser:guid}"
 
+@using Client.Components.Admin
 @using Client.Components.ComponentCustom
 @using Data.Database.Table
 @using Microsoft.AspNetCore.Authorization
@@ -11,12 +12,12 @@
 @using System.Net.Mail
 @using System.Net
 @attribute [Authorize(Roles = "Admin")]
+@layout AdminLayout
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager Navigation
 @inject IDialogService DialogService
 @inject IHttpClientFactory HttpClientFactory
 @inject ISnackbar Snackbar
-
 @inject UserManager<ApplicationUser> UserManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
@@ -110,7 +111,7 @@ else
                 </tbody>
             </MudSimpleTable>
             <div class="d-flex justify-content-center">
-                <MudPagination Color="Color.Primary" Count="TotalPage" @bind-value="@Page" SelectedChanged="LoadUser" />
+                <MudPagination Color="Color.Primary" Count="TotalPage"  @bind-Selected="@Page" />
             </div>
         }
     </MudContainer>
@@ -360,6 +361,14 @@ else
     async Task ToggleDrawer(UserTrans user)
     {
         user.Open = !user.Open;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            await LoadUser();
+        }
     }
 
     internal class UserTrans

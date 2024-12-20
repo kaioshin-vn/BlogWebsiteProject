@@ -1,5 +1,6 @@
 ﻿@page "/listUserReport/{IdUser:guid}"
 
+@using Client.Components.Admin
 @using Data.DTO.EntitiDTO
 @using Data.DTO
 @using Newtonsoft.Json
@@ -9,6 +10,8 @@
 @inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject UserManager<ApplicationUser> UserManager
+
+@layout AdminLayout
 
 <style>
     .result-container {

@@ -1,8 +1,10 @@
 ﻿@page "/statistical"
+@using Client.Components.Admin
 @using Newtonsoft.Json
 @attribute [Authorize(Roles = "Admin")]
 @inject IHttpClientFactory HttpClientFactory
 @inject IJSRuntime JSRuntime
+@layout AdminLayout
 
 <div class="d-flex justify-content-between mx-5">
 

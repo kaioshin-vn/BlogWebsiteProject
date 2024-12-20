@@ -1,6 +1,7 @@
 ﻿@page "/postReportedDetail/{IdPost:guid}"
 
 @using ASM_PH35423.StaticClass
+@using Client.Components.Admin
 @using Client.Components.ComponentCustom
 @using Data.DTO
 @using Data.DTO.EntitiDTO
@@ -10,6 +11,7 @@
 @using Newtonsoft.Json.Linq
 @using System.Globalization;
 
+@layout AdminLayout
 @attribute [Authorize(Roles = "Admin")]
 @inject IJSRuntime JSRunTime
 @inject IHttpClientFactory HttpClientFactory

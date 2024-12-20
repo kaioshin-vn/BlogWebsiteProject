@@ -1,6 +1,7 @@
 ﻿@page "/ManageAuthor"
 
 
+@using Client.Components.Admin
 @using Client.Components.ComponentCustom
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Identity
@@ -9,6 +10,7 @@
 @using Newtonsoft.Json
 
 @attribute [Authorize(Roles = "Admin")]
+@layout AdminLayout
 @inject NavigationManager Navigation
 @inject IDialogService DialogService
 @inject IHttpClientFactory HttpClientFactory

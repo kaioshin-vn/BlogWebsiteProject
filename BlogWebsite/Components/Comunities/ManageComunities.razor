@@ -1,6 +1,7 @@
 ﻿@page "/ManageComunities"
 @* @page "/ManageAccount/{IdUser:guid}" *@
 
+@using Client.Components.Admin
 @using Client.Components.ComponentCustom
 @using Data.DTO
 @using Data.Database.Table
@@ -13,6 +14,7 @@
 @using System.Net.Mail
 @using System.Net
 
+@layout AdminLayout
 @attribute [Authorize]
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager Navigation

@@ -1,12 +1,27 @@
 ﻿@using Client.Components.Account.Shared
 @using Client.Components.Layout
+
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+
 <Router AppAssembly="typeof(Program).Assembly">
     <Found Context="routeData">
-        <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)">
-            <NotAuthorized>
-                <RedirectToLogin />
-            </NotAuthorized>
-        </AuthorizeRouteView>
+        @if (isAdmin)
+        {
+            <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(Admin.AdminLayout)">
+                <NotAuthorized>
+                    <RedirectToLogin />
+                </NotAuthorized>
+            </AuthorizeRouteView>
+        }
+        else
+        {
+            <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)">
+                <NotAuthorized>
+                    <RedirectToLogin />
+                </NotAuthorized>
+            </AuthorizeRouteView>
+        }
         <FocusOnNavigate RouteData="routeData" Selector="h1"/>
     </Found>
     <NotFound>
@@ -16,3 +31,16 @@
     </NotFound>
 </Router>
 
+@code {
+    bool isAdmin;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        if (user != null)
+        {
+            isAdmin = user.IsInRole("Admin");
+        }
+    }
+}

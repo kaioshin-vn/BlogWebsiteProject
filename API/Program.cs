@@ -1,5 +1,4 @@
 using BlogWebsite.Data;
-using Client.VNPayService;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
@@ -24,7 +23,6 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddIdentity<ApplicationUser,IdentityRole<Guid>>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
-builder.Services.AddScoped<VnPayService>();
 builder.Services.AddCors(options =>
 {
 	options.AddPolicy("AllowAll",

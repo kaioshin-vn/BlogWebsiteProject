@@ -31,8 +31,6 @@ namespace Data.Database.Table
         public ApplicationUser? User { get; set; }
         public ICollection<PostTag>? TagPosts { get; set; }
         public ICollection<PostSave>? PostSaves { get; set; }
-        public ICollection<PaidPost>? PaidPosts { get; set; }
         public ICollection<GroupPost>? GroupPost { get; set; }
-        public ICollection<PostView>? PostViews { get; set; }
     }
 }

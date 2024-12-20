@@ -1,6 +1,24 @@
 ﻿@page "/"
 @using Microsoft.AspNetCore.Authorization
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+
 
 <PageTitle>Home</PageTitle>
 
 <Client.Components.Pages.Post.ListPost></Client.Components.Pages.Post.ListPost>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        if (user != null)
+        {
+            if (user.IsInRole("Admin"))
+            {
+                Navigation.NavigateTo("/admin", true);
+            } 
+        }
+    }
+}

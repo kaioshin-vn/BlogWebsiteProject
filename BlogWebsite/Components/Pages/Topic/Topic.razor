@@ -1,9 +1,12 @@
 ﻿@page "/topics"
+@using Client.Components.Admin
 
 @attribute [Authorize(Roles = "Admin")]
 @inject IHttpClientFactory _httpClientFactory;
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
+
+@layout AdminLayout
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-16">
     <h2>Quản lý chủ đề</h2>

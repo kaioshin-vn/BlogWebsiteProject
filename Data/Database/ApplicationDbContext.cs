@@ -9,6 +9,13 @@ namespace BlogWebsite.Data
     public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>(options)
     {
 
+        public DbSet<Invoices> Invoices { get; set; }
+        public DbSet<Service> Services { get; set; }
+        public DbSet<PostHideByRestricted> PostHideByRestricted { get; set; }
+        public DbSet<ServiceAdvertisementPricing> ServiceAdvertisementPricing { get; set; }
+        public DbSet<RegistrationAdvertisement> RegistrationAdvertisements { get; set; }
+
+
         public DbSet<PostHide> PostHides { get; set; }
         public DbSet<Messenger> Messengers { get; set; }
         public DbSet<Conversation> Conversations { get; set; }
@@ -22,12 +29,8 @@ namespace BlogWebsite.Data
         public DbSet<Notice> Notices { get; set; }
         public DbSet<Tag> Tags { get; set; }
         public DbSet<PostTag> PostTags { get; set; }
-        public DbSet<PaidPost> PaidPosts { get; set; }
         public DbSet<Response> Responses { get; set; }
         public DbSet<ReplyResponse> ReplyResponses { get; set; }
-		public DbSet<PaymentRequest> PaymentRequests { get; set; }
-		public DbSet<PaymentTransaction> PaymentTransactions { get; set; }
-        public DbSet<PostView> PostViews { get; set; }
 
         public DbSet<Group> Groups { get; set; }
         public DbSet<GroupPost> GroupPosts { get; set; }
@@ -112,17 +115,6 @@ namespace BlogWebsite.Data
                 .WithMany(u => u.NoticesSent)
                 .HasForeignKey(n => n.FromUser)
                 .OnDelete(DeleteBehavior.Restrict);
-            modelBuilder.Entity<PaidPost>()
-                .HasOne(n => n.User)
-                .WithMany(u => u.PaidPosts)
-                .HasForeignKey(n => n.IdUser)
-                .OnDelete(DeleteBehavior.Restrict);     
-
-            modelBuilder.Entity<PostView>()
-                .HasOne(n => n.User)
-                .WithMany(u => u.PostViews)
-                .HasForeignKey(n => n.UserId)
-                .OnDelete(DeleteBehavior.Restrict);  
 
             modelBuilder.Entity<PostSave>()
                 .HasOne(n => n.Save)

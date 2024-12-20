@@ -1,5 +1,6 @@
 ﻿@page "/listpetition"
 
+@using Client.Components.Admin
 @using Data.Database.Table
 @using Data.DTO
 @using Newtonsoft.Json
@@ -8,6 +9,8 @@
 @inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject UserManager<ApplicationUser> UserManager
+
+@layout AdminLayout
 
 <style>
     .result-container {
@@ -52,7 +55,7 @@ else
                                         </MudAvatar>
                                         <MudItem Class="px-2">
                                             <MudText Typo="Typo.body1"><b class="hover-underline">@post.User.FullName</b></MudText>
-                                            <MudText >@((MarkupString)post.Content)</MudText>
+                                            <MudText>@((MarkupString)post.Content)</MudText>
                                         </MudItem>
                                     </MudCardHeader>
                                 </MudItem>
@@ -91,7 +94,7 @@ else
         await LoadReport();
     }
 
-    async Task LoadReport ()
+    async Task LoadReport()
     {
         isLoaded = false;
         var httpClient = HttpClientFactory.CreateClient("MyHttpClient");

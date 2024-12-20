@@ -1,6 +1,7 @@
 ﻿@page "/PetitionDetail/{Id:guid}"
 
 @using ASM_PH35423.StaticClass
+@using Client.Components.Admin
 @using Client.Components.ComponentCustom
 @using Data.DTO
 @using Data.DTO.EntitiDTO
@@ -15,6 +16,7 @@
 @using System.Net
 
 @attribute [Authorize(Roles = "Admin")]
+@layout AdminLayout
 @inject IJSRuntime JSRunTime
 @inject IHttpClientFactory HttpClientFactory
 @inject AuthenticationStateProvider AuthenticationStateProvider
