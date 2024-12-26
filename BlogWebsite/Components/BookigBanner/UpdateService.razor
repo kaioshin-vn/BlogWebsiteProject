@@ -1,0 +1,100 @@
+﻿@page "/updateService/{IdService}"
+@using Data.Database.Table
+@using Microsoft.EntityFrameworkCore.Metadata.Internal
+@using MudBlazor
+
+@inject IHttpClientFactory HttpClientFactory
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserManager<ApplicationUser> UserManager
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+@if (ServiceAdver == null)
+{
+    <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+}
+else
+{
+    <MudDialog Class="w-50">
+        <DialogContent>
+            <MudGrid Class="p-0" Justify="Justify.SpaceBetween">
+                <MudItem />
+                <MudItem>
+                    <MudText Typo="Typo.h6">Cập nhật gói</MudText>
+                </MudItem>
+                <MudItem>
+                    <MudIconButton OnClick="Cancel" Class="p-0" Size="Size.Medium" Icon="@Icons.Material.Filled.Close"></MudIconButton>
+                </MudItem>
+            </MudGrid>
+            <MudDivider />
+        </DialogContent>
+        <DialogActions>
+            <MudGrid>
+                <MudItem xs="12">
+                    <EditForm Model="@ServiceAdver">
+                        <DataAnnotationsValidator />
+                        <MudGrid>
+                            <MudItem xs="12">
+                                <MudCard>
+                                    <MudCardContent>
+                                        <MudTextField @bind-Value="ServiceAdver.Name" For="@(() => ServiceAdver.Name)" Label="Tên gói dịch vụ" />
+                                        <MudTextField @bind-Value="ServiceAdver.Price" For="@( ()=> ServiceAdver.Price)" InputType="InputType.Number" Label="Giá" Class="mt-3" />
+                                        <MudTextField @bind-Value="ServiceAdver.DurationDays" For="@( ()=> ServiceAdver.DurationDays)" InputType="InputType.Number" Label="Hạn gói" Class="mt-3" />
+                                        <MudTextField @bind-Value="ServiceAdver.Description" T="string" Label="Mô tả" Variant="Variant.Text" Lines="4" />
+                                    </MudCardContent>
+                                </MudCard>
+                            </MudItem>
+                        </MudGrid>
+                    </EditForm>
+                </MudItem>
+                <MudItem xs="12" Class="m-2">
+                    <MudGrid Class="" Justify="Justify.FlexEnd">
+                        <MudButton OnClick="Cancel" Color="Color.Secondary">Hủy</MudButton>
+                        <MudButton OnClick="UpdateServiceById" Color="Color.Primary">Cập nhật</MudButton>
+                    </MudGrid>
+                </MudItem>
+            </MudGrid>
+        </DialogActions>
+    </MudDialog>
+}
+
+@code {
+    [CascadingParameter] MudDialogInstance Dialog { get; set; }
+
+    ServiceAdvertisementPricing ServiceAdver = new ServiceAdvertisementPricing();
+
+    [Parameter]
+    public Guid IdService { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadService(IdService);
+    }
+
+    private async Task LoadService(Guid id)
+    {
+        var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+        ServiceAdver = await httpClient.GetFromJsonAsync<ServiceAdvertisementPricing>($"/api/ServiceAdvertisement/getByIdService/{id}");
+    }
+
+    private async Task UpdateServiceById()
+    {
+        var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+        var result = await httpClient.PutAsJsonAsync($"/api/ServiceAdvertisement/updateService/{IdService}", ServiceAdver);
+        if (result.IsSuccessStatusCode)
+        {
+            Navigation.NavigateTo("/serviceAdver", true);
+            Snackbar.Add("Cập nhật thành công gói!", Severity.Success);
+        }
+        else
+        {
+            Snackbar.Add("Cập nhật không thành công gói!", Severity.Error);
+        }
+    }
+
+    private void Cancel()
+    {
+        Dialog.Close(DialogResult.Cancel());
+    }
+}
