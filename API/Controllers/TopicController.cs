@@ -101,7 +101,7 @@ namespace API.Controllers
 
             var listGroup = new List<GroupDTO>();
 
-            listGroup = _context.Groups.Where(a => listIdGroup.Contains(a.IdGroup)).Select(g => new GroupDTO
+            listGroup = _context.Groups.Where(a => listIdGroup.Contains(a.IdGroup) && a.isDeleted == false).Select(g => new GroupDTO
             {
                 IdGroup = g.IdGroup,
                 Name = g.Name,
@@ -137,7 +137,7 @@ namespace API.Controllers
 
             var listGroup = new List<GroupDTO>();
 
-            listGroup = _context.Groups.Where(a => listIdGroup.Contains(a.IdGroup)).Select(g => new GroupDTO
+            listGroup = _context.Groups.Where(a => listIdGroup.Contains(a.IdGroup) && a.isDeleted == false).Select(g => new GroupDTO
             {
                 IdGroup = g.IdGroup,
                 Name = g.Name,

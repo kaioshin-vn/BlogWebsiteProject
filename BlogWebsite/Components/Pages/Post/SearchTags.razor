@@ -106,16 +106,29 @@ else
     private int currentPage = 1;
     private int pageSize = 10;
 
+    Guid IdUser;
+
     bool isLoaded;
 
     protected override async Task OnInitializedAsync()
     {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        var userCurrent = UserManager.GetUserId(user);
+        if (userCurrent != null)
+        {
+            IdUser = Guid.Parse(userCurrent);
+        }
         Search = TagName;
         var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
-        var response = await httpClient.GetAsync($"/SearchAllPostTag/{Search}");
+        var response = await httpClient.GetAsync($"/SearchAllPostTag/{IdUser}/{Search}");
         var content = await response.Content.ReadAsStringAsync();
         Tag = JsonConvert.DeserializeObject<TagDTO>(content);
         postDTOs = Tag.PostDTOs;
+
+        
+
         isLoaded = true;
     }
 
@@ -128,7 +141,7 @@ else
     {
         isLoaded = false;
         var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
-        var response = await httpClient.GetAsync($"/SearchAllPostTag/{Search}");
+        var response = await httpClient.GetAsync($"/SearchAllPostTag/{IdUser}/{Search}");
         var content = await response.Content.ReadAsStringAsync();
         Tag = JsonConvert.DeserializeObject<TagDTO>(content);
         postDTOs = Tag.PostDTOs;

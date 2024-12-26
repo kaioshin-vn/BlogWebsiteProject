@@ -36,8 +36,15 @@
 
         try
         {
-            HttpResponseMessage response;
             var client = _httpClientFactory.CreateClient("MyHttpClient");
+            var data = await client.GetStringAsync($"/checkExistedTopic/{topic.TopicName}");
+            if (data == "true")
+            {
+                Snackbar.Add($"Chủ đề này đã tồn tại", Severity.Error);
+                return;
+            }
+
+            HttpResponseMessage response;
             if (Topic == null)
             {
                 response = await client.PostAsJsonAsync("api/topic", topic);

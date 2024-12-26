@@ -1,0 +1,205 @@
+﻿@page "/renewpaymentsucess/{IdTransaction}/{IdSvAds:guid}/{IdRegis:guid}/{IdBill:guid}"
+
+@using Data.Database.Table
+@using Net.payOS
+@using Net.payOS.Types
+@using Newtonsoft.Json
+@using QuestPDF.Fluent
+@using QuestPDF.Helpers
+@using QuestPDF.Infrastructure
+
+@attribute [Authorize]
+@inject IHttpClientFactory HttpClientFactory
+@inject NavigationManager Navigation
+
+@if (!isLoaded)
+{
+    <Client.Components.ComponentCustom.LoadingLocal></Client.Components.ComponentCustom.LoadingLocal>
+}
+else
+{
+    if (isSuccess)
+    {
+        <MudAlert Severity="Severity.Success" Style="width:550px;">Bạn vừa gia hạn dịch vụ thành công !</MudAlert>
+        <MudButton Class="my-3" OnClick="DowBill">Tải hóa đơn</MudButton>
+    }
+    else
+    {
+
+        <MudAlert Severity="Severity.Error" Style="width:550px;">Oops đã có lỗi nào đó xảy ra !</MudAlert>
+    }
+}
+
+
+@code {
+    [Parameter]
+    public string IdTransaction { get; set; }
+
+    [Parameter]
+    public Guid IdSvAds { get; set; }
+
+    [Parameter]
+    public Guid IdRegis { get; set; }
+
+    [Parameter]
+    public Guid IdBill { get; set; }
+
+    bool isSuccess;
+
+    bool isLoaded;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var id = 1;
+
+        var canParse = Int32.TryParse(IdTransaction, out id);
+
+        if (!canParse)
+        {
+            isLoaded = true;
+            return;
+        }
+
+
+        var clientId = "a4a25e48-1714-4173-92a2-0bd3f1629958";
+        var apiKey = "994b850d-985a-40da-95f9-433e0f6e9220";
+        var checksumKey = "d7880fe42699d8e520b0104798b4862421347c39520c0e5fd8cb68b160741333";
+
+        var payOS = new PayOS(clientId, apiKey, checksumKey);
+
+
+        var response = await payOS.getPaymentLinkInformation(id);
+
+
+
+        if (response.status == "PAID")
+        {
+            var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+            var data = await httpClient.GetAsync($"/renew/{IdSvAds}/{IdRegis}/{IdBill}");
+            if (data.IsSuccessStatusCode)
+            {
+                QuestPDF.Settings.License = LicenseType.Community;
+                data = await httpClient.GetAsync($"/getinvoice/{IdBill}");
+
+                var invoice = JsonConvert.DeserializeObject<Invoices>(await data.Content.ReadAsStringAsync());
+                string wwwrootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+                string pdfPath = Path.Combine(wwwrootPath, "FilePDF", $"{invoice.Id}.pdf");
+
+                if (!Directory.Exists(pdfPath))
+                {
+                    Directory.CreateDirectory(Path.GetDirectoryName(pdfPath)!);
+
+                    // Tạo PDF và lưu
+                    var document = new InvoicePdfDocument(invoice);
+                    document.GeneratePdf(pdfPath);
+                }
+                isSuccess = true;
+            }
+        }
+
+
+
+        isLoaded = true;
+    }
+
+    async Task DowBill()
+    {
+        Navigation.NavigateTo($"/FilePDF/{IdSvAds}.pdf", forceLoad: true);
+    }
+
+    public class InvoicePdfDocument : IDocument
+    {
+        private readonly Invoices _invoice;
+
+        public InvoicePdfDocument(Invoices invoice)
+        {
+            _invoice = invoice;
+        }
+
+        public void Compose(IDocumentContainer container)
+        {
+            container
+                .Page(page =>
+                {
+                    page.Size(PageSizes.A4);
+                    page.Margin(20);
+                    page.DefaultTextStyle(x => x.FontSize(12));
+                    page.Content().Column(column =>
+                    {
+                        column.Item().Row(row =>
+                {
+                    row.RelativeItem().Column(header =>
+                    {
+                        header.Item().Text("HÓA ĐƠN").FontSize(18).Bold().AlignCenter();
+                        header.Item().Text("KAIZEN").FontSize(16).Bold().DecorationColor(QuestPDF.Helpers.Colors.Red.Darken1).AlignCenter();
+                        header.Item().Text($"Ngày {DateTime.Now.Day} tháng {DateTime.Now.Month} năm {DateTime.Now.Year}").AlignCenter();
+                    });
+
+                    // Thông tin mã số và số hóa đơn
+                    row.ConstantItem(200).Column(info =>
+                    {
+                        info.Item().Text("Mẫu số: 01GTKT0/001").AlignRight();
+                        info.Item().Text("Ký hiệu: HK/18E").AlignRight();
+                        info.Item().Text("Số: 0000000").AlignRight();
+                    });
+                });
+
+                        // Đường kẻ ngang
+                        column.Item().PaddingVertical(5).BorderBottom(1).BorderColor(QuestPDF.Helpers.Colors.Grey.Medium);
+
+                        // Thông tin công ty
+                        column.Item().Text("KAIZEN - FPT POLYTECHNIC")
+                        .Bold().FontSize(14).AlignCenter();
+
+                        column.Item().Column(details =>
+                    {
+                        details.Item().Text("Mã số thuế: 0108397618").AlignLeft();
+                        details.Item().Text("Địa chỉ: Phồ Kiều Mai,Phường Phúc Diễn, Quận Bắc Từ Liêm, Thành phố Hà Nội, Việt Nam").AlignLeft();
+                        details.Item().Text("Số tài khoản: 0978040960 - Ngân hàng MB - CN Hưng Yên").AlignLeft();
+                    });
+
+                        // Đường kẻ ngang
+                        column.Item().PaddingVertical(5).BorderBottom(1).BorderColor(QuestPDF.Helpers.Colors.Grey.Medium);
+
+
+
+
+                        column.Item().Text($"Mã Hóa Đơn: {_invoice.Id}").FontSize(18).Bold();
+                        column.Item().PaddingVertical(10).Text($"Thời gian thanh toán: {_invoice.PaymentDate:dd/MM/yyyy HH:mm}").FontSize(10).Bold();
+                        column.Item().PaddingBottom(10).Text($"Khách hàng: {_invoice.User.FullName}").FontSize(10).Bold();
+
+                        column.Item().PaddingBottom(20).Table(table =>
+                        {
+
+                            table.ColumnsDefinition(columns =>
+                        {
+                            columns.RelativeColumn();
+                            columns.RelativeColumn();
+                            columns.RelativeColumn();
+                        });
+
+                            table.Header(header =>
+                            {
+                                header.Cell().Border(1).BorderColor(QuestPDF.Helpers.Colors.Grey.Lighten2).Text("Tên dịch vụ").Bold();
+                                header.Cell().Border(1).BorderColor(QuestPDF.Helpers.Colors.Grey.Lighten2).Text("Thời gian").Bold();
+                                header.Cell().Border(1).BorderColor(QuestPDF.Helpers.Colors.Grey.Lighten2).Text("Giá").Bold();
+                            });
+
+
+                            table.Cell().Border(1).BorderColor(QuestPDF.Helpers.Colors.Grey.Lighten2).Text(_invoice.RegistrationAdvertisement.Name);
+                            table.Cell().Border(1).BorderColor(QuestPDF.Helpers.Colors.Grey.Lighten2).Text(_invoice.RegistrationAdvertisement.DurationDays.ToString() + " ngày");
+                            table.Cell().Border(1).BorderColor(QuestPDF.Helpers.Colors.Grey.Lighten2).Text(_invoice.Amount.ToString("N0", System.Globalization.CultureInfo.InvariantCulture) + " ₫");
+
+
+                            table.Footer(footer =>
+                            {
+                                footer.Cell().ColumnSpan(2).Padding(10).Text("Tổng cộng").Bold();
+                                footer.Cell().Padding(10).Text(_invoice.Amount.ToString("N0", System.Globalization.CultureInfo.InvariantCulture) + " ₫").Bold();
+                            });
+                        });
+                    });
+                });
+        }
+    }
+
+}

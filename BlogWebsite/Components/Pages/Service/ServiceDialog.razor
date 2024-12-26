@@ -1,0 +1,112 @@
+﻿@using Data.Database.Table
+@using Net.payOS
+@using Net.payOS.Types
+@using Newtonsoft.Json
+
+@inject IHttpClientFactory HttpClientFactory
+@inject NavigationManager NavigationManager
+
+<MudPaper Style="width: 1004px; height: 800px; overflow-y:scroll;">
+    <MudContainer MaxWidth="MaxWidth.ExtraExtraLarge" Style="padding:32px;" Class="my-4">
+        <MudGrid>
+            @if (ListService.Count != 0)
+            {
+                @foreach (var item in ListService)
+                {
+                    var randomColor = this.GetRandomIndex();
+                    <MudItem xs="4" md="4">
+                        <MudPaper Elevation="4" Class="p-4 text-center">
+                            <MudText Typo="Typo.h5" Color="@this.colors[randomColor]">@item.Name</MudText>
+                            <MudText Typo="Typo.h6" Class="my-2">@item.Price.ToString("N0", System.Globalization.CultureInfo.InvariantCulture) ₫ cho @item.DurationDays ngày</MudText>
+                            <MudDivider Class="my-2" />
+                            <MudList T="string">
+                                <MudListItem Style="height:250px;" Class="my-3">@item.Description</MudListItem>
+                            </MudList>
+                            <MudButton Variant="Variant.Filled" Color="@this.colors[randomColor]" OnClick="() => RegisRenew(item.Id)" Class="mt-4 p-2">Đăng ký </MudButton>
+                        </MudPaper>
+                    </MudItem>
+                }
+            }
+            else
+            {
+                <MudAlert Severity="Severity.Info">Hiện tại không có dịch vụ nào </MudAlert>
+            }
+
+        </MudGrid>
+    </MudContainer>
+</MudPaper>
+
+@code {
+
+    [Parameter]
+    public Guid IdRegis { get; set; }
+
+    List<ServiceAdvertisementPricing> ListService = new List<ServiceAdvertisementPricing>();
+
+    int rdColor;
+
+    List<Color> colors = new List<Color> { Color.Secondary, Color.Primary, Color.Error, Color.Info, Color.Success, Color.Dark, Color.Warning, Color.Surface, Color.Tertiary, Color.Default };
+
+    private int GetRandomIndex()
+    {
+        Random random = new Random();
+
+        int randomIndex = 0;
+
+        do
+        {
+            randomIndex = random.Next(0, colors.Count);
+        } while (this.rdColor == randomIndex);
+
+        this.rdColor = randomIndex;
+        return randomIndex;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+        var response = await httpClient.GetStringAsync($"/getAllSvAds");
+
+        ListService = JsonConvert.DeserializeObject<List<ServiceAdvertisementPricing>>(response);
+    }
+
+    async Task RegisRenew(Guid guid )
+    {
+        var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+        var data = await httpClient.GetStringAsync($"/getNextIdPay");
+        var id = Convert.ToInt32(data);
+
+
+        var clientId = "a4a25e48-1714-4173-92a2-0bd3f1629958";
+        var apiKey = "994b850d-985a-40da-95f9-433e0f6e9220";
+        var checksumKey = "d7880fe42699d8e520b0104798b4862421347c39520c0e5fd8cb68b160741333";
+
+        var invoices = ListService.FirstOrDefault(a => a.Id == guid);
+
+        var payOS = new PayOS(clientId, apiKey, checksumKey);
+
+        var domain = NavigationManager.BaseUri;
+
+        var price = Int32.Parse(invoices.Price.ToString());
+
+        DateTime newTime = DateTime.Now.AddMinutes(10);
+
+        // Chuyển đổi sang Unix Timestamp
+        long unixTimestamp = ((DateTimeOffset)newTime).ToUnixTimeSeconds();
+
+        var IdBill = Guid.NewGuid();
+
+        var paymentLinkRequest = new PaymentData(
+            orderCode: id,
+            amount: price,
+            description: "",
+            items: [new("Kaioshin-sama", 1, price)],
+            returnUrl: domain + $"renewpaymentsucess/{id}/{invoices.Id}/{IdRegis}/{IdBill}",
+            cancelUrl: domain + "serviceAdtisvertment/3",
+            expiredAt: unixTimestamp
+        );
+        var response = await payOS.createPaymentLink(paymentLinkRequest);
+
+        NavigationManager.NavigateTo(response.checkoutUrl);
+    }
+}

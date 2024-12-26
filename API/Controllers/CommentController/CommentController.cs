@@ -41,6 +41,29 @@ namespace API.Controllers.CommentController
             return listCmt;
         }
 
+        [HttpPost("/commment/getAllHotComments/{idPost}")]
+        public List<CommentDTO> GetHotCommentsPost(Guid idPost, [FromBody] List<Guid> listPostExisted)
+        {
+            var listCmt = new List<CommentDTO>();
+            var data = _context.Responses.Where(a => a.IdPost == idPost && a.IsDeleted == false && !listPostExisted.Contains(a.Id)).OrderByDescending(a => a.Likes.Length).Take(20).Include(u => u.User);
+            listCmt = data.Select(a => new CommentDTO
+            {
+                Id = a.Id,
+                Avatar = a.User.Img,
+                UserName = a.User.FullName,
+                Content = a.Content,
+                CreateDate = a.CreateDate,
+                Like = a.Likes,
+                IdUser = a.IdUser
+            }).ToList();
+            foreach (var item in listCmt)
+            {
+                item.ReplyCount = _context.ReplyResponses.Where(a => a.IdResponse == item.Id && a.IsDeleted == false).Count();
+            }
+
+            return listCmt;
+        }
+
         [HttpGet("/likeCmt/{idCmt}/{idUser}/{likeState}")]
         public async Task<IActionResult> LikePost(Guid idCmt, Guid idUser, bool likeState)
         {

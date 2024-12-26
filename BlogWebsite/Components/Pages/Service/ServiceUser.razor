@@ -1,0 +1,372 @@
+﻿@page "/serviceAdtisvertment"
+@page "/serviceAdtisvertment/{Number}"
+@using Client.Components.ComponentCustom
+@using Data.Database.Table
+@using Data.DTO.EntitiDTO
+@using Data.DTO
+@using Net.payOS
+@using Net.payOS.Types
+@using Newtonsoft.Json
+
+@attribute [Authorize]
+@inject IHttpClientFactory HttpClientFactory
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserManager<ApplicationUser> UserManager
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+
+    @if (!isLoaded)
+{
+    <Client.Components.ComponentCustom.LoadingLocal></Client.Components.ComponentCustom.LoadingLocal>
+}
+else
+{
+    <MudTabs Elevation="2" @bind-ActivePanelIndex="TabIndex" Style="width:90%;" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6" Class="mb-5" Color="@Color.Success">
+
+        <MudTabPanel Text="Dịch vụ" OnClick="LoadService">
+            <MudContainer MaxWidth="MaxWidth.Large" Class="my-4">
+                <MudGrid>
+                    @if (ListService.Count != 0)
+                    {
+                        @foreach (var item in ListService)
+                        {
+                            var randomColor = this.GetRandomIndex();
+                            <MudItem xs="12" md="4">
+                                <MudPaper Elevation="4" Class="p-4 text-center">
+                                    <MudText Typo="Typo.h5" Color="@this.colors[randomColor]">@item.Name</MudText>
+                                    <MudText Typo="Typo.h6" Class="my-2">@item.Price.ToString("N0", System.Globalization.CultureInfo.InvariantCulture) ₫ cho @item.DurationDays ngày</MudText>
+                                    <MudDivider Class="my-2" />
+                                    <MudList T="string">
+                                        <MudListItem Style="height:300px;" Class="my-3">@item.Description</MudListItem>
+                                    </MudList>
+                                    <MudButton Variant="Variant.Filled" Color="@this.colors[randomColor]" OnClick="() => NaviGate(item.Id.ToString())" Class="mt-4">Đăng ký @item.Name</MudButton>
+                                </MudPaper>
+                            </MudItem>
+                        }
+                    }
+                    else
+                    {
+                        <MudAlert Severity="Severity.Info">Hiện tại không có dịch vụ nào </MudAlert>
+                    }
+
+                </MudGrid>
+            </MudContainer>
+        </MudTabPanel>
+
+
+        <MudTabPanel Text="Chờ xác nhận" OnClick="WaitBill">
+            @if (ListRegisWaite.Count != 0)
+            {
+                foreach (var item in ListRegisWaite)
+                {
+                    <MudPaper Class="d-flex my-5 justify-content-between align-items-center p-3" Style="width:94%;">
+                        <MudText Color="Color.Success" Style="width:400px;">
+                            <b>
+                                Dịch vụ @item.Name - quảng cáo @item.DurationDays ngày
+                            </b>
+                        </MudText>
+                        <MudText Style="width:120px;">@item.Price.ToString("N0", System.Globalization.CultureInfo.InvariantCulture) ₫</MudText>
+
+                        <MudText Style="width:300px;height:100px;text-overflow:ellipsis;overflow:hidden;" Class="mx-2">
+                            <b>Đường dẫn : @item.Link</b>
+                        </MudText>
+
+                        <MudButton Variant="Variant.Text" Color="Color.Success" OnClick="() => UpdateRegisService(item.Id)">Sửa</MudButton>
+                        <MudButton Variant="Variant.Text" Color="Color.Error" OnClick="() => DeleteBill(item.Id)">Hủy</MudButton>
+                    </MudPaper>
+                }
+            }
+            else
+            {
+                <MudAlert Severity="Severity.Info">Bạn không có đơn đặt nào</MudAlert>
+            }
+
+        </MudTabPanel>
+
+
+        <MudTabPanel Text="Chờ thanh toán" OnClick="LoadBill">
+            @if (ListBillUser.Count != 0)
+            {
+                foreach (var item in ListBillUser)
+                {
+
+
+                    <MudPaper Class="d-flex justify-content-between align-items-center p-3" Style="margin:24px 0px; width:94%;background-color:rgb(245,245,245)">
+
+
+                        <MudText Color="Color.Info" Style="width:400px;">
+                            <h5>
+                                Dịch vụ @item.RegistrationAdvertisement.Name - quảng cáo @item.RegistrationAdvertisement.DurationDays ngày
+                            </h5>
+                        </MudText>
+
+                        <MudText Style="width:120px;">
+                            <h5>@item.Amount.ToString("N0", System.Globalization.CultureInfo.InvariantCulture) ₫</h5>
+                        </MudText>
+
+                        <div>
+                            <MudButton Class="p-1" Variant="Variant.Outlined" Color="Color.Success" OnClick="() => PayBill(item)">Thanh toán</MudButton>
+                        </div>
+                    </MudPaper>
+                }
+            }
+            else
+            {
+                <MudAlert Severity="Severity.Info">Bạn không có đơn đặt nào</MudAlert>
+            }
+
+        </MudTabPanel>
+
+
+        <MudTabPanel Text="Quảng cáo" OnClick="AdsRunning">
+            @if (ListAdsRunning.Count != 0)
+            {
+                <MudTable Dense="true" Items="ListAdsRunning">
+                    <HeaderContent>
+                        <MudTh Style="font-weight: 900;">Người dùng</MudTh>
+                        <MudTh Style="font-weight: 900;">Thời gian bắt đầu</MudTh>
+                        <MudTh Style="font-weight: 900;">Thời gian hết hạn</MudTh>
+                        <MudTh Style="font-weight: 900;">Gói dịch vụ</MudTh>
+                        <MudTh Style="font-weight: 900;">Thời gian còn lại</MudTh>
+                        <MudTh></MudTh> <!-- Nút GIA HẠN -->
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.User.FullName</MudTd>
+                        <MudTd>@context.TimeStart.ToString("dd/MM/yyyy HH:mm")</MudTd>
+                        <MudTd>@context.TimeStart.AddDays(context.DurationDays).ToString("dd/MM/yyyy HH:mm")</MudTd>
+                        <MudTd><b>@context.Name</b></MudTd>
+                        @if (context.TimeStart.AddDays(context.DurationDays) > DateTime.Now)
+                        {
+                            <MudTd>
+                                <MudText Color="Color.Success">@(ProcessString((context.TimeStart.AddDays(context.DurationDays) - DateTime.Now)))</MudText>
+                            </MudTd>
+                        }
+                        else
+                        {
+                            <MudTd>
+                                <MudText Color="Color.Error">Hết hạn</MudText>
+                            </MudTd>
+                        }
+
+                        <MudTd>
+                            <MudButton Variant="Variant.Outlined" Color="Color.Info" OnClick="() => AdsDetail(context.Id)">Chi tiết</MudButton>
+                            <MudButton Variant="Variant.Outlined" Color="Color.Success" OnClick="() => RenewService(context.Id)">Gia hạn</MudButton>
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+            }
+            else
+            {
+                <MudAlert Severity="Severity.Info">Không có quảng cáo nào đang chạy</MudAlert>
+            }
+        </MudTabPanel>
+
+
+    </MudTabs>
+}
+
+
+@code {
+
+    [Parameter]
+    public string Number { get; set; }
+
+    List<ServiceAdvertisementPricing> ListService = new List<ServiceAdvertisementPricing>();
+
+    List<RegistrationAdvertisement> ListRegisWaite = new List<RegistrationAdvertisement>();
+
+    List<RegistrationAdvertisement> ListAdsRunning = new List<RegistrationAdvertisement>();
+
+    string ProcessString(TimeSpan time)
+    {
+        if (time.Days > 0)
+        {
+            return $"{time.Days} ngày {time.Hours} tiếng {time.Minutes} phút";
+        }
+        else
+        {
+            return $"{time.Hours} tiếng {time.Minutes} phút";
+        }
+    }
+
+    List<Invoices> ListBillUser = new List<Invoices>();
+
+    int rdColor;
+
+    int TabIndex;
+
+    bool isLoaded;
+
+    Guid IdUser;
+
+    List<Color> colors = new List<Color> { Color.Secondary, Color.Primary, Color.Error, Color.Info, Color.Success, Color.Dark, Color.Warning, Color.Surface, Color.Tertiary, Color.Default };
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        var idUserCurrent = UserManager.GetUserId(user);
+        IdUser = Guid.Parse(idUserCurrent);
+        if (Number != null)
+        {
+            TabIndex = Int16.Parse(Number);
+
+            if (TabIndex == 1)
+            {
+                await WaitBill();
+            }
+            else if (TabIndex == 2)
+            {
+                await LoadBill();
+            }
+            else if (TabIndex == 3)
+            {
+                await AdsRunning();
+            }
+        }
+        else
+        {
+            await LoadService();
+        }
+
+        isLoaded = true;
+    }
+
+    async Task LoadService()
+    {
+        var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+        var response = await httpClient.GetStringAsync($"/getAllSvAds");
+
+        ListService = JsonConvert.DeserializeObject<List<ServiceAdvertisementPricing>>(response);
+    }
+
+    async Task NaviGate(string link)
+    {
+        NavigationManager.NavigateTo("/AdsServiceRegis/" + link, true);
+    }
+
+    private int GetRandomIndex()
+    {
+        Random random = new Random();
+
+        int randomIndex = 0;
+
+        do
+        {
+            randomIndex = random.Next(0, colors.Count);
+        } while (this.rdColor == randomIndex);
+
+        this.rdColor = randomIndex;
+        return randomIndex;
+    }
+
+    async Task WaitBill()
+    {
+        var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+        var response = await httpClient.GetStringAsync($"/getAllRegisWaitBill/{IdUser}");
+
+        ListRegisWaite = JsonConvert.DeserializeObject<List<RegistrationAdvertisement>>(response);
+
+    }
+
+    async Task UpdateRegisService(Guid Id)
+    {
+        NavigationManager.NavigateTo("/UpdateAdsServiceRegis/" + Id.ToString());
+    }
+
+    async Task DeleteBill(Guid Id)
+    {
+        var parameters = new DialogParameters<Dialog>();
+        parameters.Add(x => x.ContentText, "Xác nhận bạn muốn xóa đơn quảng cáo này, sẽ xóa vĩnh viễn và không thể khôi phục?");
+        parameters.Add(x => x.ButtonText, "Xóa");
+        parameters.Add(x => x.Color, Color.Error);
+
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+        var result = await DialogService.Show<Dialog>("Xác nhận", parameters, options).Result;
+        if (result.Data != null)
+        {
+            if ((bool)result.Data)
+            {
+                var _httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+                var response = await _httpClient.DeleteAsync($"/deleteRegisAds/{Id}");
+                if (response.IsSuccessStatusCode)
+                {
+                    Snackbar.Add("Đã hủy đơn đăng kí quảng cáo", Severity.Info);
+                    await WaitBill();
+                }
+            }
+        }
+    }
+
+
+    async Task LoadBill()
+    {
+        var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+        var response = await httpClient.GetStringAsync($"/getAllBillToPay/{IdUser}");
+
+        ListBillUser = JsonConvert.DeserializeObject<List<Invoices>>(response);
+    }
+
+    async Task PayBill(Invoices invoices)
+    {
+        var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+        var data = await httpClient.GetStringAsync($"/getNextIdPay");
+        var id = Convert.ToInt32(data);
+
+
+        var clientId = "a4a25e48-1714-4173-92a2-0bd3f1629958";
+        var apiKey = "994b850d-985a-40da-95f9-433e0f6e9220";
+        var checksumKey = "d7880fe42699d8e520b0104798b4862421347c39520c0e5fd8cb68b160741333";
+
+        var payOS = new PayOS(clientId, apiKey, checksumKey);
+
+        var domain = NavigationManager.BaseUri;
+
+        var price = Int32.Parse(invoices.Amount.ToString());
+
+        DateTime newTime = DateTime.Now.AddMinutes(10);
+
+        // Chuyển đổi sang Unix Timestamp
+        long unixTimestamp = ((DateTimeOffset)newTime).ToUnixTimeSeconds();
+
+
+        var paymentLinkRequest = new PaymentData(
+            orderCode: id,
+            amount: price,
+            description: "",
+            items: [new("Kaioshin-sama", 1, price)],
+            returnUrl: domain + $"paymentsucess/{id}/{invoices.Id}",
+            cancelUrl: domain + "serviceAdtisvertment/2",
+            expiredAt: unixTimestamp
+        );
+        var response = await payOS.createPaymentLink(paymentLinkRequest);
+
+        NavigationManager.NavigateTo(response.checkoutUrl);
+    }
+
+    async Task AdsRunning()
+    {
+        var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+        var response = await httpClient.GetStringAsync($"/getAllAdsRunning/{IdUser}");
+
+        ListAdsRunning = JsonConvert.DeserializeObject<List<RegistrationAdvertisement>>(response);
+    }
+
+    async Task AdsDetail(Guid Id)
+    {
+        NavigationManager.NavigateTo("/AdsServiceRegisDetail/" + Id.ToString());
+    }
+    
+    async Task RenewService(Guid Id)
+    {
+        var parameters = new DialogParameters<ServiceDialog>();
+        parameters.Add(x => x.IdRegis, Id);
+
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraLarge};
+
+        var result = await DialogService.Show<ServiceDialog>("Chọn dịch vụ để gia hạn", parameters, options).Result;
+    }
+}

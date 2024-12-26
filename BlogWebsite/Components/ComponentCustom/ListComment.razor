@@ -28,6 +28,10 @@ else
     }
     else
     {
+        <select class="form-select mt-3 ms-4" style="width:150px;" @onchange="(v) => SortChange(v)">
+            <option value="0">Mới nhất</option>
+            <option value="1">Nổi bật nhất</option>
+        </select>
         if (ListNewComment.Count > 0)
         {
             @foreach (var item in ListNewComment)
@@ -83,6 +87,8 @@ else
 
     bool isLoaded;
 
+    int Sort = 0;
+
     protected override async Task OnInitializedAsync()
     {
         var _httpClient = HttpClientFactory.CreateClient("MyHttpClient");
@@ -121,7 +127,16 @@ else
             var listIdUserCmt = ListNewComment.Select(a => a.Id).ToList();
             var listIdCmt = ListCommentPost.Select(a => a.Id).ToList();
             listIdCmt.AddRange(listIdUserCmt);
-            var result = await _httpClient.PostAsJsonAsync($"/commment/getAllComments/{IdPost}", listIdCmt);
+            HttpResponseMessage result;
+            if (Sort == 0)
+            {
+                result = await _httpClient.PostAsJsonAsync($"/commment/getAllComments/{IdPost}", listIdCmt);
+            }
+            else
+            {
+                result = await _httpClient.PostAsJsonAsync($"/commment/getAllHotComments/{IdPost}", listIdCmt);
+            }
+
             if (result.IsSuccessStatusCode)
             {
                 var data = await result.Content.ReadAsStringAsync();
@@ -135,6 +150,38 @@ else
                 }
             }
         }
+    }
+
+    async Task SortChange(ChangeEventArgs v)
+    {
+        isLoaded = false;
+        Sort = Convert.ToInt16(v.Value);
+        await JSRuntime.InvokeVoidAsync("restoreScrollPosition", 0);
+        CommentCount = 20;
+        ListCommentPost = new List<CommentDTO>();
+        var _httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+        if (Sort == 0)
+        {
+            var result = await _httpClient.PostAsJsonAsync($"/commment/getAllComments/{IdPost}", new List<Guid>());
+
+            var resultConverted = JsonConvert.DeserializeObject<List<CommentDTO>>(await result.Content.ReadAsStringAsync());
+            if (resultConverted != null)
+            {
+                ListCommentPost = resultConverted;
+            }
+        }
+        else
+        {
+            var result = await _httpClient.PostAsJsonAsync($"/commment/getAllHotComments/{IdPost}", new List<Guid>());
+
+            var resultConverted = JsonConvert.DeserializeObject<List<CommentDTO>>(await result.Content.ReadAsStringAsync());
+            if (resultConverted != null)
+            {
+                ListCommentPost = resultConverted;
+            }
+        }
+        isLoaded = true;
+        StateHasChanged();
     }
 
     public void Dispose()

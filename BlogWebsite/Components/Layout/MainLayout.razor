@@ -60,7 +60,7 @@ else
 {
     <div class="page" @onclick="Hide">
         <MudLayout>
-            <MudAppBar Elevation="1" >
+            <MudAppBar Elevation="1">
                 <div style="z-index:100; position :fixed;border-bottom:grey 0.5px solid;width:100%;" class="d-flex justify-content-between align-items-center row">
                     <div class="col-3">
                         <NavLink href="/">
@@ -199,15 +199,14 @@ else
 
                                         <MudIconButton Class="mx-1" Icon=""></MudIconButton>
 
-                                        @if (isUserNullRole)
-                                        {
-                                            <MudIconButton @onclick="ClickMesLabel" Style="overflow:visible;">
-                                                <MudBadge Color="Color.Tertiary" Overlap="true" Visible="this.isHasNewMes" Class="">
-                                                    <MudIcon Icon="@Icons.Material.Filled.Chat">
-                                                    </MudIcon>
-                                                </MudBadge>
-                                            </MudIconButton>
-                                        }
+
+                                        <MudIconButton @onclick="ClickMesLabel" Style="overflow:visible;">
+                                            <MudBadge Color="Color.Tertiary" Overlap="true" Visible="this.isHasNewMes" Class="">
+                                                <MudIcon Icon="@Icons.Material.Filled.Chat">
+                                                </MudIcon>
+                                            </MudBadge>
+                                        </MudIconButton>
+
 
                                         @if (isShowMessenger)
                                         {

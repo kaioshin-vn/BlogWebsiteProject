@@ -5,6 +5,7 @@ using BlogWebsite.Data;
 using Data.Database.Table;
 using Data.DTO;
 using Data.DTO.EntitiDTO;
+using Data.Enums;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -37,13 +38,28 @@ namespace API.Controllers.TagController
         [HttpPost("/addNewPostTag")]
         public void AddPostTag([FromBody]PostTag postTag)
         {
-            _context.PostTags.Add(postTag);
-            _context.SaveChanges();
+            if ( !_context.PostTags.Any(a => a.IdPost == postTag.IdPost && a.IdTag == postTag.IdTag))
+            {
+                _context.PostTags.Add(postTag);
+                _context.SaveChanges();
+            }
+            
         }
 
-        [HttpGet("/AllPostTag/{IdTag}")]
-        public async Task<IActionResult> AllGroupTopic(Guid IdTag)
+        [HttpGet("/AllPostTag/{IdUser?}/{IdTag}")]
+        public async Task<IActionResult> AllGroupTopic(Guid? IdUser, Guid IdTag)
         {
+            var listIdHide = _context.PostHideByRestricted.Select(a => a.IdPost).ToList();
+
+            if (IdUser != null)
+            {
+                var listHide = _context.PostHides.Where(a => a.IdUser == IdUser).Select(a => a.IdPost).ToList();
+                if (listHide.Count != 0)
+                {
+                    listIdHide.AddRange(listHide);
+                }
+            }
+
             var tag = new TagDTO();
 
             if (_context.PostTags.Count() != 0)
@@ -61,7 +77,9 @@ namespace API.Controllers.TagController
 
             var listPostIntro = new List<PostIntroDTO>();
 
-            var listPost = _context.Posts.Where(a => a.IsDeleted == false && listIdPost.Contains(a.Id)).ToList();
+            var listPost = _context.Posts.Include(a => a.User).Include(a => a.GroupPost).ThenInclude(a => a.Group).Where(a => a.IsDeleted == false && (a.GroupPost.Count == 0 ||
+            (a.GroupPost.Any(b => b.IdPost == a.Id && b.WaitState == WaitState.Accept && (b.Group.StateGroup == KindGroup.Public))))
+            && a.User.LockoutEnd == null && !listIdHide.Contains(a.Id) && listIdPost.Contains(a.Id)).ToList();
 
             foreach (var item in listPost)
             {
@@ -75,9 +93,18 @@ namespace API.Controllers.TagController
         }
 
 
-        [HttpGet("/SearchAllPostTag/{TopicName}")]
-        public async Task<IActionResult> SearchAllGroupTopic(string TopicName)
+        [HttpGet("/SearchAllPostTag/{IdUser?}/{TopicName}")]
+        public async Task<IActionResult> SearchAllGroupTopic(Guid? IdUser, string TopicName)
         {
+            var listIdHide = new List<Guid>();
+            if (IdUser != null)
+            {
+                var listHide = _context.PostHides.Where(a => a.IdUser == IdUser).Select(a => a.IdPost).ToList();
+                if (listHide.Count != 0)
+                {
+                    listIdHide = listHide;
+                }
+            }
             var tag = new TagDTO();
 
             if (_context.GroupTopics.Count() != 0)
@@ -95,7 +122,9 @@ namespace API.Controllers.TagController
 
             var listPostIntro = new List<PostIntroDTO>();
 
-            var listPost = _context.Posts.Where(a => a.IsDeleted == false && listIdPost.Contains(a.Id)).ToList();
+            var listPost = _context.Posts.Include(a => a.User).Include(a => a.GroupPost).ThenInclude(a => a.Group).Where(a => a.IsDeleted == false && (a.GroupPost.Count == 0 ||
+            (a.GroupPost.Any(b => b.IdPost == a.Id && b.WaitState == WaitState.Accept && (b.Group.StateGroup == KindGroup.Public))))
+            && a.User.LockoutEnd == null && !listIdHide.Contains(a.Id) && listIdPost.Contains(a.Id)).ToList();
 
             foreach (var item in listPost)
             {

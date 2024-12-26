@@ -289,16 +289,6 @@ else
         }
 
 
-        foreach (var item in listRestricted)
-        {
-            if (ListTag.Any(a => a.Name.ToLower().Contains(item.ToLower())))
-            {
-                Snackbar.Add("Danh sách thẻ tag có chứa từ" + $" \"{item}\"" + " nằm trong danh sách từ khóa hạn chế", Severity.Info);
-                return;
-            }
-        }
-
-
         isUpPost = true;
         StateHasChanged();
 

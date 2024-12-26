@@ -1,0 +1,281 @@
+﻿@page "/AdsServiceRegis/{IdSv:guid}"
+@using Data.Database.Table
+@using Data.DTO.EntitiDTO
+@using Data.DTO
+@using Newtonsoft.Json
+@using Newtonsoft.Json.Linq
+@using Radzen
+@using Radzen.Blazor
+@using System.Text
+@using RestSharp
+@using System.Web
+
+@attribute [Authorize]
+@inject IHttpClientFactory HttpClientFactory
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserManager<ApplicationUser> UserManager
+@inject ISnackbar Snackbar
+@if (!isLoaded)
+{
+    <Client.Components.ComponentCustom.LoadingLocal></Client.Components.ComponentCustom.LoadingLocal>
+}
+else
+{
+    <style>
+        .rz-html-editor-content img {
+            display: block; /* Chuyển ảnh thành khối để dễ căn giữa */
+            margin: 0 auto !important; /* Căn giữa theo chiều ngang */
+            height: 160px; /* Chiều cao của ảnh */
+            border-radius: 8px; /* Bo góc */
+        }
+
+        .ads-content img {
+            display: block; /* Chuyển ảnh thành khối để dễ căn giữa */
+            max-width: 100%; /* Đảm bảo ảnh không vượt quá chiều rộng của phần tử cha */
+            height: auto; /* Giữ tỷ lệ ảnh */
+            max-height: 160px;
+            margin: 0 auto !important;
+            border-radius: 8px; /* Bo góc */
+        }
+
+        .ads-content {
+            word-wrap: break-word; /* Ngắt từ nếu quá dài */
+            overflow-wrap: break-word; /* Hỗ trợ ngắt từ cho trình duyệt hiện đại */
+            white-space: normal; /* Cho phép xuống dòng */
+            overflow: hidden;
+        }
+    </style>
+
+    <MudContainer Class="my-3">
+
+        <div style="width:450px;" class="my-3">
+            <select class="form-select" @onchange="(v) => SortChange(v)">
+                @foreach (var item in ListService)
+                {
+                    if (item.Id == service.Id)
+                    {
+                        <option selected value="@item.Id">@item.Name - @item.Price.ToString("N0", System.Globalization.CultureInfo.InvariantCulture) ₫</option>
+                    }
+                    else
+                    {
+                        <option value="@item.Id">@item.Name - @item.Price.ToString("N0", System.Globalization.CultureInfo.InvariantCulture) ₫</option>
+                    }
+                }
+            </select>
+        </div>
+
+        <div class="d-flex justify-content-between my-5">
+            <MudAlert Severity="Severity.Info">Dịch vụ @service.Name, thời gian @service.DurationDays ngày mức giá @service.Price.ToString("N0", System.Globalization.CultureInfo.InvariantCulture) ₫</MudAlert>
+        </div>
+
+
+
+        <div class="d-flex justify-content-between align-items-end">
+
+            <MudItem Style="width:65%;">
+                <RadzenHtmlEditor Change="Change" style="min-height:300px; height: auto;max-width:990px;border-radius:12px;overflow:hidden;" UploadUrl="minimalApi/uploadImage">
+                    <RadzenHtmlEditorUndo Title="Trước" />
+                    <RadzenHtmlEditorRedo Title="Sau" />
+                    <RadzenHtmlEditorSeparator />
+                    <RadzenHtmlEditorBold Title="In đậm" />
+                    <RadzenHtmlEditorItalic Title="In nghiêng" />
+                    <RadzenHtmlEditorUnderline Title="Gạch chân" />
+                    <RadzenHtmlEditorStrikeThrough Title="Xuyên qua" />
+                    @* <RadzenHtmlEditorJustify Title="Căn đều" /> *@
+                    @* <RadzenHtmlEditorUnorderedList Title="Danh sách" /> *@
+
+                    <RadzenHtmlEditorSeparator />
+                    <RadzenHtmlEditorColor Title="Màu chữ" />
+                    <RadzenHtmlEditorBackground Title="Màu nền" />
+                    <RadzenHtmlEditorRemoveFormat Title="Bỏ định dạng" />
+                    <RadzenHtmlEditorSeparator />
+                    @* <RadzenHtmlEditorSubscript Title="Chữ phía dưới" />
+                <RadzenHtmlEditorSuperscript Title="Chữ phía trên" /> *@
+                    @* <RadzenHtmlEditorSeparator /> *@
+                    <RadzenHtmlEditorImage Title="Thêm ảnh" ShowHeight="false" ShowWidth="false" ShowAlt="false" UploadChooseText="Tải ảnh lên" AltText="Tên ảnh" CancelText="Hủy" SelectText="Chọn ảnh tải lên" UrlText="Nếu không có sẵn ảnh trên máy, hãy nhập đường dẫn ảnh trên web" HeightText="Chiều cao" WidthText="Chiều rộng" />
+                    <RadzenHtmlEditorSeparator />
+                    @* <RadzenHtmlEditorFormatBlock Title="Cỡ chữ" Placeholder="Cỡ chữ" NormalText="Thông thường" Heading1Text="Loại 1" Heading2Text="Loại 2" Heading3Text="Loại 3" Heading4Text="Loại 4" Heading5Text="Loại 5" Heading6Text="Loại 6" /> *@
+                </RadzenHtmlEditor>
+            </MudItem>
+
+            <div class="d-flex justify-content-center align-items-center">
+                <MudPaper>
+                    <div class="m-3 ads-content" style="height:456px;width:320px;">
+                        @this.ContentAds
+                    </div>
+                </MudPaper>
+            </div>
+        </div>
+
+        <div class="d-flex mt-5">
+            <button class="input-group-text fw-lagre" style="background-color: rgb(42, 198, 255);border:solid 2px grey" id="">Đường dẫn</button>
+            <input type="text" @bind-value="RegistrationAdvertisement.Link" class="form-control ms-3" style="width : 550px" id="search" placeholder="Nhập đường dẫn quảng cáo của bạn" aria-label="Recipient's username" aria-describedby="basic-addon2">
+        </div>
+
+        <MudButton Class="mt-3 rounded-3" OnClick="(async ()=> await CreateAdsSubmit())" Variant="MudBlazor.Variant.Filled" Color="Color.Tertiary">Gửi yêu cầu</MudButton>
+
+    </MudContainer>
+}
+
+@code {
+    [Parameter]
+    public Guid IdSv { get; set; }
+
+    MarkupString ContentAds = new MarkupString("Thiết kế quảng cáo của bạn");
+
+    bool isLoaded;
+
+    ServiceAdvertisementPricing service = new ServiceAdvertisementPricing();
+
+    RegistrationAdvertisement RegistrationAdvertisement = new RegistrationAdvertisement();
+
+    List<ServiceAdvertisementPricing> ListService = new List<ServiceAdvertisementPricing>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+        var response = await httpClient.GetStringAsync($"/getSeviceAdsInfo/{IdSv}");
+
+        service = JsonConvert.DeserializeObject<ServiceAdvertisementPricing>(response);
+
+        RegistrationAdvertisement.State = Data.Enums.WaitState.Pending;
+        RegistrationAdvertisement.TimeAccept = DateTime.MinValue;
+        RegistrationAdvertisement.TimeStart = DateTime.MinValue;
+        RegistrationAdvertisement.ContentAds = "";
+        RegistrationAdvertisement.Link = "";
+
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        var idUserCurrent = UserManager.GetUserId(user);
+        var idUser = Guid.Parse(idUserCurrent);
+        RegistrationAdvertisement.IdUser = idUser;
+
+        response = await httpClient.GetStringAsync($"/getAllSvAds");
+
+        ListService = JsonConvert.DeserializeObject<List<ServiceAdvertisementPricing>>(response);
+
+        isLoaded = true;
+    }
+
+    async Task CreateAdsSubmit()
+    {
+        if (string.IsNullOrEmpty(RegistrationAdvertisement.ContentAds))
+        {
+            Snackbar.Add("Không bỏ trống phần nội dung", Severity.Info);
+            return;
+        }
+
+        if (string.IsNullOrEmpty(RegistrationAdvertisement.Link))
+        {
+            Snackbar.Add("Không bỏ trống phần đường dẫn", Severity.Info);
+            return;
+        }
+
+        RegistrationAdvertisement.Link = RegistrationAdvertisement.Link.Trim();
+
+
+        if (!Uri.IsWellFormedUriString(RegistrationAdvertisement.Link, UriKind.Absolute))
+        {
+            Snackbar.Add("Đường dẫn vừa rồi bạn nhập không đúng địa chỉ đường dẫn", Severity.Info);
+            return;
+        }
+
+
+        isLoaded = false;
+        var result = await CheckUrlWithVirusTotal(RegistrationAdvertisement.Link);
+
+
+        if (!result)
+        {
+            Snackbar.Add("Đường dẫn vừa rồi bạn nhập không đúng hoặc không an toàn, có thể chứa nội dung đội hại", Severity.Info);
+            isLoaded = true;
+            return;
+        }
+        else
+        {
+
+            RegistrationAdvertisement.Id = Guid.NewGuid();
+            RegistrationAdvertisement.DurationDays = service.DurationDays;
+            RegistrationAdvertisement.Name = service.Name;
+            RegistrationAdvertisement.Price = service.Price;
+            RegistrationAdvertisement.IdServiceAdvertis = service.Id;
+
+            var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+            var response = await httpClient.PostAsJsonAsync($"/addNewAds", RegistrationAdvertisement);
+
+            if (response.IsSuccessStatusCode)
+            {
+                Snackbar.Add("Đã đặt quảng cáo thành công, hãy chờ admin xác nhận", Severity.Info);
+                NavigationManager.NavigateTo("/serviceAdtisvertment/1");
+            }
+            else
+            {
+                Snackbar.Add("Có lỗi nào đó đã xảy ra", Severity.Error);
+            }
+            isLoaded = true;
+
+        }
+
+    }
+
+    void Change(string html)
+    {
+        RegistrationAdvertisement.ContentAds = html;
+        ContentAds = (MarkupString)RegistrationAdvertisement.ContentAds;
+    }
+
+    public async Task<bool> CheckUrlWithVirusTotal(string url)
+    {
+        string encodedUrl = HttpUtility.UrlEncode(url);
+
+        var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+        var response = await httpClient.GetAsync($"https://www.ipqualityscore.com/api/json/url/TrhMP8Gyzqz214WC3Hzkfwf9DGbL03p8/{encodedUrl}");
+
+        if (response.IsSuccessStatusCode)
+        {
+            var data = await response.Content.ReadAsStringAsync();
+            JObject jsonObject = JObject.Parse(data);
+            var successStr = jsonObject["success"];
+            if (successStr != null)
+            {
+                if ((string)successStr == "True")
+                {
+                    var unsafeStr = jsonObject["unsafe"];
+                    if (unsafeStr != null)
+                    {
+                        if ((string)unsafeStr == "False")
+                        {
+                            return true;
+                        }
+                        else
+                        {
+                            return false;
+                        }
+                    }
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            return false;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    async Task SortChange(ChangeEventArgs v)
+    {
+        isLoaded = false;
+        var id = Guid.Parse(v.Value.ToString());
+
+        service = ListService.FirstOrDefault(a => a.Id == id);
+
+        isLoaded = true;
+        StateHasChanged();
+    }
+
+}

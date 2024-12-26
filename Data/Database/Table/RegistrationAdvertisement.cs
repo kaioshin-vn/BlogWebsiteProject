@@ -37,5 +37,6 @@ namespace Data.Database.Table
 
         [ForeignKey("IdServiceAdvertis")]
         public ServiceAdvertisementPricing? ServiceAdvertisementPricing { get; set; }
+        public ICollection<Invoices>? Invoices { get; set; }
     }
 }

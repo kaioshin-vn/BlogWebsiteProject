@@ -28,5 +28,15 @@ namespace API.Controllers
             _context.PostHides.Remove(hp);
             await _context.SaveChangesAsync();
         }
+
+        [HttpGet("/getListHidePost/{IdUser}")]
+        public async Task<IActionResult> GetHidePost(Guid IdUser)
+        {
+            var listPh = new List<PostHideByRestricted>();
+            var hp = _context.PostHideByRestricted.Include(a => a.RestrictedWord).Include(a => a.Post).ThenInclude(a => a.User).Where(a => a.Post.IsDeleted == false && a.Post.User.Id == IdUser).ToList();
+            listPh = hp;
+
+            return Ok(hp);
+        }
     }
 }

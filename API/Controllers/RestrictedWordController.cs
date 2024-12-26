@@ -7,6 +7,8 @@ using Data.DTO.EntitiDTO;
 using Data.DTO;
 using Blazorise;
 using Client.Components.Pages.Restricted;
+using HtmlAgilityPack;
+using Microsoft.AspNetCore.Html;
 
 namespace API.Controllers
 {
@@ -73,7 +75,22 @@ namespace API.Controllers
             return Ok(topic);
         }
 
-		
+
+        [HttpGet("/checkExistedRestriceted/{Word}")]
+        public async Task<IActionResult> CheckRS(string Word)
+        {
+            var existed = _context.RestrictedWords.Any(a => a.Word.ToLower() == Word.ToLower());
+
+            return Ok(existed);
+        }
+
+        [HttpGet("/checkExistedTopic/{Topic}")]
+        public async Task<IActionResult> CheckTP(string Topic)
+        {
+            var existed = _context.Topics.Any(a => a.TopicName.ToLower() == Topic.ToLower());
+
+            return Ok(existed);
+        }
 
         [HttpPost]
         public async Task<IActionResult> CreateTopic([FromBody] RestrictedWord topic)
@@ -87,8 +104,47 @@ namespace API.Controllers
             _context.RestrictedWords.Add(topic);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetTopic), new { id = topic.Id }, topic);
+
+            var lisPostViolence = _context.Posts.Where(a => a.IsDeleted == false && ( a.Content.ToLower().Contains(topic.Word.ToLower()) || a.Title.ToLower().Contains(topic.Word.ToLower()))).ToList();
+
+            var listIdUser = new HashSet<Guid>();
+
+            if (lisPostViolence.Count != 0)
+            {
+                foreach (var item in lisPostViolence)
+                {
+                    listIdUser.Add(item.IdUser);
+                    var posthide = new PostHideByRestricted();
+
+                    posthide.Id = Guid.NewGuid();
+
+                    posthide.IdPost = item.Id;
+
+                    posthide.IdRestricted = topic.Id;
+
+                    _context.PostHideByRestricted.Add(posthide);
+                }
+            }
+            _context.SaveChanges();
+
+
+            return Ok(listIdUser);
         }
+
+        async Task<(bool state, string word)> CheckContent(string htmlString, string word)
+        {
+
+            var doc = new HtmlDocument();
+            doc.LoadHtml(htmlString);
+
+            var content = doc.DocumentNode.InnerText;
+            if (content.ToLower().Contains(word.ToLower()))
+            {
+                return (false, word);
+            }
+            return (true, "");
+        }
+
 
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateTopic(Guid id, [FromBody] RestrictedWord topic)
@@ -98,25 +154,46 @@ namespace API.Controllers
                 return BadRequest();
             }
 
+            var listPostHide = _context.PostHideByRestricted.Where(a => a.IdRestricted == topic.Id);
+
+            _context.PostHideByRestricted.RemoveRange(listPostHide);
+            _context.SaveChanges();
+
+
+
+
             _context.Entry(topic).State = EntityState.Modified;
 
-            try
+            await _context.SaveChangesAsync();
+
+            var lisPostViolence = _context.Posts.Where(a => a.IsDeleted == false && (a.Content.ToLower().Contains(topic.Word.ToLower()) || a.Title.ToLower().Contains(topic.Word.ToLower()))).ToList();
+
+            var listIdUser = new HashSet<Guid>();
+
+            if (lisPostViolence.Count != 0)
             {
-                await _context.SaveChangesAsync();
+                foreach (var item in lisPostViolence)
+                {
+                    listIdUser.Add(item.IdUser);
+                    var posthide = new PostHideByRestricted();
+
+                    posthide.Id = Guid.NewGuid();
+
+                    posthide.IdPost = item.Id;
+
+                    posthide.IdRestricted = topic.Id;
+
+                    _context.PostHideByRestricted.Add(posthide);
+                }
             }
-            catch (DbUpdateConcurrencyException)
+            _context.SaveChanges();
+
+            if (!TopicExists(id))
             {
-                if (!TopicExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                return NotFound();
             }
 
-            return NoContent();
+            return Ok(listIdUser);
         }
 
         [HttpDelete("{id}")]
@@ -124,6 +201,10 @@ namespace API.Controllers
         {
             var topic = await _context.RestrictedWords
                 .FirstOrDefaultAsync(t => t.Id == id);
+
+            var listPostHide = _context.PostHideByRestricted.Where(a => a.IdRestricted == id);
+
+            _context.PostHideByRestricted.RemoveRange(listPostHide);
 
             try
             {

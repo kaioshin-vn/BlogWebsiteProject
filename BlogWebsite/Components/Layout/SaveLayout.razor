@@ -58,375 +58,372 @@
 else
 {
     <div class="page" @onclick="Hide">
-            <MudAppBar Elevation="1" Style="background-color:#fff;">
-                <div style="z-index:100; position :fixed;border-bottom:grey 0.5px solid;width:100%;" class="d-flex justify-content-between align-items-center row">
-                    <div class="col-3">
-                        <NavLink href="/">
-                            <MudImage Src="logo.png" Height="64"></MudImage>
-                        </NavLink>
-                    </div>
-                    <div class="d-flex col-6">
-                        <MudMenu AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter" Class="w-100" FullWidth>
-                            <ActivatorContent>
-                                <MudTextField @bind-Value="Search"
-                                              Placeholder="Tìm kiếm"
-                                              Variant="Variant.Text"
-                                              Adornment="Adornment.Start"
-                                              AdornmentIcon="@Icons.Material.Filled.Search"
-                                              Style="width: 100%"
-                                              @onclick="async ()=> await SearchKeyPress()"
-                                              OnKeyUp="@(async (e)=> await SearchKey(e))"
-                                              Immediate />
-                            </ActivatorContent>
-                            <ChildContent>
-                                @if (string.IsNullOrEmpty(Search))
-                                {
-                                    <MudGrid>
-                                        <MudItem Class="pb-0 mb-0" xs="12">
-                                            <MudList T="string">
-                                                @foreach (var history in SearchHistory)
-                                                {
-                                                    <MudListItem Icon="@Icons.Material.Filled.History">
-                                                        <MudGrid Justify="Justify.SpaceBetween">
-                                                            <MudItem xs="10" @onclick="@(async ()=> await SelectFromHistory(history))">
-                                                                <MudText>@history</MudText>
-                                                            </MudItem>
-                                                            <MudItem xs="2" Class="d-flex justify-content-end">
-                                                                <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" OnClick="@(() => DeleteHistoryItem(history))" />
-                                                            </MudItem>
-                                                        </MudGrid>
-                                                    </MudListItem>
-                                                }
-                                            </MudList>
-                                            <hr />
+        <MudAppBar Elevation="1" Style="background-color:#fff;">
+            <div style="z-index:100; position :fixed;border-bottom:grey 0.5px solid;width:100%;" class="d-flex justify-content-between align-items-center row">
+                <div class="col-3">
+                    <NavLink href="/">
+                        <MudImage Src="logo.png" Height="64"></MudImage>
+                    </NavLink>
+                </div>
+                <div class="d-flex col-6">
+                    <MudMenu AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter" Class="w-100" FullWidth>
+                        <ActivatorContent>
+                            <MudTextField @bind-Value="Search"
+                                          Placeholder="Tìm kiếm"
+                                          Variant="Variant.Text"
+                                          Adornment="Adornment.Start"
+                                          AdornmentIcon="@Icons.Material.Filled.Search"
+                                          Style="width: 100%"
+                                          @onclick="async ()=> await SearchKeyPress()"
+                                          OnKeyUp="@(async (e)=> await SearchKey(e))"
+                                          Immediate />
+                        </ActivatorContent>
+                        <ChildContent>
+                            @if (string.IsNullOrEmpty(Search))
+                            {
+                                <MudGrid>
+                                    <MudItem Class="pb-0 mb-0" xs="12">
+                                        <MudList T="string">
+                                            @foreach (var history in SearchHistory)
+                                            {
+                                                <MudListItem Icon="@Icons.Material.Filled.History">
+                                                    <MudGrid Justify="Justify.SpaceBetween">
+                                                        <MudItem xs="10" @onclick="@(async ()=> await SelectFromHistory(history))">
+                                                            <MudText>@history</MudText>
+                                                        </MudItem>
+                                                        <MudItem xs="2" Class="d-flex justify-content-end">
+                                                            <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" OnClick="@(() => DeleteHistoryItem(history))" />
+                                                        </MudItem>
+                                                    </MudGrid>
+                                                </MudListItem>
+                                            }
+                                        </MudList>
+                                        <hr />
+                                    </MudItem>
+                                    <MudItem Class="pt-0 mt-0" xs="12">
+                                        <MudItem Class="d-flex justify-content-start">
+                                            <MudText Class="pb-2 px-2"><MudIcon Icon="@Icons.Material.Filled.TrendingUp" /> Bài Viết HOT</MudText>
                                         </MudItem>
-                                        <MudItem Class="pt-0 mt-0" xs="12">
-                                            <MudItem Class="d-flex justify-content-start">
-                                                <MudText Class="pb-2 px-2"><MudIcon Icon="@Icons.Material.Filled.TrendingUp" /> Bài Viết HOT</MudText>
-                                            </MudItem>
-                                            <MudDivider Style="border-color:black; border-width:1px" />
-                                            <MudList T="string" Style="overflow:scroll; max-height:370px">
-                                                @foreach (var post in lstPostUserTop)
+                                        <MudDivider Style="border-color:black; border-width:1px" />
+                                        <MudList T="string" Style="overflow:scroll; max-height:370px">
+                                            @foreach (var post in lstPostUserTop)
+                                            {
+                                                <MudListItem OnClick="() => NaviGate(post.Id.ToString())">
+                                                    <MudGrid Justify="Justify.SpaceBetween">
+                                                        <MudItem xs="8">
+                                                            <MudCardHeader Class="p-0 m-0">
+                                                                <MudAvatar>
+                                                                    <MudImage ObjectFit="ObjectFit.Cover" Src="@post.Avatar"></MudImage>
+                                                                </MudAvatar>
+                                                                <MudText Class="px-2">@post.UserName</MudText>
+                                                            </MudCardHeader>
+                                                            <MudCardContent Class="p-0 pt-1 m-0">
+                                                                <MudText Typo="Typo.h6" Class="truncate-text">@post.Title</MudText>
+                                                            </MudCardContent>
+                                                            @if (!string.IsNullOrEmpty(post.Like))
+                                                            {
+                                                                string[] likeCount = post.Like.Split('|');
+                                                                int toltalLike = likeCount.Distinct().Count();
+                                                                <MudText Style=" font-size:12px; color:gray">@(string.IsNullOrEmpty(Convert.ToString(toltalLike)) ? 0 : toltalLike) lượt thích · @post.CommentCount bình luận </MudText>
+                                                            }
+                                                        </MudItem>
+                                                        <MudItem xs="4" Class="d-flex justify-content-end">
+                                                            @if (!string.IsNullOrEmpty(post.ImgFile) || !string.IsNullOrEmpty(post.VideoFile))
+                                                            {
+                                                                <MudImage Style="border-radius:20px" Src="@(string.IsNullOrEmpty(post.ImgFile) ? post.VideoFile : post.ImgFile)" ObjectFit="ObjectFit.Cover" Width="150" Height="100" />
+                                                            }
+                                                        </MudItem>
+                                                    </MudGrid>
+                                                </MudListItem>
+                                                <MudDivider Style="border-color:gray; border-width:1px" />
+                                            }
+                                        </MudList>
+                                    </MudItem>
+                                </MudGrid>
+                            }
+                            else if (searchResult?.Posts != null)
+                            {
+                                <MudGrid>
+                                    <MudItem xs="12">
+                                        <MudText Class="p-2" Typo="Typo.body1">Bài viết</MudText>
+                                        <MudDivider Style="border-color:black; border-width:1px" />
+                                        <MudList T="string" Style="overflow:scroll; max-height:650px">
+                                            @foreach (var post in searchResult.Posts)
+                                            {
+                                                <MudListItem OnClick="() => NaviGate(post.Id.ToString())">
+                                                    <MudGrid Justify="Justify.SpaceBetween">
+                                                        <MudItem xs="6">
+                                                            <MudCardHeader Class="p-0 m-0">
+                                                                <MudAvatar Size="Size.Small">
+                                                                    <MudImage ObjectFit="ObjectFit.Cover" Src="@post.Avatar"></MudImage>
+                                                                </MudAvatar>
+                                                                <MudText Class="px-2">@post.UserName</MudText>
+                                                            </MudCardHeader>
+                                                            <MudCardContent Class="p-0 pt-1 m-0">
+                                                                <MudText Typo="Typo.h6" Class="truncate-text">@post.Title</MudText>
+                                                            </MudCardContent>
+                                                            @if (!string.IsNullOrEmpty(post.Like))
+                                                            {
+                                                                string[] likeCount = post.Like.Split('|');
+                                                                int toltalLike = likeCount.Distinct().Count();
+                                                                <MudText Style=" font-size:12px; color:gray">@(string.IsNullOrEmpty(Convert.ToString(toltalLike)) ? 0 : toltalLike) lượt thích · @post.CommentCount bình luận </MudText>
+                                                            }
+                                                        </MudItem>
+                                                        <MudItem xs="6" Class="d-flex justify-content-end">
+                                                            @if (!string.IsNullOrEmpty(post.ImgFile) || !string.IsNullOrEmpty(post.VideoFile))
+                                                            {
+                                                                <MudImage Style="border-radius:20px" Src="@(string.IsNullOrEmpty(post.ImgFile) ? post.VideoFile : post.ImgFile)" ObjectFit="ObjectFit.Cover" Width="150" Height="100" />
+                                                            }
+                                                        </MudItem>
+                                                    </MudGrid>
+                                                </MudListItem>
+                                                <MudDivider Style="border-color:gray; border-width:1px" />
+
+                                            }
+                                        </MudList>
+                                    </MudItem>
+                                </MudGrid>
+                            }
+                        </ChildContent>
+                    </MudMenu>
+                    <MudIconButton Icon="@Icons.Material.Filled.Search" @bind-Value="Search" @onclick="async ()=> await HandleSearch()" Color="Color.Info" aria-label="github"></MudIconButton>
+                    <MudIconButton Class="mx-2" Icon="@(DarkLightModeButtonIcon)" Color="Color.Inherit" OnClick="@DarkModeToggle" />
+                </div>
+                <div class="col-3">
+                    <AuthorizeView>
+                        <Authorized>
+                            <div class="d-flex justify-content-end">
+                                <div class="d-flex justify-content-between align-items-center me-4">
+
+                                    <MudIconButton Class="mx-1" Icon=""></MudIconButton>
+
+                                    <MudIconButton @onclick="ClickMesLabel" Style="overflow:visible;">
+                                        <MudBadge Color="Color.Tertiary" Overlap="true" Visible="this.isHasNewMes" Class="">
+                                            <MudIcon Icon="@Icons.Material.Filled.Chat">
+                                            </MudIcon>
+                                        </MudBadge>
+                                    </MudIconButton>
+
+                                    @if (isShowMessenger)
+                                    {
+                                        <style>
+                                            .hover-back:hover {
+                                                background-color: rgb(230, 230, 230);
+                                                cursor: pointer;
+                                            }
+
+                                            .single-line {
+                                                display: inline-block; /* Hoặc dùng block nếu cần span có kích thước cố định */
+                                                white-space: nowrap; /* Không cho phép xuống dòng */
+                                                overflow: hidden; /* Ẩn phần nội dung tràn ra */
+                                                text-overflow: ellipsis; /* Thêm dấu "..." cho nội dung bị cắt */
+                                                width: 50%;
+                                            }
+                                        </style>
+                                        <div class="p-3" @onclick="DoNothing" style="overflow:hidden;border-radius:12px;position:fixed;top: 62px; right: 122px;z-index:100; border: 2px solid lightgrey;box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.3);overflow:hidden; width:400px;height:500px;background-color:#fff; /* Đổ bóng */">
+                                            @if (LoadedMes)
+                                            {
+                                                <h4 style="" class="my-2">Đoạn chat</h4>
+                                                @if (IsMessengerDetail)
                                                 {
-                                                    <MudListItem OnClick="() => NaviGate(post.Id.ToString())">
-                                                        <MudGrid Justify="Justify.SpaceBetween">
-                                                            <MudItem xs="8">
-                                                                <MudCardHeader Class="p-0 m-0">
-                                                                    <MudAvatar>
-                                                                        <MudImage ObjectFit="ObjectFit.Cover" Src="@post.Avatar"></MudImage>
-                                                                    </MudAvatar>
-                                                                    <MudText Class="px-2">@post.UserName</MudText>
-                                                                </MudCardHeader>
-                                                                <MudCardContent Class="p-0 pt-1 m-0">
-                                                                    <MudText Typo="Typo.h6" Class="truncate-text">@post.Title</MudText>
-                                                                </MudCardContent>
-                                                                @if (!string.IsNullOrEmpty(post.Like))
-                                                                {
-                                                                    string[] likeCount = post.Like.Split('|');
-                                                                    int toltalLike = likeCount.Distinct().Count();
-                                                                    <MudText Style=" font-size:12px; color:gray">@(string.IsNullOrEmpty(Convert.ToString(toltalLike)) ? 0 : toltalLike) lượt thích · @post.CommentCount bình luận </MudText>
-                                                                }
-                                                            </MudItem>
-                                                            <MudItem xs="4" Class="d-flex justify-content-end">
-                                                                @if (!string.IsNullOrEmpty(post.ImgFile) || !string.IsNullOrEmpty(post.VideoFile))
-                                                                {
-                                                                    <MudImage Style="border-radius:20px" Src="@(string.IsNullOrEmpty(post.ImgFile) ? post.VideoFile : post.ImgFile)" ObjectFit="ObjectFit.Cover" Width="150" Height="100" />
-                                                                }
-                                                            </MudItem>
-                                                        </MudGrid>
-                                                    </MudListItem>
-                                                    <MudDivider Style="border-color:gray; border-width:1px" />
-                                                }
-                                            </MudList>
-                                        </MudItem>
-                                    </MudGrid>
-                                }
-                                else if (searchResult?.Posts != null)
-                                {
-                                    <MudGrid>
-                                        <MudItem xs="12">
-                                            <MudText Class="p-2" Typo="Typo.body1">Bài viết</MudText>
-                                            <MudDivider Style="border-color:black; border-width:1px" />
-                                            <MudList T="string" Style="overflow:scroll; max-height:650px">
-                                                @foreach (var post in searchResult.Posts)
-                                                {
-                                                    <MudListItem OnClick="() => NaviGate(post.Id.ToString())">
-                                                        <MudGrid Justify="Justify.SpaceBetween">
-                                                            <MudItem xs="6">
-                                                                <MudCardHeader Class="p-0 m-0">
-                                                                    <MudAvatar Size="Size.Small">
-                                                                        <MudImage ObjectFit="ObjectFit.Cover" Src="@post.Avatar"></MudImage>
-                                                                    </MudAvatar>
-                                                                    <MudText Class="px-2">@post.UserName</MudText>
-                                                                </MudCardHeader>
-                                                                <MudCardContent Class="p-0 pt-1 m-0">
-                                                                    <MudText Typo="Typo.h6" Class="truncate-text">@post.Title</MudText>
-                                                                </MudCardContent>
-                                                                @if (!string.IsNullOrEmpty(post.Like))
-                                                                {
-                                                                    string[] likeCount = post.Like.Split('|');
-                                                                    int toltalLike = likeCount.Distinct().Count();
-                                                                    <MudText Style=" font-size:12px; color:gray">@(string.IsNullOrEmpty(Convert.ToString(toltalLike)) ? 0 : toltalLike) lượt thích · @post.CommentCount bình luận </MudText>
-                                                                }
-                                                            </MudItem>
-                                                            <MudItem xs="6" Class="d-flex justify-content-end">
-                                                                @if (!string.IsNullOrEmpty(post.ImgFile) || !string.IsNullOrEmpty(post.VideoFile))
-                                                                {
-                                                                    <MudImage Style="border-radius:20px" Src="@(string.IsNullOrEmpty(post.ImgFile) ? post.VideoFile : post.ImgFile)" ObjectFit="ObjectFit.Cover" Width="150" Height="100" />
-                                                                }
-                                                            </MudItem>
-                                                        </MudGrid>
-                                                    </MudListItem>
-                                                    <MudDivider Style="border-color:gray; border-width:1px" />
-
-                                                }
-                                            </MudList>
-                                        </MudItem>
-                                    </MudGrid>
-                                }
-                            </ChildContent>
-                        </MudMenu>
-                        <MudIconButton Icon="@Icons.Material.Filled.Search" @bind-Value="Search" @onclick="async ()=> await HandleSearch()" Color="Color.Info" aria-label="github"></MudIconButton>
-                        <MudIconButton Class="mx-2" Icon="@(DarkLightModeButtonIcon)" Color="Color.Inherit" OnClick="@DarkModeToggle" />
-                    </div>
-                    <div class="col-3">
-                        <AuthorizeView>
-                            <Authorized>
-                                <div class="d-flex justify-content-end">
-                                    <div class="d-flex justify-content-between align-items-center me-4">
-
-                                        <MudIconButton Class="mx-1" Icon=""></MudIconButton>
-
-                                        @if (isUserNullRole)
-                                        {
-                                            <MudIconButton @onclick="ClickMesLabel" Style="overflow:visible;">
-                                                <MudBadge Color="Color.Tertiary" Overlap="true" Visible="this.isHasNewMes" Class="">
-                                                    <MudIcon Icon="@Icons.Material.Filled.Chat">
-                                                    </MudIcon>
-                                                </MudBadge>
-                                            </MudIconButton>
-                                        }
-
-                                        @if (isShowMessenger)
-                                        {
-                                            <style>
-                                                .hover-back:hover {
-                                                    background-color: rgb(230, 230, 230);
-                                                    cursor: pointer;
-                                                }
-
-                                                .single-line {
-                                                    display: inline-block; /* Hoặc dùng block nếu cần span có kích thước cố định */
-                                                    white-space: nowrap; /* Không cho phép xuống dòng */
-                                                    overflow: hidden; /* Ẩn phần nội dung tràn ra */
-                                                    text-overflow: ellipsis; /* Thêm dấu "..." cho nội dung bị cắt */
-                                                    width: 50%;
-                                                }
-                                            </style>
-                                            <div class="p-3" @onclick="DoNothing" style="overflow:hidden;border-radius:12px;position:fixed;top: 62px; right: 122px;z-index:100; border: 2px solid lightgrey;box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.3);overflow:hidden; width:400px;height:500px;background-color:#fff; /* Đổ bóng */">
-                                                @if (LoadedMes)
-                                                {
-                                                    <h4 style="" class="my-2">Đoạn chat</h4>
-                                                    @if (IsMessengerDetail)
-                                                    {
-                                                        <Client.Components.Messenger.ConversationDetail GoBack="BackToListConver" IdConversation="IdConversation"></Client.Components.Messenger.ConversationDetail>
-                                                    }
-                                                    else
-                                                    {
-                                                        <div>
-                                                            <MudTooltip Text="Tạo cuộc trò chuyện mới">
-                                                                <MudIconButton OnClick="AddNewMesAdmin" Icon="@Icons.Material.Filled.AddCircle" Size="Size.Small" />
-                                                            </MudTooltip>
-                                                        </div>
-                                                        if (ListConversation.Count != 0)
-                                                        {
-                                                            <div style="overflow-y:scroll;height:390px;overflow-x: hidden;">
-                                                                @foreach (var item in ListConversation)
-                                                                {
-                                                                    <div style="font-size:14px;border-radius:10px;" @onclick="() => MesDetail(item.Id)" class="p-1 m-1 hover-back">
-                                                                        <div style="height:68px;" class="d-flex justify-content-between align-items-center">
-                                                                            <MudAvatar Class="hover-border">
-                                                                                <MudImage Src="@(item.Avatar==null?@"\Img\avatar_default1.jpg":item.Avatar)"></MudImage>
-                                                                            </MudAvatar>
-
-                                                                            <div class="flex-grow-1 ms-3">
-                                                                                <p class="mb-1"><b>@(item.FullName == null ? "Admin" : item.FullName)</b></p>
-                                                                                <div class="d-flex align-items-end ">
-                                                                                    @if (item.isRead)
-                                                                                    {
-                                                                                        <span class="single-line">@item.LastestMes</span>
-                                                                                    }
-                                                                                    else
-                                                                                    {
-                                                                                        <b class="single-line">@item.LastestMes</b>
-                                                                                    }
-                                                                                    <span class="ms-2">• @item.Time</span>
-                                                                                </div>
-                                                                            </div>
-
-                                                                        </div>
-                                                                    </div>
-                                                                }
-                                                            </div>
-                                                        }
-                                                        else
-                                                        {
-                                                            <MudAlert Severity="Severity.Info" Class="mt-2">Không có cuộc trò chuyện nào</MudAlert>
-                                                        }
-                                                    }
-                                                }
-                                                else
-                                                {
-                                                    <Client.Components.ComponentCustom.LoadingLocal></Client.Components.ComponentCustom.LoadingLocal>
-                                                }
-                                            </div>
-                                        }
-                                        <MudTooltip Class="mx-1" Text="Thêm mới bài viết">
-                                            <MudFab Class="mx-1" StartIcon="@Icons.Material.Filled.Add" @onclick="CreatePost" Size="Size.Medium" Style="border:none;box-shadow:none;background-color:none;" Label="Tạo mới" />
-                                        </MudTooltip>
-
-                                        <MudIconButton @onclick="ClickNoticeLabel" Style="overflow:visible;">
-                                            <MudBadge Content="NoticeCount" Color="Color.Tertiary" Overlap="true" Class="">
-                                                <MudIcon Icon="@Icons.Material.Filled.Notifications">
-                                                </MudIcon>
-                                            </MudBadge>
-                                        </MudIconButton>
-
-                                        @if (isShowNotice)
-                                        {
-                                            <div class="" style="overflow:hidden;border-radius:12px;position:fixed;top: 62px; right: 82px;z-index:100; border: 2px solid lightgrey;box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.3); width:440px; /* Đổ bóng */">
-                                                @if (LoadedNotice)
-                                                {
-                                                    @if (ListNotice.Count != 0)
-                                                    {
-                                                        @foreach (var item in ListNotice)
-                                                        {
-                                                            <div style="background-color:@(item.isRead ? " #fff" : "rgb(230, 230, 230)" );">
-                                                                <MudMenuItem Class="p-1" @onclick="() => GoTo(item.Id, item.Link)">
-                                                                    <div class="d-flex justify-content-start align-items-start " style="font-size:14px;">
-                                                                        <MudAvatar Class="hover-border">
-                                                                            <MudImage Src="@item.AvatarUserSend"></MudImage>
-                                                                        </MudAvatar>
-                                                                        <div class="ms-3">
-                                                                            <b>@item.UserNameSend</b>
-                                                                            <div style="text-overflow: ellipsis; white-space: normal;">
-                                                                                <span>@item.Content</span>
-                                                                            </div>
-                                                                            <p style="color:deepskyblue;" class="mb-0">
-                                                                                @item.Time
-                                                                            </p>
-                                                                        </div>
-                                                                    </div>
-                                                                </MudMenuItem>
-                                                            </div>
-                                                        }
-                                                        <div class="px-2 py-0" style="background-color:#fff">
-                                                            <div class="d-flex justify-content-between">
-                                                                <MudIconButton Class="m-0" @onclick="Pre" Disabled="!isPreValid" Icon="@Icons.Material.Filled.NavigateBefore"></MudIconButton>
-                                                                <MudIconButton Class="m-0" @onclick="Next" Disabled="!isNextValid" Icon="@Icons.Material.Filled.NavigateNext"></MudIconButton>
-                                                            </div>
-                                                        </div>
-                                                    }
-                                                    else
-                                                    {
-                                                        <div style="background-color:gainsboro;" class="p-2">
-                                                            <div class="d-flex justify-content-start align-items-center ">
-                                                                <MudFab class="p-0 me-3" StartIcon="@Icons.Material.Filled.NotAccessible" Color="Color.Tertiary" Size="Size.Small" />
-                                                                <b>Không có thông báo nào</b>
-                                                            </div>
-                                                        </div>
-                                                    }
+                                                    <Client.Components.Messenger.ConversationDetail GoBack="BackToListConver" IdConversation="IdConversation"></Client.Components.Messenger.ConversationDetail>
                                                 }
                                                 else
                                                 {
                                                     <div>
-                                                        <Client.Components.ComponentCustom.WaveLoading></Client.Components.ComponentCustom.WaveLoading>
+                                                        <MudTooltip Text="Tạo cuộc trò chuyện mới">
+                                                            <MudIconButton OnClick="AddNewMesAdmin" Icon="@Icons.Material.Filled.AddCircle" Size="Size.Small" />
+                                                        </MudTooltip>
+                                                    </div>
+                                                    if (ListConversation.Count != 0)
+                                                    {
+                                                        <div style="overflow-y:scroll;height:390px;overflow-x: hidden;">
+                                                            @foreach (var item in ListConversation)
+                                                            {
+                                                                <div style="font-size:14px;border-radius:10px;" @onclick="() => MesDetail(item.Id)" class="p-1 m-1 hover-back">
+                                                                    <div style="height:68px;" class="d-flex justify-content-between align-items-center">
+                                                                        <MudAvatar Class="hover-border">
+                                                                            <MudImage Src="@(item.Avatar==null?@"\Img\avatar_default1.jpg":item.Avatar)"></MudImage>
+                                                                        </MudAvatar>
+
+                                                                        <div class="flex-grow-1 ms-3">
+                                                                            <p class="mb-1"><b>@(item.FullName == null ? "Admin" : item.FullName)</b></p>
+                                                                            <div class="d-flex align-items-end ">
+                                                                                @if (item.isRead)
+                                                                                {
+                                                                                    <span class="single-line">@item.LastestMes</span>
+                                                                                }
+                                                                                else
+                                                                                {
+                                                                                    <b class="single-line">@item.LastestMes</b>
+                                                                                }
+                                                                                <span class="ms-2">• @item.Time</span>
+                                                                            </div>
+                                                                        </div>
+
+                                                                    </div>
+                                                                </div>
+                                                            }
+                                                        </div>
+                                                    }
+                                                    else
+                                                    {
+                                                        <MudAlert Severity="Severity.Info" Class="mt-2">Không có cuộc trò chuyện nào</MudAlert>
+                                                    }
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <Client.Components.ComponentCustom.LoadingLocal></Client.Components.ComponentCustom.LoadingLocal>
+                                            }
+                                        </div>
+                                    }
+                                    <MudTooltip Class="mx-1" Text="Thêm mới bài viết">
+                                        <MudFab Class="mx-1" StartIcon="@Icons.Material.Filled.Add" @onclick="CreatePost" Size="Size.Medium" Style="border:none;box-shadow:none;background-color:none;" Label="Tạo mới" />
+                                    </MudTooltip>
+
+                                    <MudIconButton @onclick="ClickNoticeLabel" Style="overflow:visible;">
+                                        <MudBadge Content="NoticeCount" Color="Color.Tertiary" Overlap="true" Class="">
+                                            <MudIcon Icon="@Icons.Material.Filled.Notifications">
+                                            </MudIcon>
+                                        </MudBadge>
+                                    </MudIconButton>
+
+                                    @if (isShowNotice)
+                                    {
+                                        <div class="" style="overflow:hidden;border-radius:12px;position:fixed;top: 62px; right: 82px;z-index:100; border: 2px solid lightgrey;box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.3); width:440px; /* Đổ bóng */">
+                                            @if (LoadedNotice)
+                                            {
+                                                @if (ListNotice.Count != 0)
+                                                {
+                                                    @foreach (var item in ListNotice)
+                                                    {
+                                                        <div style="background-color:@(item.isRead ? " #fff" : "rgb(230, 230, 230)" );">
+                                                            <MudMenuItem Class="p-1" @onclick="() => GoTo(item.Id, item.Link)">
+                                                                <div class="d-flex justify-content-start align-items-start " style="font-size:14px;">
+                                                                    <MudAvatar Class="hover-border">
+                                                                        <MudImage Src="@item.AvatarUserSend"></MudImage>
+                                                                    </MudAvatar>
+                                                                    <div class="ms-3">
+                                                                        <b>@item.UserNameSend</b>
+                                                                        <div style="text-overflow: ellipsis; white-space: normal;">
+                                                                            <span>@item.Content</span>
+                                                                        </div>
+                                                                        <p style="color:deepskyblue;" class="mb-0">
+                                                                            @item.Time
+                                                                        </p>
+                                                                    </div>
+                                                                </div>
+                                                            </MudMenuItem>
+                                                        </div>
+                                                    }
+                                                    <div class="px-2 py-0" style="background-color:#fff">
+                                                        <div class="d-flex justify-content-between">
+                                                            <MudIconButton Class="m-0" @onclick="Pre" Disabled="!isPreValid" Icon="@Icons.Material.Filled.NavigateBefore"></MudIconButton>
+                                                            <MudIconButton Class="m-0" @onclick="Next" Disabled="!isNextValid" Icon="@Icons.Material.Filled.NavigateNext"></MudIconButton>
+                                                        </div>
                                                     </div>
                                                 }
+                                                else
+                                                {
+                                                    <div style="background-color:gainsboro;" class="p-2">
+                                                        <div class="d-flex justify-content-start align-items-center ">
+                                                            <MudFab class="p-0 me-3" StartIcon="@Icons.Material.Filled.NotAccessible" Color="Color.Tertiary" Size="Size.Small" />
+                                                            <b>Không có thông báo nào</b>
+                                                        </div>
+                                                    </div>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <div>
+                                                    <Client.Components.ComponentCustom.WaveLoading></Client.Components.ComponentCustom.WaveLoading>
+                                                </div>
+                                            }
+                                        </div>
+                                    }
+
+                                </div>
+
+                                <MudMenu Class="pt-2 pb-3" ActivationEvent="@MouseEvent.LeftClick" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.BottomRight">
+                                    <ActivatorContent>
+                                        <MudAvatar Class="avatar" Variant="Variant.Outlined">
+                                            <MudImage Src="@Avatar"></MudImage>
+                                        </MudAvatar>
+                                    </ActivatorContent>
+                                    <ChildContent>
+                                        <MudMenuItem Href="/profile">
+                                            <div class="d-flex justify-content-start align-items-center ">
+                                                <MudFab class="p-0 me-3" StartIcon="@Icons.Material.Filled.Person" Color="Color.Tertiary" Size="Size.Small" />
+                                                <b>Trang cá nhân</b>
                                             </div>
-                                        }
-
-                                    </div>
-
-                                    <MudMenu Class="pt-2 pb-3" ActivationEvent="@MouseEvent.LeftClick" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.BottomRight">
-                                        <ActivatorContent>
-                                            <MudAvatar Class="avatar" Variant="Variant.Outlined">
-                                                <MudImage Src="@Avatar"></MudImage>
-                                            </MudAvatar>
-                                        </ActivatorContent>
-                                        <ChildContent>
-                                            <MudMenuItem Href="/profile">
-                                                <div class="d-flex justify-content-start align-items-center ">
-                                                    <MudFab class="p-0 me-3" StartIcon="@Icons.Material.Filled.Person" Color="Color.Tertiary" Size="Size.Small" />
-                                                    <b>Trang cá nhân</b>
-                                                </div>
-                                            </MudMenuItem>
-                                            <MudMenuItem Href="/Setting/ChangePassword">
-                                                <div class="d-flex justify-content-start align-items-center ">
-                                                    <MudFab class="p-0 me-3" StartIcon="@Icons.Material.Filled.Settings" Color="Color.Tertiary" Size="Size.Small" />
-                                                    <b>Đổi mật khẩu</b>
-                                                </div>
-                                            </MudMenuItem>
-                                            <MudMenuItem Href="/followers">
-                                                <div class="d-flex justify-content-start align-items-center ">
-                                                    <MudFab class="p-0 me-3" StartIcon="@Icons.Material.Filled.Groups" Color="Color.Tertiary" Size="Size.Small" />
-                                                    <b>Danh sách theo dõi</b>
-                                                </div>
-                                            </MudMenuItem>
-                                            <MudMenuItem>
-                                                <form action="Account/Logout" class="p-0" method="post">
-                                                    <AntiforgeryToken />
-                                                    <input type="hidden" name="ReturnUrl" value="Account/Login" />
-                                                    <button type="submit" style="width:230px;" class="d-flex justify-content-start ">
-                                                        <MudFab class="p-0 me-3" StartIcon="@Icons.Material.Filled.Logout" Color="Color.Tertiary" Size="Size.Small" />
-                                                        <b>Đăng xuất</b>
-                                                    </button>
-                                                </form>
-                                            </MudMenuItem>
-                                        </ChildContent>
-                                    </MudMenu>
-                                    <form action="Account/Logout" class="p-0" method="post" style="display:none;">
-                                        <AntiforgeryToken />
-                                        <input type="hidden" name="ReturnUrl" value="Account/Login" />
-                                        <button type="submit" style="width:230px;" class="d-flex justify-content-start ">
-                                            <MudFab class="p-0 me-3" StartIcon="@Icons.Material.Filled.Logout" Color="Color.Tertiary" Size="Size.Small" />
-                                            <b>Đăng xuất</b>
-                                        </button>
-                                    </form>
-                                </div>
-                            </Authorized>
-
-                            <NotAuthorized>
-                                <div class="d-flex justify-content-end">
-                                    <div class="nav-item ">
-                                        <NavLink class="nav-link" href="Account/Register">
-                                            <center>
-                                                <button class="codepro-custom-btn codepro-btn-11" target="blank" title="Code Pro">
-                                                    Đăng ký
+                                        </MudMenuItem>
+                                        <MudMenuItem Href="/Setting/ChangePassword">
+                                            <div class="d-flex justify-content-start align-items-center ">
+                                                <MudFab class="p-0 me-3" StartIcon="@Icons.Material.Filled.Settings" Color="Color.Tertiary" Size="Size.Small" />
+                                                <b>Đổi mật khẩu</b>
+                                            </div>
+                                        </MudMenuItem>
+                                        <MudMenuItem Href="/followers">
+                                            <div class="d-flex justify-content-start align-items-center ">
+                                                <MudFab class="p-0 me-3" StartIcon="@Icons.Material.Filled.Groups" Color="Color.Tertiary" Size="Size.Small" />
+                                                <b>Danh sách theo dõi</b>
+                                            </div>
+                                        </MudMenuItem>
+                                        <MudMenuItem>
+                                            <form action="Account/Logout" class="p-0" method="post">
+                                                <AntiforgeryToken />
+                                                <input type="hidden" name="ReturnUrl" value="Account/Login" />
+                                                <button type="submit" style="width:230px;" class="d-flex justify-content-start ">
+                                                    <MudFab class="p-0 me-3" StartIcon="@Icons.Material.Filled.Logout" Color="Color.Tertiary" Size="Size.Small" />
+                                                    <b>Đăng xuất</b>
                                                 </button>
-                                            </center>
-                                        </NavLink>
-                                    </div>
-                                    <div class="nav-item">
-                                        <NavLink class="nav-link" href="Account/Login">
-                                            <center>
-                                                <button class="codepro-custom-btn codepro-btn-12" target="blank" title="Code Pro">
-                                                    <span>Go!</span>
-                                                    <span>Đăng nhập</span>
-                                                </button>
-                                            </center>
-                                        </NavLink>
-                                    </div>
+                                            </form>
+                                        </MudMenuItem>
+                                    </ChildContent>
+                                </MudMenu>
+                                <form action="Account/Logout" class="p-0" method="post" style="display:none;">
+                                    <AntiforgeryToken />
+                                    <input type="hidden" name="ReturnUrl" value="Account/Login" />
+                                    <button type="submit" style="width:230px;" class="d-flex justify-content-start ">
+                                        <MudFab class="p-0 me-3" StartIcon="@Icons.Material.Filled.Logout" Color="Color.Tertiary" Size="Size.Small" />
+                                        <b>Đăng xuất</b>
+                                    </button>
+                                </form>
+                            </div>
+                        </Authorized>
+
+                        <NotAuthorized>
+                            <div class="d-flex justify-content-end">
+                                <div class="nav-item ">
+                                    <NavLink class="nav-link" href="Account/Register">
+                                        <center>
+                                            <button class="codepro-custom-btn codepro-btn-11" target="blank" title="Code Pro">
+                                                Đăng ký
+                                            </button>
+                                        </center>
+                                    </NavLink>
                                 </div>
-                            </NotAuthorized>
-                        </AuthorizeView>
-                    </div>
+                                <div class="nav-item">
+                                    <NavLink class="nav-link" href="Account/Login">
+                                        <center>
+                                            <button class="codepro-custom-btn codepro-btn-12" target="blank" title="Code Pro">
+                                                <span>Go!</span>
+                                                <span>Đăng nhập</span>
+                                            </button>
+                                        </center>
+                                    </NavLink>
+                                </div>
+                            </div>
+                        </NotAuthorized>
+                    </AuthorizeView>
                 </div>
-            </MudAppBar>
-            <MudMainContent>
-                @Body
-            </MudMainContent>
-            <audio id="audioPlayer" src="audio/newNoticeSound.mp3"></audio>
+            </div>
+        </MudAppBar>
+        <MudMainContent>
+            @Body
+        </MudMainContent>
+        <audio id="audioPlayer" src="audio/newNoticeSound.mp3"></audio>
     </div>
 
     <script>
@@ -581,8 +578,6 @@ else
             }
             await LoadSearchHistory();
 
-
-            await CheckUserRole();
         }
     }
 
@@ -911,22 +906,5 @@ else
     }
 
     private bool isUserNullRole = false;
-
-
-    async Task CheckUserRole()
-    {
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        var user = authState.User;
-
-        if (user.Identity is not null && user.Identity.IsAuthenticated)
-        {
-            var identityUser = await UserManager.GetUserAsync(user);
-            if (identityUser != null)
-            {
-                var userRoles = await UserManager.GetRolesAsync(identityUser);
-                isUserNullRole = !userRoles.Any(); // Hiển thị nút nếu người dùng không có quyền nào
-            }
-        }
-    }
 
 }

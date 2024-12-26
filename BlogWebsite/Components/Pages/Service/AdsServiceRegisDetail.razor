@@ -1,0 +1,112 @@
+﻿@page "/AdsServiceRegisDetail/{Id:guid}"
+@using Data.Database.Table
+@using Data.DTO.EntitiDTO
+@using Data.DTO
+@using Newtonsoft.Json
+@using Newtonsoft.Json.Linq
+@using Radzen
+@using Radzen.Blazor
+@using System.Text
+@using RestSharp
+@using System.Web
+
+@attribute [Authorize]
+@inject IHttpClientFactory HttpClientFactory
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserManager<ApplicationUser> UserManager
+@inject ISnackbar Snackbar
+@if (!isLoaded)
+{
+    <Client.Components.ComponentCustom.LoadingLocal></Client.Components.ComponentCustom.LoadingLocal>
+}
+else
+{
+    <style>
+        .rz-html-editor-content img {
+            display: block; /* Chuyển ảnh thành khối để dễ căn giữa */
+            margin: 0 auto !important; /* Căn giữa theo chiều ngang */
+            height: 160px; /* Chiều cao của ảnh */
+            border-radius: 8px; /* Bo góc */
+        }
+
+        .ads-content img {
+            display: block; /* Chuyển ảnh thành khối để dễ căn giữa */
+            max-width: 100%; /* Đảm bảo ảnh không vượt quá chiều rộng của phần tử cha */
+            height: auto; /* Giữ tỷ lệ ảnh */
+            max-height: 160px;
+            margin: 0 auto !important;
+            border-radius: 8px; /* Bo góc */
+        }
+
+        .ads-content {
+            word-wrap: break-word; /* Ngắt từ nếu quá dài */
+            overflow-wrap: break-word; /* Hỗ trợ ngắt từ cho trình duyệt hiện đại */
+            white-space: normal; /* Cho phép xuống dòng */
+            overflow: hidden;
+        }
+    </style>
+    <a href="/serviceAdtisvertment/3" class="my-3">
+        <MudFab StartIcon="@Icons.Material.Filled.ArrowBack" Label=" " DropShadow="false" />
+    </a>
+
+    <MudContainer Class="my-3">
+        <div class="d-flex justify-content-center align-items-end">
+
+            <div class="d-flex justify-content-center align-items-center">
+                <MudPaper>
+                    <div class="m-3 ads-content" style="height:456px;width:320px;">
+                        @this.ContentAds
+                    </div>
+                </MudPaper>
+            </div>
+        </div>
+
+        <div class="d-flex mt-5">
+            <button class="input-group-text fw-lagre" style="background-color: rgb(42, 198, 255);border:solid 2px grey" id="">Đường dẫn</button>
+            <input type="text" @bind-value="RegistrationAdvertisement.Link" class="form-control ms-3" style="width : 550px" id="search" placeholder="Nhập đường dẫn quảng cáo của bạn" aria-label="Recipient's username" aria-describedby="basic-addon2">
+        </div>
+    </MudContainer>
+}
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    MarkupString ContentAds = new MarkupString("");
+
+    bool isLoaded;
+
+    ServiceAdvertisementPricing service = new ServiceAdvertisementPricing();
+
+    RegistrationAdvertisement RegistrationAdvertisement = new RegistrationAdvertisement();
+
+    List<ServiceAdvertisementPricing> ListService = new List<ServiceAdvertisementPricing>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+        var response = await httpClient.GetStringAsync($"/getRegisSeviceAds/{Id}");
+
+        RegistrationAdvertisement = JsonConvert.DeserializeObject<RegistrationAdvertisement>(response);
+
+        response = await httpClient.GetStringAsync($"/getSeviceAdsInfo/{RegistrationAdvertisement.IdServiceAdvertis}");
+
+        service = JsonConvert.DeserializeObject<ServiceAdvertisementPricing>(response);
+
+        response = await httpClient.GetStringAsync($"/getAllSvAds");
+
+        ListService = JsonConvert.DeserializeObject<List<ServiceAdvertisementPricing>>(response);
+
+        ContentAds = (MarkupString)RegistrationAdvertisement.ContentAds;
+
+        isLoaded = true;
+    }
+
+    void Change(string html)
+    {
+        RegistrationAdvertisement.ContentAds = html;
+        ContentAds = (MarkupString)RegistrationAdvertisement.ContentAds;
+    }
+
+}

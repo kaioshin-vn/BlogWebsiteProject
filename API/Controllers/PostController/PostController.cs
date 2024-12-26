@@ -58,13 +58,13 @@ namespace API.Controllers.PostController
 		[HttpPost("/GetListPostIntro/{IdUser?}")]
 		public async Task<List<PostIntroDTO>> GetListPostIntro(Guid? IdUser, [FromBody] List<Guid> listPostExisted)
 		{
-			var listIdHide = new List<Guid>();
+			var listIdHide = _context.PostHideByRestricted.Select(a => a.IdPost).ToList();
 			if (IdUser != null)
 			{
 				var listHide = _context.PostHides.Where(a => a.IdUser == IdUser).Select(a => a.IdPost).ToList();
 				if (listHide.Count != 0)
 				{
-					listIdHide = listHide;
+					listIdHide.AddRange(listHide);
 				}
 			}
 
@@ -86,19 +86,19 @@ namespace API.Controllers.PostController
         [HttpPost("/GetListPostHot/{IdUser?}")]
         public async Task<List<PostIntroDTO>> GetListPostIntroHot(Guid? IdUser, [FromBody] List<Guid> listPostExisted)
         {
-            var listIdHide = new List<Guid>();
+            var listIdHide = _context.PostHideByRestricted.Select(a => a.IdPost).ToList();
             if (IdUser != null)
             {
                 var listHide = _context.PostHides.Where(a => a.IdUser == IdUser).Select(a => a.IdPost).ToList();
                 if (listHide.Count != 0)
                 {
-                    listIdHide = listHide;
+                    listIdHide.AddRange(listHide);
                 }
             }
 
-            var listPost = await _context.Posts.Include(a => a.User).Include(a => a.GroupPost).ThenInclude(a => a.Group).Where(a => a.IsDeleted == false && (a.GroupPost.Count == 0 ||
-            (a.GroupPost.Any(b => b.IdPost == a.Id && b.WaitState == WaitState.Accept && (b.Group.StateGroup == KindGroup.Public ))))
-            && !listPostExisted.Contains(a.Id) && a.User.LockoutEnd == null && !listIdHide.Contains(a.Id))
+			var listPost = await _context.Posts.Include(a => a.User).Include(a => a.GroupPost).ThenInclude(a => a.Group).Where(a => a.IsDeleted == false && (a.GroupPost.Count == 0 ||
+			(a.GroupPost.Any(b => b.IdPost == a.Id && b.WaitState == WaitState.Accept && (b.Group.StateGroup == KindGroup.Public))))
+			&& !listPostExisted.Contains(a.Id) && a.User.LockoutEnd == null && !listIdHide.Contains(a.Id) && a.CreateDate >= DateTime.Now.AddDays(-7))
 				.OrderByDescending(a => a.Like.Length ).Take(20).ToListAsync();
 
             var listIntroPost = new List<PostIntroDTO>();
@@ -161,8 +161,8 @@ namespace API.Controllers.PostController
 			return listIntroPost;
 		}
 
-		[HttpGet("getListPostIntroGroup")]
-		public async Task<ActionResult<List<PostIntroDTO>>> GetListPostIntroGroup([FromQuery] string groupName)
+		[HttpGet("getListPostIntroGroup/{IdUser?}")]
+		public async Task<ActionResult<List<PostIntroDTO>>> GetListPostIntroGroup(Guid? IdUser, [FromQuery] string groupName)
 		{
 
 			var group = await _context.Groups.FirstOrDefaultAsync(a => a.Name == groupName);
@@ -172,7 +172,19 @@ namespace API.Controllers.PostController
 				return new List<PostIntroDTO>();
 			}
 
-			var listPost = await _context.Posts.Where(a => a.IsDeleted == false ).OrderByDescending(a => a.CreateDate).ToListAsync();
+
+            var listIdHide = _context.PostHideByRestricted.Select(a => a.IdPost).ToList();
+            if (IdUser != null)
+            {
+                var listHide = _context.PostHides.Where(a => a.IdUser == IdUser).Select(a => a.IdPost).ToList();
+                if (listHide.Count != 0)
+                {
+                    listIdHide.AddRange(listHide);
+                }
+            }
+
+
+            var listPost = await _context.Posts.Where(a => a.IsDeleted == false && !listIdHide.Contains(a.Id) && a.User.LockoutEnd == null).OrderByDescending(a => a.CreateDate).ToListAsync();
 
 			// Lấy danh sách GroupPosts cho nhóm này để kiểm tra quan hệ
 			var groupPosts = await _context.GroupPosts
@@ -360,6 +372,14 @@ namespace API.Controllers.PostController
 			}
 
 			_context.Posts.Update(existingPost);
+
+			var postHide = await _context.PostHideByRestricted.FirstOrDefaultAsync(a => a.IdPost == idPost);
+
+			if (postHide != null)
+			{
+				_context.PostHideByRestricted.Remove(postHide);
+			}
+
 			await _context.SaveChangesAsync();
 			return Ok(existingPost);
 		}
@@ -433,7 +453,7 @@ namespace API.Controllers.PostController
 		[HttpGet("/post/getPost/{idPost}")]
 		public async Task<PostIntroDTO> GetPost(Guid idPost)
 		{
-			var post = await _context.Posts.FirstOrDefaultAsync(a => a.Id == idPost && a.IsDeleted == false);
+			var post = await _context.Posts.Include(a => a.User).FirstOrDefaultAsync(a => a.Id == idPost && a.IsDeleted == false && a.User.LockoutEnd == null);
 			if (post == null)
 			{
 				return null;

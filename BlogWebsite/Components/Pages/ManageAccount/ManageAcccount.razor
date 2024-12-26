@@ -55,7 +55,7 @@ else
                     @foreach (var row in ListUser)
                     {
                         <tr>
-                            <td><a href="/other-profile/@row.Id"><b>@row.FullName</b></a></td>
+                            <td><a href="/admin-other-profile/@row.Id"><b>@row.FullName</b></a></td>
                             <td>@row.AccountName</td>
                             <td>@row.Email</td>
                             @if (row.ListRole.Count == 0)

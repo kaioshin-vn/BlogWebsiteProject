@@ -1,7 +1,10 @@
-﻿@using static Client.Components.Pages.Restricted.RestricedWord
+﻿@using Data.Database.Table
+@using Microsoft.AspNetCore.SignalR.Client
+@using Newtonsoft.Json
+@using static Client.Components.Pages.Restricted.RestricedWord
 @inject IHttpClientFactory _httpClientFactory;
 @inject ISnackbar Snackbar
-
+@inject NavigationManager Navigation
 <MudDialog Style="width:500px;">
     <DialogContent>
         <MudTextField @bind-Value="topic.Word" Label="Từ khóa hạn chế" Required="true" RequiredError="Không được bỏ trống!" />
@@ -36,8 +39,16 @@
 
         try
         {
-            HttpResponseMessage response;
             var client = _httpClientFactory.CreateClient("MyHttpClient");
+            var data = await client.GetStringAsync($"/checkExistedRestriceted/{topic.Word}");
+            if (data == "true")
+            {
+                Snackbar.Add($"Từ khóa này đã tồn tại", Severity.Error);
+                return;
+            }
+
+
+            HttpResponseMessage response;
             if (Topic == null)
             {
                 response = await client.PostAsJsonAsync("api/restrictedword", topic);
@@ -49,6 +60,32 @@
 
             if (response.IsSuccessStatusCode)
             {
+                var listIdString = await response.Content.ReadAsStringAsync();
+
+                var listIdUser = JsonConvert.DeserializeObject<List<Guid>>(listIdString);
+
+                if (listIdUser.Count != 0)
+                {
+                    var hubConnection = new HubConnectionBuilder()
+            .WithUrl(Navigation.ToAbsoluteUri("/hubNotice"))
+            .Build();
+
+                    await hubConnection.StartAsync();
+                    foreach (var item in listIdUser)
+                    {
+                        var notice = new Notice();
+                        notice.Id = Guid.NewGuid();
+                        notice.FromUser = item;
+                        notice.ToUser = item;
+                        notice.Content = "Bài viết của bạn đã bị ẩn do nội dung chứa từ khóa bị hạn chế";
+                        notice.CreateDate = DateTime.Now;
+                        notice.Link = $"/HidePost";
+                        await client.PostAsJsonAsync($"/addNewNotice", notice);
+
+                        await hubConnection.SendAsync("SendPrivateMessage", item.ToString());
+                    }
+                }
+
                 Snackbar.Add(Topic == null ? "Đã thêm từ hạn chế thành công" : "Đã cập nhật từ hạn chế thành công", Severity.Success);
                 MudDialog.Close(DialogResult.Ok(true));
             }

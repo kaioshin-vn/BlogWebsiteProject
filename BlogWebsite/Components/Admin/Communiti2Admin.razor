@@ -1,4 +1,4 @@
-﻿@page "/groups/{Name}"
+﻿@page "/admin-groups/{Name}"
 
 @using Client.Components.Layout
 @using Client.Components.Pages.Post
@@ -8,8 +8,6 @@
 @using Data.DTO.EntitiDTO
 @using Client.Components.ComponentCustom
 @using Data.Enums
-
-@layout MainLayoutSub
 
 @inject ApplicationDbContext DbContext
 @inject UserManager<ApplicationUser> UserManager

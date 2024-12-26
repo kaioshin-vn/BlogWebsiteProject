@@ -108,7 +108,8 @@ namespace API.Controllers
             if (string.IsNullOrWhiteSpace(keyword))
                 return Ok(new SearchResultWithPaginationDTO());
 
-            var listIdHide = new List<Guid>();
+            var listIdHide = _context.PostHideByRestricted.Select(a => a.IdPost).ToList();
+
 
             // Lưu keyword search
             if (idUser != Guid.Empty)
@@ -117,7 +118,7 @@ namespace API.Controllers
                 var listHide = _context.PostHides.Where(a => a.IdUser == idUser).Select(a => a.IdPost).ToList();
                 if (listHide.Count != 0)
                 {
-                    listIdHide = listHide;
+                    listIdHide.AddRange(listHide);
                 }
             }
 
