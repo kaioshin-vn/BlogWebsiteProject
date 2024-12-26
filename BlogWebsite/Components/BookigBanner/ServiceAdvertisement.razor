@@ -1,0 +1,189 @@
+﻿@page "/serviceAdver"
+@using Data.Database.Table
+
+@inject IHttpClientFactory HttpClientFactory
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserManager<ApplicationUser> UserManager
+@inject NavigationManager Navigation
+
+@if (ServiceAdver == null || lstServiceAdver == null)
+{
+    <Client.Components.ComponentCustom.LoadingLocal></Client.Components.ComponentCustom.LoadingLocal>
+}
+else{
+    <MudContainer>
+        <MudPaper Class="p-4" Outlined="true" Square="true" Style="height:650px; background-color:#F8FAFC">
+            <MudText Typo="Typo.h6" Style="font-weight:bold">Quản lý dịch vụ</MudText>
+            <MudDivider Style="border-width: 1px; border-color: black;" />
+            <MudTabs Elevation="0" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-2">
+                <MudTabPanel Style="text-transform: capitalize;" Text="Danh sách dịch vụ">
+                    <MudList T="string" Style="height:530px; max-height:530px; overflow:scroll;">
+                        <MudGrid>
+                            <MudItem xs="4">
+                                <MudCard Style="border-radius:10px; background-color:whitesmoke">
+                                    <MudItem xs="6">
+                                        <MudText Style="background-color:violet; color:black; font-weight:bold; border-radius:10px 0px 10px 0px" Class="d-flex justify-content-center p-1">29.000đ cho 3 tháng</MudText>
+                                    </MudItem>
+                                    <MudCardHeader Class="pb-0">
+                                        <CardHeaderAvatar>
+                                            <MudAvatar Size="Size.Medium">
+                                                <MudImage ObjectFit="ObjectFit.Cover" Src="FixedImage/Thocuong.png"></MudImage>
+                                            </MudAvatar>
+                                        </CardHeaderAvatar>
+                                        <CardHeaderContent>
+                                            <MudText Typo="Typo.body1">KAIZEN SERVICE</MudText>
+                                        </CardHeaderContent>
+                                        <CardHeaderActions>
+                                            <MudMenu Icon="@Icons.Material.Filled.Menu" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
+                                                <MudMenuItem>Chỉnh sửa</MudMenuItem>
+                                                <MudMenuItem>Xóa</MudMenuItem>
+                                            </MudMenu>
+                                        </CardHeaderActions>
+                                    </MudCardHeader>
+                                    <MudCardContent>
+                                        <MudText Typo="Typo.h6" Style="font-weight:bold">Gói cơ bản</MudText>
+                                        <MudText Style="font-size:14px; color:gray;">29.000đ cho 3 tháng</MudText>
+                                    </MudCardContent>
+                                    <MudDivider Class="px-2" Style="border-width: 1px; border-color: black;" />
+                                    <MudCardContent>
+                                        <MudList T="string" Style="max-height:70px; overflow:scroll">
+                                            <MudText>
+                                                Thanh toán một lần
+                                                Hủy bất cứ lúc nàoThanh toán một lần
+                                                Hủy bất cứ lúc nàoThanh toán một lầnThanh toán một lần
+                                                Hủy bất cứ lúc nàoThanh toán một lần
+                                                Hủy bất cứ lúc nàoThanh toán một lầnThanh toán một lần
+                                                Hủy bất cứ lúc nàoThanh toán một lần
+                                                Hủy bất cứ lúc nàoThanh toán một lần
+                                            </MudText>
+                                        </MudList>
+                                    </MudCardContent>
+                                    <MudCardActions Class="d-flex justify-content-center">
+                                        <MudButton Variant="Variant.Filled">Đăng ký dịch vụ</MudButton>
+                                    </MudCardActions>
+                                    <MudCardContent>
+                                        <MudText Class="d-flex justify-content-center align-content-center" Style="font-size:13px;text-decoration: underline; transition: font-weight 0.3s;"
+                                        onmouseover="this.style.fontWeight='bold'"
+                                        onmouseout="this.style.fontWeight='normal'">có áp dụng điều khoản</MudText>
+                                    </MudCardContent>
+                                </MudCard>
+                            </MudItem>
+                            @foreach (var item in lstServiceAdver)
+                            {
+                                <MudItem xs="4">
+                                    <MudCard Style="border-radius:10px; background-color:whitesmoke">
+                                        <MudItem xs="6">
+                                            <MudText Style="background-color:violet; color:black; font-weight:bold; border-radius:10px 0px 10px 0px" Class="d-flex justify-content-center p-1"><span>@item.Price</span>đ cho<span style="margin-left:3px;margin-right:3px">@item.DurationDays</span>ngày</MudText>
+                                        </MudItem>
+                                        <MudCardHeader Class="pb-0">
+                                            <CardHeaderAvatar>
+                                                <MudAvatar Size="Size.Medium">
+                                                    <MudImage ObjectFit="ObjectFit.Cover" Src="FixedImage/Thocuong.png"></MudImage>
+                                                </MudAvatar>
+                                            </CardHeaderAvatar>
+                                            <CardHeaderContent>
+                                                <MudText Typo="Typo.body1">KAIZEN SERVICE</MudText>
+                                            </CardHeaderContent>
+                                            <CardHeaderActions>
+                                                <MudMenu Icon="@Icons.Material.Filled.Menu" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
+                                                    <MudMenuItem @onclick="async ()=> await OpenDiaLogService(item.Id)">Chỉnh sửa</MudMenuItem>
+                                                    <MudMenuItem @onclick="async ()=> await DeleteService(item.Id)">Xóa</MudMenuItem>
+                                                </MudMenu>
+                                            </CardHeaderActions>
+                                        </MudCardHeader>
+                                        <MudCardContent>
+                                            <MudText Typo="Typo.h6" Style="font-weight:bold">@item.Name</MudText>
+                                            <MudText Style="font-size:14px; color:gray;"><span>@item.Price</span>đ cho<span style="margin-left:3px;margin-right:3px">@item.DurationDays</span>ngày</MudText>
+                                        </MudCardContent>
+                                        <MudDivider Class="px-2" Style="border-width: 1px; border-color: black;" />
+                                        <MudCardContent>
+                                            <MudList T="string" Style="max-height:70px; overflow:scroll">
+                                                <div>@((MarkupString)@item.Description.Replace("\n", "<br />"))</div>
+                                            </MudList>
+                                        </MudCardContent>
+                                        <MudCardActions Class="d-flex justify-content-center">
+                                            <MudButton Variant="Variant.Filled">Đăng ký dịch vụ</MudButton>
+                                        </MudCardActions>
+                                        <MudCardContent>
+                                            <MudText Class="d-flex justify-content-center align-content-center" Style="font-size:13px;text-decoration: underline; transition: font-weight 0.3s;"
+                                            onmouseover="this.style.fontWeight='bold'"
+                                            onmouseout="this.style.fontWeight='normal'">có áp dụng điều khoản</MudText>
+                                        </MudCardContent>
+                                    </MudCard>
+                                </MudItem>
+                            }
+                        </MudGrid>
+                    </MudList>
+                </MudTabPanel>
+                <MudTabPanel Style="text-transform: capitalize;" Text="Tạo mới">
+                    <EditForm Model="@ServiceAdver" OnValidSubmit="CreateServiceAdver">
+                        <DataAnnotationsValidator />
+                        <MudGrid>
+                            <MudItem xs="12" sm="7">
+                                <MudCard>
+                                    <MudCardContent>
+                                        <MudTextField @bind-Value="ServiceAdver.Name" For="@(() => ServiceAdver.Name)" Label="Tên gói dịch vụ" />
+                                        <MudTextField @bind-Value="ServiceAdver.Price" For="@( ()=> ServiceAdver.Price)" InputType="InputType.Number" Label="Giá"Class="mt-3" />
+                                        <MudTextField @bind-Value="ServiceAdver.DurationDays" For="@( ()=> ServiceAdver.DurationDays)" InputType="InputType.Number" Label="Hạn gói" Class="mt-3" />
+                                        <MudTextField @bind-Value="ServiceAdver.Description" T="string" Label="Mô tả" Variant="Variant.Text" Lines="4"/>
+                                    </MudCardContent>
+                                    <MudCardActions>
+                                        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">Register</MudButton>
+                                    </MudCardActions>
+                                </MudCard>
+                            </MudItem>
+                        </MudGrid>
+                    </EditForm>
+                </MudTabPanel>
+            </MudTabs>
+        </MudPaper>
+    </MudContainer>
+}
+
+@code {
+    bool success;
+    List<ServiceAdvertisementPricing> lstServiceAdver = new List<ServiceAdvertisementPricing>();
+    ServiceAdvertisementPricing ServiceAdver = new ServiceAdvertisementPricing();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var httpclient = HttpClientFactory.CreateClient("MyHttpClient");
+        lstServiceAdver = await httpclient.GetFromJsonAsync<List<ServiceAdvertisementPricing>>("/api/ServiceAdvertisement/getAllService");
+    }
+
+    private async Task CreateServiceAdver(){
+        var httpclient = HttpClientFactory.CreateClient("MyHttpClient");
+        var result = await httpclient.PostAsJsonAsync("api/ServiceAdvertisement/addService", ServiceAdver);
+        if(result.IsSuccessStatusCode){
+            Navigation.NavigateTo("/serviceAdver", true);
+            Snackbar.Add("Tạo mới gói dịnh vụ thành công!", Severity.Success);
+        }
+        else{
+            Snackbar.Add("Tạo mới gói dịch vụ không thành công!", Severity.Error);
+        }
+    }
+
+    private async Task DeleteService(Guid id){
+        var httpclient = HttpClientFactory.CreateClient("MyHttpClient");
+        var result = await httpclient.PutAsJsonAsync($"api/ServiceAdvertisement/deleteService/{id}", new{});
+        if (result.IsSuccessStatusCode)
+        {
+            Navigation.NavigateTo("/serviceAdver", true);
+            Snackbar.Add("Xóa gói dịnh vụ thành công!", Severity.Success);
+        }
+        else
+        {
+            Snackbar.Add("Xóa gói dịch vụ không thành công!", Severity.Error);
+        }
+    }
+
+    private async Task OpenDiaLogService(Guid id){
+        var parameters = new DialogParameters();
+        parameters.Add("IdService", id);
+    
+        var dialog = DialogService.Show<UpdateService>(string.Empty, parameters);
+        var result = await dialog.Result;
+    }
+}
