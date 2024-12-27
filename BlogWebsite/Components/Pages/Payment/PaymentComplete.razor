@@ -1,0 +1,64 @@
+﻿@page "/PaymentComplete/{IdBill:guid}"
+
+@using Data.Database.Table
+@using Net.payOS
+@using Net.payOS.Types
+@using Newtonsoft.Json
+@using QuestPDF.Fluent
+@using QuestPDF.Helpers
+@using QuestPDF.Infrastructure
+
+@attribute [Authorize]
+@inject IHttpClientFactory HttpClientFactory
+@inject NavigationManager Navigation
+
+@if (!isLoaded)
+{
+    <Client.Components.ComponentCustom.LoadingLocal></Client.Components.ComponentCustom.LoadingLocal>
+}
+else
+{
+    if (isSuccess)
+    {
+        <MudAlert Severity="Severity.Success" Style="width:550px;">Thanh toán thành công !</MudAlert>
+        <MudButton Class="my-3" OnClick="DowBill">Tải hóa đơn</MudButton>
+    }
+    else
+    {
+
+        <MudAlert Severity="Severity.Error" Style="width:550px;">Oops đã có lỗi nào đó xảy ra !</MudAlert>
+    }
+}
+
+
+@code {
+    [Parameter]
+    public string IdTransaction { get; set; }
+
+    [Parameter]
+    public Guid IdBill { get; set; }
+
+    bool isSuccess;
+
+    bool isLoaded;
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+
+        var data = await httpClient.GetAsync($"/getinvoice/{IdBill}");
+
+        var invoice = JsonConvert.DeserializeObject<Invoices>(await data.Content.ReadAsStringAsync());
+
+        isSuccess = invoice.PaymentDate != DateTime.MinValue;
+
+        isLoaded = true;
+    }
+
+    async Task DowBill()
+    {
+        Navigation.NavigateTo($"/FilePDF/{IdBill}.pdf", forceLoad: true);
+    }
+
+}

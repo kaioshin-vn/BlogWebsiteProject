@@ -3,6 +3,7 @@
 @using Client.Components.ComponentCustom
 @using Data.DTO.EntitiDTO
 @using System.Net.Http.Headers
+@using Data.Database.Table
 @using Newtonsoft.Json
 @using Newtonsoft.Json.Linq
 @using Radzen
@@ -37,7 +38,25 @@ else
         }
     </style>
 
-    <div>
+    <style>
+        .ads-content img {
+            display: block; /* Chuyển ảnh thành khối để dễ căn giữa */
+            max-width: 100%; /* Đảm bảo ảnh không vượt quá chiều rộng của phần tử cha */
+            height: auto; /* Giữ tỷ lệ ảnh */
+            max-height: 160px;
+            margin: 0 auto !important;
+            border-radius: 8px; /* Bo góc */
+        }
+
+        .ads-content {
+            word-wrap: break-word; /* Ngắt từ nếu quá dài */
+            overflow-wrap: break-word; /* Hỗ trợ ngắt từ cho trình duyệt hiện đại */
+            white-space: normal; /* Cho phép xuống dòng */
+            overflow: hidden;
+        }
+    </style>
+
+    <div class="">
         <div class="mt-3 ms-4" style="width:70%; display: @(PostDetail == null?"block":"none");">
             @foreach (var item in listIntroPost)
             {
@@ -50,6 +69,18 @@ else
                 </PostIntro>
             }
         </div>
+
+        @if (isHasAds)
+        {
+            <MudPaper Class="p-0" Style="position:fixed;top: 100px; right: 18px;z-index:1000;width:22%;">
+                <a href="@Ads.Link" >
+                    <div class="m-3 ads-content" style="height:456px;">
+                        @((MarkupString)Ads.ContentAds)
+                    </div>
+                </a>
+            </MudPaper>
+        }
+
     </div>
 
     @if (PostDetail != null)
@@ -67,7 +98,6 @@ else
         </div>
     }
     <div class="mt-5">
-
     </div>
 }
 <script>
@@ -86,11 +116,16 @@ else
     PostIntroDTO? PostDetail = null;
     private double ScrollPosition = 0;
 
+    RegistrationAdvertisement Ads = new RegistrationAdvertisement();
+
     bool isLoaded;
+
+    bool isHasAds;
 
     private DotNetObjectReference<ListPost>? dotNetRef;
 
     int PosttCount = 20;
+
 
     int Sort = 0;
 
@@ -119,6 +154,7 @@ else
         {
             listIntroPost = resultConverted;
         }
+
         isLoaded = true;
     }
 
@@ -128,6 +164,20 @@ else
         {
             dotNetRef = DotNetObjectReference.Create(this);
             await JSRunTime.InvokeVoidAsync("onScrollToEnd", dotNetRef);
+
+            var _httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+            var response = await _httpClient.GetStringAsync("/getcurrentads");
+
+            if (response != null)
+            {
+                Ads = JsonConvert.DeserializeObject<RegistrationAdvertisement>(response);
+                isHasAds = true;
+            }
+            else
+            {
+                isHasAds = false;
+            }
+
         }
         if (!firstRender && ScrollPosition > 0 && PostDetail == null)
         {

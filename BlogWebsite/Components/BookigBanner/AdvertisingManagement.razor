@@ -1,4 +1,15 @@
-﻿@page "/managementAd"
+﻿@page "/managementbooking"
+@using Data.Database.Table
+@using Newtonsoft.Json
+
+@inject IHttpClientFactory HttpClientFactory
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserManager<ApplicationUser> UserManager
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+@attribute [Authorize(Roles = "Admin")]
 <style>
     .GrayBold{
         font-weight:bold;
@@ -10,49 +21,64 @@
         padding-top:5px;
     }
 </style>
-<MudContainer>
-    <MudPaper Class="p-4" Outlined="true" Square="true" Style="height:650px; background-color:#F8FAFC">
-        <MudText Typo="Typo.h6" Style="font-weight:bold">Quản lý người booking</MudText>
-        <MudDivider Style="border-width: 1px; border-color: black;" />
-        <MudTabs Elevation="0" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-2">
-            <MudTabPanel Style="text-transform: capitalize;" Text="Danh sách người booking">
-                <MudList T="string" Style="height:530px; max-height:530px; overflow:scroll;">
-                    <MudGrid>
-                        <MudItem xs="12">
-                            <MudCard Style="border-radius:5px; background-color:whitesmoke; height:100px">
-                               <MudGrid Justify="Justify.SpaceBetween" Class="p-4">
-                                   <MudItem>
-                                        <MudText Class="GrayBold">NGƯỜI DÙNG</MudText>
-                                        <MudText Class="BlackBold">Tho</MudText>
-                                   </MudItem>
-                                    <MudItem>
-                                        <MudText Class="GrayBold">THỜI HẠN</MudText>
-                                        <MudText Class="BlackBold">Còn 7 ngày</MudText>
-                                   </MudItem>
-                                    <MudItem>
-                                        <MudText Class="GrayBold">GÓI DỊCH VỤ</MudText>
-                                        <MudText Class="BlackBold">Gói cơ bản</MudText>
-                                    </MudItem>
-                                    <MudItem>
-                                        <MudText Class="GrayBold">TRẠNG THÁI</MudText>
-                                        <MudText Color="Color.Success" Class="BlackBold">Đang hoạt động</MudText>
-                                   </MudItem>
-                                    <MudItem>
-                                       <MudButton Variant="Variant.Outlined" Color="Color.Success">Gia Hạn</MudButton>
-                                   </MudItem>
-                               </MudGrid>
-                            </MudCard>
-                        </MudItem>
-                    </MudGrid>
-                </MudList>
-            </MudTabPanel>
-            <MudTabPanel Style="text-transform: capitalize;" Text="Danh sách hết hạn">
-                <MudText>Content Two</MudText>
-            </MudTabPanel>
-        </MudTabs>
-    </MudPaper>
-</MudContainer>
+@if (!isLoaded)
+{
+    <Client.Components.ComponentCustom.LoadingLocal></Client.Components.ComponentCustom.LoadingLocal>
+}
+else
+{
+    <MudText Typo="Typo.h6" Style="font-weight:bold" Class="my-5">Quản lý đơn đặt hàng</MudText>
 
+    <MudContainer>
+        @if (ListRegisWaite.Count != 0)
+        {
+            <MudTable Dense="true" Items="ListRegisWaite">
+                <HeaderContent>
+                    <MudTh Style="font-weight: 900;">Người dùng</MudTh>
+                    <MudTh Style="font-weight: 900;">Gói dịch vụ</MudTh>
+                    <MudTh Style="font-weight: 900;">Thời hạn</MudTh>
+                    <MudTh Style="font-weight: 900;">Mức giá</MudTh>
+                    <MudTh></MudTh> <!-- Nút GIA HẠN -->
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd>@context.User.FullName</MudTd>
+                    <MudTd><b>@context.Name</b></MudTd>
+                    <MudTd>@context.DurationDays ngày</MudTd>
+                    <MudTd>@context.Price.ToString("N0", System.Globalization.CultureInfo.InvariantCulture) ₫</MudTd>
+
+                    <MudTd>
+                        <MudButton Variant="Variant.Outlined" Color="Color.Success" OnClick="() => AcceptRegisService(context.Id)">Chi tiết</MudButton>
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+        }
+        else
+        {
+            <MudAlert Severity="Severity.Info">Không có yêu cầu quảng nào</MudAlert>
+        }
+    </MudContainer>
+}
 @code {
+    List<RegistrationAdvertisement> ListRegisWaite = new List<RegistrationAdvertisement>();
 
+    bool isLoaded;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await WaitBill();
+        isLoaded = true;
+    }
+
+    async Task WaitBill()
+    {
+        var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+        var response = await httpClient.GetStringAsync($"/getRegisWaitUser");
+
+        ListRegisWaite = JsonConvert.DeserializeObject<List<RegistrationAdvertisement>>(response);
+    }
+
+    async Task AcceptRegisService(Guid Id)
+    {
+        NavigationManager.NavigateTo("/AcceptRegis/" + Id.ToString());
+    }
 }

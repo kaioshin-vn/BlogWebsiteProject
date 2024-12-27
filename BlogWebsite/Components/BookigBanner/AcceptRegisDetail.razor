@@ -1,0 +1,178 @@
+﻿@page "/AcceptRegis/{Id:guid}"
+@using Client.Components.ComponentCustom
+@using Data.Database.Table
+@using Data.DTO.EntitiDTO
+@using Data.DTO
+@using Data.Enums
+@using Newtonsoft.Json
+@using Newtonsoft.Json.Linq
+@using System.Text
+@using RestSharp
+@using System.Web
+
+@attribute [Authorize(Roles = "Admin")]
+@inject IHttpClientFactory HttpClientFactory
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserManager<ApplicationUser> UserManager
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+@if (!isLoaded)
+{
+    <Client.Components.ComponentCustom.LoadingLocal></Client.Components.ComponentCustom.LoadingLocal>
+}
+else
+{
+    <style>
+        .rz-html-editor-content img {
+            display: block; /* Chuyển ảnh thành khối để dễ căn giữa */
+            margin: 0 auto !important; /* Căn giữa theo chiều ngang */
+            height: 160px; /* Chiều cao của ảnh */
+            border-radius: 8px; /* Bo góc */
+        }
+
+        .ads-content img {
+            display: block; /* Chuyển ảnh thành khối để dễ căn giữa */
+            max-width: 100%; /* Đảm bảo ảnh không vượt quá chiều rộng của phần tử cha */
+            height: auto; /* Giữ tỷ lệ ảnh */
+            max-height: 160px;
+            margin: 0 auto !important;
+            border-radius: 8px; /* Bo góc */
+        }
+
+        .ads-content {
+            word-wrap: break-word; /* Ngắt từ nếu quá dài */
+            overflow-wrap: break-word; /* Hỗ trợ ngắt từ cho trình duyệt hiện đại */
+            white-space: normal; /* Cho phép xuống dòng */
+            overflow: hidden;
+        }
+    </style>
+    <a href="/managementbooking" class="my-3">
+        <MudFab StartIcon="@Icons.Material.Filled.ArrowBack" Label=" " DropShadow="false" />
+    </a>
+
+    <MudContainer>
+        <MudText Class="my-3" Color="Color.Info">Đường dẫn</MudText>
+        <div class="d-flex align-items-center my-5">
+            <textarea type="text" @bind="RegistrationAdvertisement.Link" class="form-control" disabled style="width : 750px;height: 140px;" id="search" placeholder="Nhập đường dẫn quảng cáo của bạn" aria-label="Recipient's username" aria-describedby="basic-addon2"></textarea>
+        </div>
+
+        <MudText Class="my-3" Color="Color.Warning">Nội dung quảng cáo</MudText>
+
+        <MudContainer Class="my-3">
+            <div class="d-flex justify-content-center align-items-end">
+
+                <div class="d-flex justify-content-center align-items-center">
+                    <MudPaper>
+                        <div class="m-3 ads-content" style="height:456px;width:320px;">
+                            @this.ContentAds
+                        </div>
+                    </MudPaper>
+                </div>
+            </div>
+
+
+        </MudContainer>
+
+        <MudGrid Class="mx-5 my-2">
+            <MudItem xs="6" Class="p-0" sm="6">
+                <MudButton Variant="Variant.Text" Style="width:75%;padding:0px;" OnClick="AcceptClick">
+                    <MudIconButton Style="padding:10px;" OnClick="AcceptClick" Icon="@Icons.Material.Filled.Check" Color="Color.Success" />
+                    <MudText>Xác nhận</MudText>
+                </MudButton>
+            </MudItem>
+            <MudItem xs="6" Class="p-0" sm="6">
+                <MudButton Variant="Variant.Text" OnClick="DeclineClick" Style="width:75%;padding:0px;">
+                    <MudIconButton OnClick="DeclineClick" Style="padding:10px;" Icon="@Icons.Material.Filled.Close" Color="Color.Error" />
+                    <MudText>Từ chối</MudText>
+                </MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudContainer>
+}
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    MarkupString ContentAds = new MarkupString("");
+
+    bool isLoaded;
+
+    ServiceAdvertisementPricing service = new ServiceAdvertisementPricing();
+
+    RegistrationAdvertisement RegistrationAdvertisement = new RegistrationAdvertisement();
+
+    List<ServiceAdvertisementPricing> ListService = new List<ServiceAdvertisementPricing>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+        var response = await httpClient.GetStringAsync($"/getRegisSeviceAds/{Id}");
+
+        RegistrationAdvertisement = JsonConvert.DeserializeObject<RegistrationAdvertisement>(response);
+
+        response = await httpClient.GetStringAsync($"/getSeviceAdsInfo/{RegistrationAdvertisement.IdServiceAdvertis}");
+
+        service = JsonConvert.DeserializeObject<ServiceAdvertisementPricing>(response);
+
+        response = await httpClient.GetStringAsync($"/getAllSvAds");
+
+        ListService = JsonConvert.DeserializeObject<List<ServiceAdvertisementPricing>>(response);
+
+        ContentAds = (MarkupString)RegistrationAdvertisement.ContentAds;
+
+        isLoaded = true;
+    }
+
+    void Change(string html)
+    {
+        RegistrationAdvertisement.ContentAds = html;
+        ContentAds = (MarkupString)RegistrationAdvertisement.ContentAds;
+    }
+
+    async Task DeclineClick()
+    {
+        var parameters = new DialogParameters<Dialog>();
+        parameters.Add(x => x.ContentText, "Xác nhận bạn muốn từ chối đơn quảng cáo này?");
+        parameters.Add(x => x.ButtonText, "Xác nhận");
+        parameters.Add(x => x.Color, Color.Success);
+
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+        var result = await DialogService.Show<Dialog>("Xác nhận", parameters, options).Result;
+        if (result.Data != null)
+        {
+            if ((bool)result.Data)
+            {
+                var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+                var response = await httpClient.GetStringAsync($"/changeStateRegis/{Id}/{WaitState.Decline}");
+                Snackbar.Add("Từ chối thành công!", Severity.Success);
+                NavigationManager.NavigateTo("/managementbooking");
+            }
+        }
+    }
+
+    async Task AcceptClick()
+    {
+        var parameters = new DialogParameters<Dialog>();
+        parameters.Add(x => x.ContentText, "Xác nhận bạn muốn chấp nhận đơn quảng cáo này?");
+        parameters.Add(x => x.ButtonText, "Xác nhận");
+        parameters.Add(x => x.Color, Color.Success);
+
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+        var result = await DialogService.Show<Dialog>("Xác nhận", parameters, options).Result;
+        if (result.Data != null)
+        {
+            if ((bool)result.Data)
+            {
+                var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+                var response = await httpClient.GetStringAsync($"/changeStateRegis/{Id}/{WaitState.Accept}");
+                Snackbar.Add("Xác nhận thành công !", Severity.Success);
+                NavigationManager.NavigateTo("/managementbooking");
+            }
+        }
+    }
+}

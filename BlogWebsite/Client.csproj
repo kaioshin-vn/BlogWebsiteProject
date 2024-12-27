@@ -62,6 +62,9 @@
     <Content Update="Components\Admin\OtherProfileAdmin.razor">
       <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
     </Content>
+    <Content Update="Components\BookigBanner\AcceptRegisDetail.razor">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+    </Content>
     <Content Update="Components\ComponentCustom\AddComment.razor">
       <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
     </Content>
@@ -81,6 +84,9 @@
       <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
     </Content>
     <Content Update="Components\Messenger\ConversationWaitDetail.razor">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+    </Content>
+    <Content Update="Components\Pages\Payment\PaymentComplete.razor">
       <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
     </Content>
     <Content Update="Components\Pages\Payment\RenewSuccess.razor">

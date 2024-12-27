@@ -1,5 +1,6 @@
 ﻿using BlogWebsite.Data;
 using Data.Database.Table;
+using Data.Enums;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -66,6 +67,45 @@ namespace API.Controllers
             {
                 return null;
             }
+        }
+
+        [HttpGet("/getListBillUser/{Id}")]
+        public async Task<IActionResult> GetListInvoice(Guid Id)
+        {
+            var iv = _context.Invoices.Include(a => a.User).Include(a => a.RegistrationAdvertisement).Where(a => a.PaymentDate != DateTime.MinValue).ToList();
+            
+            return Ok(iv);
+        }
+
+        [HttpGet("/changeStateRegis/{Id}/{State}")]
+        public async Task<IActionResult> ChangeState(Guid Id, WaitState State)
+        {
+            var regis = _context.RegistrationAdvertisements.FirstOrDefault(a => a.Id == Id);
+            regis.State = State;
+            if (State == WaitState.Accept)
+            {
+                regis.TimeAccept = DateTime.Now;
+                var iv = new Invoices();
+                iv.Id = Guid.NewGuid();
+                iv.PaymentDate = DateTime.MinValue;
+                iv.Amount = regis.Price;
+                iv.IdUser = regis.IdUser;
+                iv.IdRegis = regis.Id;
+                _context.Invoices.Add(iv);
+            }
+
+            _context.SaveChanges();
+            return Ok();
+        }
+
+        [HttpGet("/checkwaitbill/{Id}")]
+        public async Task<IActionResult> Check(Guid Id)
+        {
+            var iv = await _context.RegistrationAdvertisements.FirstOrDefaultAsync(a => a.Id == Id);
+
+            var data = iv.State == Data.Enums.WaitState.Pending;
+
+            return Ok(data);
         }
     }
 }

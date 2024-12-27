@@ -163,6 +163,33 @@ else
             }
         </MudTabPanel>
 
+        <MudTabPanel Text="Hóa đơn" OnClick="LoadListBill">
+            @if (ListInvoices.Count != 0)
+            {
+                <MudTable Dense="true" Items="ListInvoices">
+                    <HeaderContent>
+                        <MudTh Style="font-weight: 900;">Người thanh toán</MudTh>
+                        <MudTh Style="font-weight: 900;">Thời gian thanh toán</MudTh>
+                        <MudTh Style="font-weight: 900;">Gói dịch vụ</MudTh>
+                        <MudTh Style="font-weight: 900;">Số tiền</MudTh>
+                        <MudTh></MudTh> <!-- Nút GIA HẠN -->
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.User.FullName</MudTd>
+                        <MudTd>@context.PaymentDate.ToString("dd/MM/yyyy HH:mm")</MudTd>
+                        <MudTd><b>@context.RegistrationAdvertisement.Name</b></MudTd>
+                        <MudText Style="width:120px;">@context.Amount.ToString("N0", System.Globalization.CultureInfo.InvariantCulture) ₫</MudText>
+                        <MudTd>
+                            <MudButton Variant="Variant.Outlined" Color="Color.Success" OnClick="() => DowBill(context.Id)">Hóa đơn</MudButton>
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+            }
+            else
+            {
+                <MudAlert Severity="Severity.Info">Không có hóa đơn nào</MudAlert>
+            }
+        </MudTabPanel>
 
     </MudTabs>
 }
@@ -178,6 +205,8 @@ else
     List<RegistrationAdvertisement> ListRegisWaite = new List<RegistrationAdvertisement>();
 
     List<RegistrationAdvertisement> ListAdsRunning = new List<RegistrationAdvertisement>();
+
+    List<Invoices> ListInvoices = new List<Invoices>();
 
     string ProcessString(TimeSpan time)
     {
@@ -337,7 +366,7 @@ else
             orderCode: id,
             amount: price,
             description: "",
-            items: [new("Kaioshin-sama", 1, price)],
+            items: [new($"Thanh toán dịch vụ quảng cáo", 1, price)],
             returnUrl: domain + $"paymentsucess/{id}/{invoices.Id}",
             cancelUrl: domain + "serviceAdtisvertment/2",
             expiredAt: unixTimestamp
@@ -368,5 +397,19 @@ else
         var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraLarge};
 
         var result = await DialogService.Show<ServiceDialog>("Chọn dịch vụ để gia hạn", parameters, options).Result;
+    }
+
+    async Task DowBill(Guid Id)
+    {
+        NavigationManager.NavigateTo("/FilePDF/" + Id.ToString()+".pdf", true);
+    }
+
+    async Task LoadListBill()
+    {
+        var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+        var response = await httpClient.GetStringAsync($"/getListBillUser/{IdUser}");
+
+        ListInvoices = JsonConvert.DeserializeObject<List<Invoices>>(response);
+
     }
 }

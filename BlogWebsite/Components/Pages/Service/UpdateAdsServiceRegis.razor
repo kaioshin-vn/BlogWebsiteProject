@@ -178,6 +178,14 @@ else
             return;
         }
 
+        var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+        var data = await httpClient.GetStringAsync($"/checkwaitbill/{RegistrationAdvertisement.Id}");
+
+        if (data == "False")
+        {
+            Snackbar.Add("Không thể chỉnh sửa do quảng cáo của bạn đã được admin xác nhận", Severity.Info);
+            return;
+        }
 
         isLoaded = false;
         var result = await CheckUrlWithVirusTotal(RegistrationAdvertisement.Link);
@@ -197,7 +205,6 @@ else
             RegistrationAdvertisement.Price = service.Price;
             RegistrationAdvertisement.IdServiceAdvertis = service.Id;
 
-            var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
             var response = await httpClient.PostAsJsonAsync($"/updteAdsRegis", RegistrationAdvertisement);
 
             if (response.IsSuccessStatusCode)

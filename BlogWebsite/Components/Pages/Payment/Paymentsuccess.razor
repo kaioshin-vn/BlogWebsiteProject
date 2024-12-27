@@ -91,6 +91,7 @@ else
                     document.GeneratePdf(pdfPath);
                 }
 
+                Navigation.NavigateTo($"/PaymentComplete/{IdBill}", true);
                 isSuccess = true;
             }
         }

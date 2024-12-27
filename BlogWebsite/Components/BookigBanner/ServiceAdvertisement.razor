@@ -7,6 +7,7 @@
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject UserManager<ApplicationUser> UserManager
 @inject NavigationManager Navigation
+@attribute [Authorize(Roles = "Admin")]
 
 @if (ServiceAdver == null || lstServiceAdver == null)
 {
@@ -14,62 +15,13 @@
 }
 else{
     <MudContainer>
-        <MudPaper Class="p-4" Outlined="true" Square="true" Style="height:650px; background-color:#F8FAFC">
+        <MudPaper Class="p-4" Outlined="true" Square="true" Style="background-color:#F8FAFC">
             <MudText Typo="Typo.h6" Style="font-weight:bold">Quản lý dịch vụ</MudText>
             <MudDivider Style="border-width: 1px; border-color: black;" />
             <MudTabs Elevation="0" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-2">
                 <MudTabPanel Style="text-transform: capitalize;" Text="Danh sách dịch vụ">
-                    <MudList T="string" Style="height:530px; max-height:530px; overflow:scroll;">
-                        <MudGrid>
-                            <MudItem xs="4">
-                                <MudCard Style="border-radius:10px; background-color:whitesmoke">
-                                    <MudItem xs="6">
-                                        <MudText Style="background-color:violet; color:black; font-weight:bold; border-radius:10px 0px 10px 0px" Class="d-flex justify-content-center p-1">29.000đ cho 3 tháng</MudText>
-                                    </MudItem>
-                                    <MudCardHeader Class="pb-0">
-                                        <CardHeaderAvatar>
-                                            <MudAvatar Size="Size.Medium">
-                                                <MudImage ObjectFit="ObjectFit.Cover" Src="FixedImage/Thocuong.png"></MudImage>
-                                            </MudAvatar>
-                                        </CardHeaderAvatar>
-                                        <CardHeaderContent>
-                                            <MudText Typo="Typo.body1">KAIZEN SERVICE</MudText>
-                                        </CardHeaderContent>
-                                        <CardHeaderActions>
-                                            <MudMenu Icon="@Icons.Material.Filled.Menu" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
-                                                <MudMenuItem>Chỉnh sửa</MudMenuItem>
-                                                <MudMenuItem>Xóa</MudMenuItem>
-                                            </MudMenu>
-                                        </CardHeaderActions>
-                                    </MudCardHeader>
-                                    <MudCardContent>
-                                        <MudText Typo="Typo.h6" Style="font-weight:bold">Gói cơ bản</MudText>
-                                        <MudText Style="font-size:14px; color:gray;">29.000đ cho 3 tháng</MudText>
-                                    </MudCardContent>
-                                    <MudDivider Class="px-2" Style="border-width: 1px; border-color: black;" />
-                                    <MudCardContent>
-                                        <MudList T="string" Style="max-height:70px; overflow:scroll">
-                                            <MudText>
-                                                Thanh toán một lần
-                                                Hủy bất cứ lúc nàoThanh toán một lần
-                                                Hủy bất cứ lúc nàoThanh toán một lầnThanh toán một lần
-                                                Hủy bất cứ lúc nàoThanh toán một lần
-                                                Hủy bất cứ lúc nàoThanh toán một lầnThanh toán một lần
-                                                Hủy bất cứ lúc nàoThanh toán một lần
-                                                Hủy bất cứ lúc nàoThanh toán một lần
-                                            </MudText>
-                                        </MudList>
-                                    </MudCardContent>
-                                    <MudCardActions Class="d-flex justify-content-center">
-                                        <MudButton Variant="Variant.Filled">Đăng ký dịch vụ</MudButton>
-                                    </MudCardActions>
-                                    <MudCardContent>
-                                        <MudText Class="d-flex justify-content-center align-content-center" Style="font-size:13px;text-decoration: underline; transition: font-weight 0.3s;"
-                                        onmouseover="this.style.fontWeight='bold'"
-                                        onmouseout="this.style.fontWeight='normal'">có áp dụng điều khoản</MudText>
-                                    </MudCardContent>
-                                </MudCard>
-                            </MudItem>
+                    <MudList T="string" Style="height:530px; max-height:530px; overflow:scroll;" Class="px-3">
+                        <MudGrid Class="mt-5">
                             @foreach (var item in lstServiceAdver)
                             {
                                 <MudItem xs="4">
@@ -80,7 +32,7 @@ else{
                                         <MudCardHeader Class="pb-0">
                                             <CardHeaderAvatar>
                                                 <MudAvatar Size="Size.Medium">
-                                                    <MudImage ObjectFit="ObjectFit.Cover" Src="FixedImage/Thocuong.png"></MudImage>
+                                                    <MudImage ObjectFit="ObjectFit.Cover" Src="/icon.png"></MudImage>
                                                 </MudAvatar>
                                             </CardHeaderAvatar>
                                             <CardHeaderContent>
@@ -99,17 +51,9 @@ else{
                                         </MudCardContent>
                                         <MudDivider Class="px-2" Style="border-width: 1px; border-color: black;" />
                                         <MudCardContent>
-                                            <MudList T="string" Style="max-height:70px; overflow:scroll">
+                                            <MudList T="string" Style="height:170px; overflow:scroll">
                                                 <div>@((MarkupString)@item.Description.Replace("\n", "<br />"))</div>
                                             </MudList>
-                                        </MudCardContent>
-                                        <MudCardActions Class="d-flex justify-content-center">
-                                            <MudButton Variant="Variant.Filled">Đăng ký dịch vụ</MudButton>
-                                        </MudCardActions>
-                                        <MudCardContent>
-                                            <MudText Class="d-flex justify-content-center align-content-center" Style="font-size:13px;text-decoration: underline; transition: font-weight 0.3s;"
-                                            onmouseover="this.style.fontWeight='bold'"
-                                            onmouseout="this.style.fontWeight='normal'">có áp dụng điều khoản</MudText>
                                         </MudCardContent>
                                     </MudCard>
                                 </MudItem>
@@ -130,7 +74,7 @@ else{
                                         <MudTextField @bind-Value="ServiceAdver.Description" T="string" Label="Mô tả" Variant="Variant.Text" Lines="4"/>
                                     </MudCardContent>
                                     <MudCardActions>
-                                        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">Register</MudButton>
+                                        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">Thêm mới</MudButton>
                                     </MudCardActions>
                                 </MudCard>
                             </MudItem>

@@ -11,6 +11,8 @@
 @attribute [Authorize]
 @inject IHttpClientFactory HttpClientFactory
 @inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserManager<ApplicationUser> UserManager
 
 @if (!isLoaded)
 {
@@ -74,8 +76,13 @@ else
 
         if (response.status == "PAID")
         {
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+            var idUserCurrent = UserManager.GetUserId(user);
+            var idUser = Guid.Parse(idUserCurrent);
+
             var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
-            var data = await httpClient.GetAsync($"/renew/{IdSvAds}/{IdRegis}/{IdBill}");
+            var data = await httpClient.GetAsync($"/renew/{IdSvAds}/{IdRegis}/{IdBill}/{idUser}");
             if (data.IsSuccessStatusCode)
             {
                 QuestPDF.Settings.License = LicenseType.Community;
@@ -93,6 +100,7 @@ else
                     var document = new InvoicePdfDocument(invoice);
                     document.GeneratePdf(pdfPath);
                 }
+                Navigation.NavigateTo($"/PaymentComplete/{IdBill}", true);
                 isSuccess = true;
             }
         }

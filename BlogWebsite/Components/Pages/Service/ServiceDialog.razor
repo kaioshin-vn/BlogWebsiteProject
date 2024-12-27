@@ -100,7 +100,7 @@
             orderCode: id,
             amount: price,
             description: "",
-            items: [new("Kaioshin-sama", 1, price)],
+            items: [new($"Thanh toán dịch vụ {invoices.Name}", 1, price)],
             returnUrl: domain + $"renewpaymentsucess/{id}/{invoices.Id}/{IdRegis}/{IdBill}",
             cancelUrl: domain + "serviceAdtisvertment/3",
             expiredAt: unixTimestamp

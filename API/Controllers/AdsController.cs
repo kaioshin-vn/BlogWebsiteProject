@@ -9,6 +9,7 @@ namespace API.Controllers
     {
         private readonly ApplicationDbContext _context;
 
+
         public AdsController(ApplicationDbContext context)
         {
             _context = context;
@@ -17,7 +18,7 @@ namespace API.Controllers
         [HttpGet("/getAllSvAds")]
         public async Task<IActionResult> GetAllMember()
         {
-            var lstMember = await _context.ServiceAdvertisementPricing.OrderBy(a => a.Price).ToListAsync();
+            var lstMember = await _context.ServiceAdvertisementPricing.OrderBy(a => a.Price).Where(a => a.IsDelete == false).ToListAsync();
             return Ok(lstMember);
         }
 
@@ -31,7 +32,7 @@ namespace API.Controllers
         [HttpGet("/getAllRegisWaitBill/{Id}")]
         public async Task<IActionResult> GetWaitBill(Guid Id)
         {
-            var lstMember =  _context.RegistrationAdvertisements.Where(a => a.IdUser == Id && a.State == Data.Enums.WaitState.Pending).ToList();
+            var lstMember =  _context.RegistrationAdvertisements.Include(a => a.ServiceAdvertisementPricing).Where(a => a.IdUser == Id && a.ServiceAdvertisementPricing.IsDelete == false && a.State == Data.Enums.WaitState.Pending).ToList();
             return Ok(lstMember);
         }
 
@@ -52,7 +53,7 @@ namespace API.Controllers
         [HttpGet("/getAllBillToPay/{Id}")]
         public async Task<IActionResult> GetAllBill(Guid Id)
         {
-            var lstMember = _context.Invoices.Include(a => a.RegistrationAdvertisement).Where(a => a.IdUser == Id && a.PaymentDate == DateTime.MinValue).OrderByDescending(a => a.RegistrationAdvertisement.TimeAccept);
+            var lstMember = _context.Invoices.Include(a => a.RegistrationAdvertisement).ThenInclude(a => a.ServiceAdvertisementPricing).Where(a => a.IdUser == Id && a.RegistrationAdvertisement.ServiceAdvertisementPricing.IsDelete == false && a.PaymentDate == DateTime.MinValue).OrderByDescending(a => a.RegistrationAdvertisement.TimeAccept);
             return Ok(lstMember);
         }
 
@@ -78,11 +79,11 @@ namespace API.Controllers
             return Ok(lstMember);
         }
 
-        [HttpGet("/renew/{IdSvAds}/{IdRegis}/{IdBill}")]
-        public async Task RenewAds(Guid IdSvAds, Guid IdRegis, Guid IdBill )
+        [HttpGet("/renew/{IdSvAds}/{IdRegis}/{IdBill}/{IdUser}")]
+        public async Task RenewAds(Guid IdSvAds, Guid IdRegis, Guid IdBill, Guid IdUser)
         {
             var regis = await _context.RegistrationAdvertisements.FirstOrDefaultAsync(a => a.Id == IdRegis);
-            var SvAds = await _context.RegistrationAdvertisements.FirstOrDefaultAsync(a => a.Id == IdSvAds);
+            var SvAds = await _context.ServiceAdvertisementPricing.FirstOrDefaultAsync(a => a.Id == IdSvAds);
             if (regis.TimeStart.AddDays(regis.DurationDays) > DateTime.Now)
             {
                 var resttime = DateTime.Now - regis.TimeStart.AddDays(regis.DurationDays);
@@ -93,6 +94,85 @@ namespace API.Controllers
                 regis.DurationDays = SvAds.DurationDays;
                 regis.TimeStart = DateTime.Now;
             }
+
+            _context.RegistrationAdvertisements.Update(regis);
+
+            var bill = await _context.Invoices.FirstOrDefaultAsync(a => a.Id == IdBill);
+
+            if (bill == null)
+            {
+                bill = new Invoices();
+                bill.Id = IdBill;
+                bill.PaymentDate = DateTime.Now;
+                bill.Amount = SvAds.Price;
+                bill.IdRegis = IdRegis;
+                bill.IdUser = IdUser;
+
+                _context.Invoices.Add(bill);
+            }
+
+            _context.SaveChanges();
+        }
+
+
+        [HttpGet("/getRegisWaitUser")]
+        public async Task<IActionResult> GetRegisWaite()
+        {
+            var lstMember = _context.RegistrationAdvertisements.Include(a => a.User).Include(a => a.ServiceAdvertisementPricing).Where( a => a.ServiceAdvertisementPricing.IsDelete == false && a.State == Data.Enums.WaitState.Pending).ToList();
+            return Ok(lstMember);
+        }
+
+        [HttpGet("/getcurrentads")]
+        public async Task<IActionResult> GetCurrentAds()
+        {
+            var lstMember = _context.RegistrationAdvertisements.Include(a => a.User).Include(a => a.Invoices).Where(a => a.State == Data.Enums.WaitState.Accept && a.Invoices.All(a => a.PaymentDate != DateTime.MinValue) && a.TimeStart.AddDays(a.DurationDays) > DateTime.Now).OrderByDescending(a => a.Id).ToList();
+
+            var listId = lstMember.Select(a => a.Id).ToList();
+
+            if (lstMember.Count != 0)
+            {
+                if (StaticVariable.IdAdsCurrent == Guid.Empty)
+                {
+                    StaticVariable.IdAdsCurrent = lstMember[0].Id;
+                    return Ok(lstMember[0]);
+                }
+                else
+                {
+                    var idAds = GetNextElement(listId, StaticVariable.IdAdsCurrent);
+                    if (idAds == Guid.Empty)
+                    {
+                        return Ok(lstMember[0]);
+                    }
+                    else
+                    {
+                        var ads = lstMember.FirstOrDefault(a => a.Id == idAds);
+                        StaticVariable.IdAdsCurrent = idAds;
+                        return Ok(ads);
+                    }
+                }
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        private static Guid GetNextElement(List<Guid> list, Guid id)
+        {
+            int index = list.IndexOf(id);
+
+            if (index != -1)
+            {
+                // Nếu là phần tử cuối cùng, trả về phần tử đầu tiên
+                if (index == list.Count - 1)
+                {
+                    return list[0];
+                }
+                // Ngược lại, trả về phần tử tiếp theo
+                return list[index + 1];
+            }
+
+            return Guid.Empty;
         }
     }
 }
