@@ -172,7 +172,7 @@ else
         var _httpClient = HttpClientFactory.CreateClient("MyHttpClient");
         var result = await _httpClient.GetStringAsync($"/getPetitionDetail/{Id}");
 
-        if (result == null)
+        if (string.IsNullOrEmpty(result))
         {
             isFail = true;
             Loaded = true;

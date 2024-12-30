@@ -281,7 +281,7 @@ else
     {
         var _httpClient = HttpClientFactory.CreateClient("MyHttpClient");
         var result = await _httpClient.GetStringAsync($"/report/getReportPost/{IdPost}");
-        if (result == null)
+        if (string.IsNullOrEmpty(result))
         {
             isFail = true;
             Loaded = true;

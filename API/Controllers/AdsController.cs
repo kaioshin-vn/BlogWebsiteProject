@@ -153,7 +153,7 @@ namespace API.Controllers
             }
             else
             {
-                return null;
+                return Ok(null);
             }
         }
 

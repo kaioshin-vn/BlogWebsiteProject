@@ -168,7 +168,7 @@ else
             var _httpClient = HttpClientFactory.CreateClient("MyHttpClient");
             var response = await _httpClient.GetStringAsync("/getcurrentads");
 
-            if (response != null)
+            if (!string.IsNullOrEmpty(response))
             {
                 Ads = JsonConvert.DeserializeObject<RegistrationAdvertisement>(response);
                 isHasAds = true;

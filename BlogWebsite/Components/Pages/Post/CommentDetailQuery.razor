@@ -276,7 +276,7 @@ else
     {
         var _httpClient = HttpClientFactory.CreateClient("MyHttpClient");
         var result = await _httpClient.GetStringAsync($"/commment/getCommentDetail/{IdCmt}");
-        if (result == null)
+        if (string.IsNullOrEmpty(result))
         {
             isDeleted = true;
             Loaded = true;
