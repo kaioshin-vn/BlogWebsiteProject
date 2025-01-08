@@ -163,7 +163,17 @@
             Snackbar.Add("Vui lòng nhập tên bộ sưu tập!", Severity.Warning);
             return;
         }
+
         var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+        // Kiểm tra tên trùng lặp
+        var existingCollections = await httpClient.GetFromJsonAsync<List<SaveDTO>>($"/api/save/get_savepost/{userId}");
+
+        if (existingCollections.Any(x => x.SaveName.Trim().ToLower() == savePost.SaveName.Trim().ToLower()))
+        {
+            Snackbar.Add("Tên bộ sưu tập đã tồn tại!", Severity.Warning);
+            return;
+        }
+
         var response = await httpClient.PostAsJsonAsync("/api/save/create_savepost", savePost);
         if (response.IsSuccessStatusCode)
         {
