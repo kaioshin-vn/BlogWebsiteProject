@@ -5,7 +5,7 @@
 @using Data.DTO
 @using Microsoft.AspNetCore.SignalR.Client
 @using Newtonsoft.Json
-@attribute [Authorize(Roles = "Admin")]
+@attribute [Authorize(Roles = "Admin, Sub Admin")]
 @inject NavigationManager Navigation
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject UserManager<ApplicationUser> UserManager
@@ -13,7 +13,7 @@
 @inject ApplicationDbContext DbContext
 @inject IHttpClientFactory HttpClientFactory
 
-@layout AdminLayout
+
 
 @if (Loaded)
 {

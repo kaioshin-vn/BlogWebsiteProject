@@ -1,4 +1,4 @@
-﻿@page "/ManageAccount"
+﻿@page "/BanAccount/{IdUser:guid}"
 
 @using Client.Components.Admin
 @using Client.Components.ComponentCustom
@@ -10,8 +10,8 @@
 @using Newtonsoft.Json
 @using System.Net.Mail
 @using System.Net
-@attribute [Authorize(Roles = "Admin")]
-@layout AdminLayout
+@attribute [Authorize(Roles = "Admin, Sub Admin")]
+
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager Navigation
 @inject IDialogService DialogService
@@ -27,13 +27,7 @@
 }
 else
 {
-
-    <div class="top-row px-4 d-flex justify-content-center">
-        <input type="text" @bind-value="Search" class="form-control" style="width : 550px" id="search" placeholder="Nhập tên đăng nhập, tên tài khoản hoặc email " aria-label="Recipient's username" aria-describedby="basic-addon2">
-        <button @onclick="SearchAction" class="input-group-text fw-lagre mx-3" style="background-color: rgb(42, 198, 255);border:solid 2px grey" id=""> Tìm kiếm</button>
-    </div>
     <MudContainer Class="mb-5" MaxWidth="MaxWidth.Large">
-        <MudSwitch Class="mt-3" T="bool" Color="Color.Success" ValueChanged="SearchBan">Danh sách tài khoản bị chặn</MudSwitch>
         @if (ListUser.Count == 0)
         {
             <p class="mt-3">Không tìm thấy tài khoản nào</p>
@@ -94,7 +88,6 @@ else
                                 }
                                 else
                                 {
-                                    <MudButton OnClick="() => GetAllRoleUser(row.Id)" Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.ArrowCircleUp" Color="Color.Tertiary">Thay đổi quyền</MudButton>
                                     if (!row.IsBaned)
                                     {
                                         <MudButton Class="mx-3" OnClick="() => BanUser(row.Id)" Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.CancelPresentation" Color="Color.Error">Khóa tài khoản</MudButton>
@@ -109,9 +102,6 @@ else
                     }
                 </tbody>
             </MudSimpleTable>
-            <div class="d-flex justify-content-center">
-                <MudPagination Color="Color.Primary" SelectedChanged="PageChange" Count="TotalPage" />
-            </div>
         }
     </MudContainer>
 

@@ -37,7 +37,7 @@ namespace ASM_PH35423.Controllers
         {
             var listRole = new List<IdentityRole<Guid>>();
 
-            listRole = _context.Roles.ToList();
+            listRole = _context.Roles.Where(a => a.Name != "Admin").ToList();
             return listRole;
         }
 

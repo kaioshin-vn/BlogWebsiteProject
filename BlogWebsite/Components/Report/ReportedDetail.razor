@@ -11,8 +11,7 @@
 @using Newtonsoft.Json.Linq
 @using System.Globalization;
 
-@layout AdminLayout
-@attribute [Authorize(Roles = "Admin")]
+@attribute [Authorize(Roles = "Admin, Sub Admin")]
 @inject IJSRuntime JSRunTime
 @inject IHttpClientFactory HttpClientFactory
 @inject AuthenticationStateProvider AuthenticationStateProvider

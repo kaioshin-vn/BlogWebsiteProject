@@ -76,7 +76,27 @@
                 <MudText>Dịch vụ quảng cáo</MudText>
             </MudNavLink>
 
+            <AuthorizeView Roles="Sub Admin" Context="ForSubAdmin">
+                <MudNavLink Match="NavLinkMatch.Prefix" Href="/messenger" Class="rounded-3 overflow-hidden m-3">
+                    <MudIcon Icon="@Icons.Material.Filled.ContactSupport"></MudIcon>
+                    <MudText>Liên hệ</MudText>
+                </MudNavLink>
+
+                <MudNavLink Match="NavLinkMatch.Prefix" Href="/report" Class="rounded-3 overflow-hidden m-3">
+                    <MudIcon Icon="@Icons.Material.Filled.Report"></MudIcon>
+                    <MudText>Báo cáo</MudText>
+                </MudNavLink>
+
+                <MudNavLink Match="NavLinkMatch.Prefix" Href="/listpetition" Class="rounded-3 overflow-hidden m-3">
+                    <MudIcon Icon="@Icons.Material.Filled.Handshake"></MudIcon>
+                    <MudText>Khiếu nại</MudText>
+                </MudNavLink>
+            </AuthorizeView>
+
         </Authorized>
+
+        
+
     </AuthorizeView>
 
     <MudNavGroup Title="Tài nguyên" Icon="@Icons.Material.Filled.Settings" Expanded="false" Class="rounded-3 overflow-hidden m-3 py-3" Style="width:200px;">

@@ -5,13 +5,12 @@
 @using Data.DTO
 @using Newtonsoft.Json
 
-@attribute [Authorize(Roles = "Admin")]
+@attribute [Authorize(Roles = "Admin, Sub Admin")]
 @inject IHttpClientFactory HttpClientFactory
 @inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject UserManager<ApplicationUser> UserManager
 
-@layout AdminLayout
 
 <style>
     .result-container {

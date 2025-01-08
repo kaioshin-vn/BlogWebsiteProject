@@ -13,9 +13,7 @@
 @using Newtonsoft.Json.Linq
 @using System.Globalization;
 
-@layout AdminLayout
-
-@attribute [Authorize(Roles = "Admin")]
+@attribute [Authorize(Roles = "Admin, Sub Admin")]
 
 @inject IJSRuntime JSRunTime
 @inject IHttpClientFactory HttpClientFactory
@@ -129,7 +127,7 @@ else
                 <a href="/listUserReport/@this.IdUserPost">
                     <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.History" Size="Size.Medium" Color="Color.Default">lịch sử báo cáo</MudButton>
                 </a>
-                <a href="/ManageAccount/@this.IdUserPost">
+                <a href="/BanAccount/@this.IdUserPost">
                     <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.RemoveCircle" Size="Size.Medium" Color="Color.Error">Khóa tài khoản</MudButton>
                 </a>
 

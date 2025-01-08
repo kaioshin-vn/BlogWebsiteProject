@@ -74,7 +74,7 @@ else
         <div class="d-flex justify-content-between align-items-end">
 
             <MudItem Style="width:65%;">
-                <RadzenHtmlEditor Change="Change" style="min-height:300px; height: auto;max-width:990px;border-radius:12px;overflow:hidden;" UploadUrl="minimalApi/uploadImage">
+                <RadzenHtmlEditor Change="Change" @bind-Value="RegistrationAdvertisement.ContentAds" style="min-height:300px; height: auto;max-width:990px;border-radius:12px;overflow:hidden;" UploadUrl="minimalApi/uploadImage">
                     <RadzenHtmlEditorUndo Title="Trước" />
                     <RadzenHtmlEditorRedo Title="Sau" />
                     <RadzenHtmlEditorSeparator />
@@ -230,10 +230,11 @@ else
         string encodedUrl = HttpUtility.UrlEncode(url);
 
         var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
-        var response = await httpClient.GetAsync($"https://www.ipqualityscore.com/api/json/url/TrhMP8Gyzqz214WC3Hzkfwf9DGbL03p8/{encodedUrl}");
 
+        var response = await httpClient.GetAsync($"https://www.ipqualityscore.com/api/json/url/QiMIJqzQdXxV3hpIkerEYEn7XnEKmRhN/https%3A%2F%2Fexample.com");
         if (response.IsSuccessStatusCode)
         {
+
             var data = await response.Content.ReadAsStringAsync();
             JObject jsonObject = JObject.Parse(data);
             var successStr = jsonObject["success"];
@@ -256,6 +257,14 @@ else
                 }
                 else
                 {
+                    var msg = jsonObject["message"];
+                    if (msg != null)
+                    {
+                        if (((string)msg).Contains("You"))
+                        {
+                            return true;
+                        }
+                    }
                     return false;
                 }
             }
@@ -265,6 +274,7 @@ else
         {
             return false;
         }
+        return true;
     }
 
     async Task SortChange(ChangeEventArgs v)

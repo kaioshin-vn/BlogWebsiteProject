@@ -1,6 +1,7 @@
 ﻿using BlogWebsite.Data;
 using Data.Database.Table;
 using Data.DTO.EntitiDTO;
+using Data.Enums;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -29,11 +30,30 @@ namespace API.Controllers
             {
                 return BadRequest();
             }
+
+            var IdUser = (await _context.Saves.FirstOrDefaultAsync(a => a.Id == idSave) ).IdUser;
+
+            var listIdHide = _context.PostHideByRestricted.Select(a => a.IdPost).ToList();
+            if (IdUser != null)
+            {
+                var listHide = _context.PostHides.Where(a => a.IdUser == IdUser).Select(a => a.IdPost).ToList();
+                if (listHide.Count != 0)
+                {
+                    listIdHide.AddRange(listHide);
+                }
+            }
+
             var post = await _context.PostSaves
-                .Where(p => p.IdSave == idSave)
                 .Include(p => p.Post)
+                .ThenInclude(p => p.GroupPost)
+                .ThenInclude(a => a.Group)
                 .Include(p => p.Post.User)
+                .Where(a => a.IdSave == idSave && a.Post.IsDeleted == false && (a.Post.GroupPost.Count == 0 ||
+            (a.Post.GroupPost.Any(b => b.IdPost == a.Post.Id && b.WaitState == WaitState.Accept && (b.Group.StateGroup == KindGroup.Public))))
+            && a.Post.User.LockoutEnd == null && !listIdHide.Contains(a.Post.Id))
                 .Select(p => new PostIntroDTO {
+                    Id = p.Post.Id,
+                    IdUser = p.Post.IdUser,
                     Title = p.Post.Title,
                     Content = p.Post.Content,
                     ImgFile = p.Post.ImgFile,
