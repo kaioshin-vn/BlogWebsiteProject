@@ -77,16 +77,35 @@ else
             return;
         }
 
+        // Kiểm tra tên trùng lặp
         var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+        var existingCollections = await httpClient.GetFromJsonAsync<List<SaveDTO>>($"/api/save/get_savepost/{userId}");
+        
+        if (existingCollections.Any(x => x.SaveName.Trim().ToLower() == savePost.SaveName.Trim().ToLower()))
+        {
+            Snackbar.Add("Tên bộ sưu tập đã tồn tại!", Severity.Warning);
+            return;
+        }
+
         var result = await httpClient.PostAsJsonAsync("/api/save/create_savepost", savePost);
         if (result.IsSuccessStatusCode)
         {
-            Snackbar.Add("Thêm bài viết vào bộ sưu tập thành công!", Severity.Success);
+            Snackbar.Add("Tạo bộ sưu tập thành công!", Severity.Success);
+            Dialog.Close(DialogResult.Ok(true));
             Navigation.NavigateTo("/savepost", true);
         }
         else
         {
-            Snackbar.Add("Thêm bài viết vào bộ sưu tập không thành công!", Severity.Error);
+            var error = await result.Content.ReadAsStringAsync();
+            if (result.StatusCode == System.Net.HttpStatusCode.BadRequest && 
+                error.Contains("Tên bộ sưu tập đã tồn tại"))
+            {
+                Snackbar.Add("Tên bộ sưu tập đã tồn tại!", Severity.Warning);
+            }
+            else
+            {
+                Snackbar.Add("Tạo bộ s�u tập không thành công!", Severity.Error);
+            }
         }
     }
 
