@@ -64,9 +64,9 @@ else
                 {
                     <MudListItem OnClick="() => GetPostInSave(item.Id)">
                         <AvatarContent>
-                                <MudAvatar Color="Color.Primary" Class="rounded-2">
-                                    @item.SaveName[0]
-                                </MudAvatar>
+                            <MudAvatar Color="Color.Primary" Class="rounded-2">
+                                @item.SaveName[0]
+                            </MudAvatar>
                         </AvatarContent>
                         <ChildContent>
                             @item.SaveName
@@ -90,13 +90,13 @@ else
                         </MudItem>
                         <MudItem>
                             <MudMenu Icon="@Icons.Material.Filled.MoreHoriz" Color="Color.Default"
-                                     AriaLabel="Open user menu">
+                            AriaLabel="Open user menu">
                                 <MudMenuItem OnClick="DeletePostSave">Xóa bộ sưu tập</MudMenuItem>
                             </MudMenu>
                         </MudItem>
                     </MudGrid>
                 </MudItem>
-                <MudList T="string" Style="overflow:scroll; max-height:630px; width:100%">
+                <MudList T="string" Style="overflow:scroll; max-height:630px; width:100%; height:590px">
                     @foreach (var item in lstPost)
                     {
                         <MudListItem>
@@ -123,12 +123,12 @@ else
                         </MudListItem>
                     }
                 </MudList>
-               
+
             </MudGrid>
         </MudMainContent>
     </MudDrawerContainer>
 }
-   
+
 @code {
     List<SaveDTO> lstPostSave = new List<SaveDTO>();
     List<PostIntroDTO> lstPost = new List<PostIntroDTO>();
@@ -183,6 +183,7 @@ else
         if (result.IsSuccessStatusCode)
         {
             lstPostSave = await httpClient.GetFromJsonAsync<List<SaveDTO>>($"/api/save/get_savepost/{userId}");
+            Navigation.NavigateTo("/savepost", true);
             Snackbar.Add("Xoá bộ sưu tập thành công!", Severity.Success);
         }
         else
