@@ -79,6 +79,23 @@ namespace API.Controllers
             return Ok(lstMember);
         }
 
+        [HttpGet("/getAdsRunningSys")]
+        public async Task<IActionResult> GetAdsRunningSys()
+        {
+            var lstMember = _context.RegistrationAdvertisements.Include(a => a.User).Include(a => a.Invoices).Where(a => a.State == Data.Enums.WaitState.Accept && a.TimeStart.AddDays(a.DurationDays) >= DateTime.Now && a.Invoices.All(a => a.PaymentDate != DateTime.MinValue)).ToList();
+            return Ok(lstMember);
+        }
+
+        [HttpGet("/stopAds/{Id}")]
+        public async Task<IActionResult> StopAds(Guid Id)
+        {
+            var ads = _context.RegistrationAdvertisements.FirstOrDefault(a => a.Id == Id);
+            ads.State = Data.Enums.WaitState.Decline;
+            _context.RegistrationAdvertisements.Update(ads);
+            _context.SaveChanges();
+            return Ok(ads);
+        }
+
         [HttpGet("/renew/{IdSvAds}/{IdRegis}/{IdBill}/{IdUser}")]
         public async Task RenewAds(Guid IdSvAds, Guid IdRegis, Guid IdBill, Guid IdUser)
         {

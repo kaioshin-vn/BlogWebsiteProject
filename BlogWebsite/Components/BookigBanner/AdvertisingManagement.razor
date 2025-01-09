@@ -1,4 +1,5 @@
 ﻿@page "/managementbooking"
+@using Client.Components.ComponentCustom
 @using Data.Database.Table
 @using Newtonsoft.Json
 
@@ -11,14 +12,15 @@
 
 @attribute [Authorize(Roles = "Admin")]
 <style>
-    .GrayBold{
-        font-weight:bold;
-        color:gray;
+    .GrayBold {
+        font-weight: bold;
+        color: gray;
     }
-    .BlackBold{
-        font-weight:bold;
-        color:black;
-        padding-top:5px;
+
+    .BlackBold {
+        font-weight: bold;
+        color: black;
+        padding-top: 5px;
     }
 </style>
 @if (!isLoaded)
@@ -27,39 +29,88 @@
 }
 else
 {
-    <MudText Typo="Typo.h6" Style="font-weight:bold" Class="my-5">Quản lý đơn đặt hàng</MudText>
+    <MudTabs Elevation="2" Style="width:90%;" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6" Class="mb-5" Color="@Color.Success">
 
-    <MudContainer>
-        @if (ListRegisWaite.Count != 0)
-        {
-            <MudTable Dense="true" Items="ListRegisWaite">
-                <HeaderContent>
-                    <MudTh Style="font-weight: 900;">Người dùng</MudTh>
-                    <MudTh Style="font-weight: 900;">Gói dịch vụ</MudTh>
-                    <MudTh Style="font-weight: 900;">Thời hạn</MudTh>
-                    <MudTh Style="font-weight: 900;">Mức giá</MudTh>
-                    <MudTh></MudTh> <!-- Nút GIA HẠN -->
-                </HeaderContent>
-                <RowTemplate>
-                    <MudTd>@context.User.FullName</MudTd>
-                    <MudTd><b>@context.Name</b></MudTd>
-                    <MudTd>@context.DurationDays ngày</MudTd>
-                    <MudTd>@context.Price.ToString("N0", System.Globalization.CultureInfo.InvariantCulture) ₫</MudTd>
+        <MudTabPanel Text="Đơn đặt quảng cáo" OnClick="WaitBill">
+            <MudContainer>
+                @if (ListRegisWaite.Count != 0)
+                {
+                    <MudTable Dense="true" Items="ListRegisWaite">
+                        <HeaderContent>
+                            <MudTh Style="font-weight: 900;">Người dùng</MudTh>
+                            <MudTh Style="font-weight: 900;">Gói dịch vụ</MudTh>
+                            <MudTh Style="font-weight: 900;">Thời hạn</MudTh>
+                            <MudTh Style="font-weight: 900;">Mức giá</MudTh>
+                            <MudTh></MudTh> <!-- Nút GIA HẠN -->
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd>@context.User.FullName</MudTd>
+                            <MudTd><b>@context.Name</b></MudTd>
+                            <MudTd>@context.DurationDays ngày</MudTd>
+                            <MudTd>@context.Price.ToString("N0", System.Globalization.CultureInfo.InvariantCulture) ₫</MudTd>
 
-                    <MudTd>
-                        <MudButton Variant="Variant.Outlined" Color="Color.Success" OnClick="() => AcceptRegisService(context.Id)">Chi tiết</MudButton>
-                    </MudTd>
-                </RowTemplate>
-            </MudTable>
-        }
-        else
-        {
-            <MudAlert Severity="Severity.Info">Không có yêu cầu quảng nào</MudAlert>
-        }
-    </MudContainer>
+                            <MudTd>
+                                <MudButton Variant="Variant.Outlined" Color="Color.Success" OnClick="() => AcceptRegisService(context.Id)">Chi tiết</MudButton>
+                            </MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                }
+                else
+                {
+                    <MudAlert Severity="Severity.Info">Không có yêu cầu quảng nào</MudAlert>
+                }
+            </MudContainer>
+        </MudTabPanel>
+
+        <MudTabPanel Text="Quảng cáo đang chạy" OnClick="AdsRunning">
+            @if (ListAdsRunning.Count != 0)
+            {
+                <MudTable Dense="true" Items="ListAdsRunning">
+                    <HeaderContent>
+                        <MudTh Style="font-weight: 900;">Người dùng</MudTh>
+                        <MudTh Style="font-weight: 900;">Thời gian bắt đầu</MudTh>
+                        <MudTh Style="font-weight: 900;">Thời gian hết hạn</MudTh>
+                        <MudTh Style="font-weight: 900;">Gói dịch vụ</MudTh>
+                        <MudTh Style="font-weight: 900;">Thời gian còn lại</MudTh>
+                        <MudTh></MudTh> <!-- Nút GIA HẠN -->
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.User.FullName</MudTd>
+                        <MudTd>@context.TimeStart.ToString("dd/MM/yyyy HH:mm")</MudTd>
+                        <MudTd>@context.TimeStart.AddDays(context.DurationDays).ToString("dd/MM/yyyy HH:mm")</MudTd>
+                        <MudTd><b>@context.Name</b></MudTd>
+                        @if (context.TimeStart.AddDays(context.DurationDays) > DateTime.Now)
+                        {
+                            <MudTd>
+                                <MudText Color="Color.Success">@(ProcessString((context.TimeStart.AddDays(context.DurationDays) - DateTime.Now)))</MudText>
+                            </MudTd>
+                        }
+                        else
+                        {
+                            <MudTd>
+                                <MudText Color="Color.Error">Hết hạn</MudText>
+                            </MudTd>
+                        }
+
+                        <MudTd>
+                            <MudButton Variant="Variant.Outlined" Color="Color.Info" OnClick="() => AdsDetail(context.Id)">Chi tiết</MudButton>
+                            <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="() => StopAds(context.Id)">Dừng quảng cáo</MudButton>
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+            }
+            else
+            {
+                <MudAlert Severity="Severity.Info">Không có quảng cáo nào đang chạy</MudAlert>
+            }
+        </MudTabPanel>
+
+    </MudTabs> 
 }
 @code {
     List<RegistrationAdvertisement> ListRegisWaite = new List<RegistrationAdvertisement>();
+
+    List<RegistrationAdvertisement> ListAdsRunning = new List<RegistrationAdvertisement>();
 
     bool isLoaded;
 
@@ -77,8 +128,58 @@ else
         ListRegisWaite = JsonConvert.DeserializeObject<List<RegistrationAdvertisement>>(response);
     }
 
+    async Task AdsRunning()
+    {
+        var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+        var response = await httpClient.GetStringAsync($"/getAdsRunningSys");
+
+        ListAdsRunning = JsonConvert.DeserializeObject<List<RegistrationAdvertisement>>(response);
+    }
+
     async Task AcceptRegisService(Guid Id)
     {
         NavigationManager.NavigateTo("/AcceptRegis/" + Id.ToString());
+    }
+
+    string ProcessString(TimeSpan time)
+    {
+        if (time.Days > 0)
+        {
+            return $"{time.Days} ngày {time.Hours} tiếng {time.Minutes} phút";
+        }
+        else
+        {
+            return $"{time.Hours} tiếng {time.Minutes} phút";
+        }
+    }
+
+    async Task StopAds(Guid Id)
+    {
+        var parameters = new DialogParameters<Dialog>();
+        parameters.Add(x => x.ContentText, "Xác nhận bạn muốn dừng quảng cáo này?");
+        parameters.Add(x => x.ButtonText, "Dừng");
+        parameters.Add(x => x.Color, Color.Error);
+
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+        var result = await DialogService.Show<Dialog>("Xác nhận", parameters, options).Result;
+        if (result.Data != null)
+        {
+            if ((bool)result.Data)
+            {
+                var _httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+                var response = await _httpClient.GetAsync($"/stopAds/{Id}");
+                if (response.IsSuccessStatusCode)
+                {
+                    Snackbar.Add("Đã dừng quảng cáo thành công!", Severity.Success);
+                    await AdsRunning();
+                }
+            }
+        }
+    }
+
+    async Task AdsDetail(Guid Id)
+    {
+        NavigationManager.NavigateTo("/AdsServiceRegisDetail/" + Id.ToString());
     }
 }
