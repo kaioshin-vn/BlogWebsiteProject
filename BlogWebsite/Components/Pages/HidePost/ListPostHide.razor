@@ -80,7 +80,7 @@ else
                                         <MudText Style="width:150px; height:100px"></MudText>
                                     }
                                 </MudItem>
-                                <MudText Class="ms-5">Từ khóa vi phạm : @post.RestrictedWord.Word</MudText>
+                                <MudText Class="ms-5">Từ khóa vi phạm : @post.ListRestrictedWord</MudText>
                                 <MudButton OnClick="() => NaviGate(post.IdPost.ToString())" Variant="Variant.Text" Class="mt-2" Color="Color.Success">Sửa bài viết</MudButton>
                             </MudGrid>
                         </MudListItem>
@@ -98,7 +98,7 @@ else
 
 @code {
 
-    List<PostHideByRestricted> listReport = new List<PostHideByRestricted>();
+    List<PostHideByRestrictedDTO> listReport = new List<PostHideByRestrictedDTO>();
 
     TagDTO Tag = new TagDTO();
 
@@ -128,7 +128,7 @@ else
         var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
         var response = await httpClient.GetStringAsync($"/getListHidePost/{currentUserId}");
 
-        listReport = JsonConvert.DeserializeObject<List<PostHideByRestricted>>(response);
+        listReport = JsonConvert.DeserializeObject<List<PostHideByRestrictedDTO>>(response);
 
         isLoaded = true;
     }

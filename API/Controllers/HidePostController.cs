@@ -1,5 +1,6 @@
 ﻿using BlogWebsite.Data;
 using Data.Database.Table;
+using Data.DTO;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -32,11 +33,28 @@ namespace API.Controllers
         [HttpGet("/getListHidePost/{IdUser}")]
         public async Task<IActionResult> GetHidePost(Guid IdUser)
         {
-            var listPh = new List<PostHideByRestricted>();
+            var listPh = new List<PostHideByRestrictedDTO>();
             var hp = _context.PostHideByRestricted.Include(a => a.RestrictedWord).Include(a => a.Post).ThenInclude(a => a.User).Where(a => a.Post.IsDeleted == false && a.Post.User.Id == IdUser).ToList();
-            listPh = hp;
 
-            return Ok(hp);
+            foreach (var item in hp)
+            {
+                if (listPh.Any(a => a.IdPost != item.IdPost) || listPh.Count == 0)
+                {
+                    var phDTO = new PostHideByRestrictedDTO();
+                    phDTO.IdPost = item.IdPost;
+                    phDTO.Post = item.Post;
+                    phDTO.IdRestricted = item.IdRestricted;
+                    phDTO.Id = item.Id;
+                    phDTO.ListRestrictedWord = string.Join(", ", hp.Select(a => a.RestrictedWord.Word).ToList()) + " .";
+
+
+                    listPh.Add(phDTO);
+                }
+            }
+
+            
+
+            return Ok(listPh);
         }
     }
 }

@@ -531,6 +531,27 @@ namespace API.Controllers
                 return Unauthorized("Chủ nhóm mới có quyền xóa phó nhóm.");
             }
 
+
+
+            var listPostGroup = _context.GroupPosts.Include(a => a.Post).Include(a => a.Group).ThenInclude(a => a.MemberGroups).Where(a => a.IdGroup == group.IdGroup).ToList();
+
+            if (listPostGroup != null && listPostGroup.Count != 0)
+            {
+                var listPost = new List<Post>();
+
+                var listPostMember = listPostGroup.Where(a => a.Post.IdUser == id).ToList();
+
+                if (listPostMember.Count != 0 && listPostMember != null)
+                {
+                    listPost = listPostMember.Select(a => a.Post).ToList();
+                    foreach (var it in listPost)
+                    {
+                        it.IsDeleted = true;
+                    }
+                    _context.Posts.UpdateRange(listPost);
+                }
+            }
+
             _context.MemberGroups.Remove(item);
             await _context.SaveChangesAsync();
             return Ok();

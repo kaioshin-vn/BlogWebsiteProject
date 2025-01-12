@@ -103,8 +103,7 @@ namespace API.Controllers
             var SvAds = await _context.ServiceAdvertisementPricing.FirstOrDefaultAsync(a => a.Id == IdSvAds);
             if (regis.TimeStart.AddDays(regis.DurationDays) > DateTime.Now)
             {
-                var resttime = DateTime.Now - regis.TimeStart.AddDays(regis.DurationDays);
-                regis.DurationDays =(resttime.Days + SvAds.DurationDays);
+                regis.DurationDays += SvAds.DurationDays;
             }
             else
             {
