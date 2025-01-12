@@ -1,9 +1,376 @@
 ﻿@page "/admin"
+@using Client.Components.Admin
+@using Newtonsoft.Json
 @attribute [Authorize(Roles = "Admin")]
+@inject IHttpClientFactory HttpClientFactory
+@inject IJSRuntime JSRuntime
 @layout AdminLayout
 
-<h3>Trang của admin</h3>
+<style>
+    .WhiteBold {
+        font-weight: bold;
+        color: white;
+    }
+
+    .BlackBold {
+        font-weight: bold;
+        color: black;
+        padding-top: 5px;
+    }
+    .centers{
+
+    }
+</style>
+
+<div class="d-flex justify-content-between mx-5">
+
+    <div class="d-flex align-items-end">
+        <select class="form-select mt-3" style="width:150px;" @onchange="(v) => Change(v)">
+            @for (int i = 2022; i <= this.CurrentYear; i++)
+            {
+                if (i != this.CurrentYear)
+                {
+                    <option value="@i">@i</option>
+                }
+                else
+                {
+                    <option value="@i" selected>@i</option>
+                }
+            }
+        </select>
+    </div>
+
+
+    <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="@(async () => await DownloadFile())" Color="Color.Tertiary">Tải file báo cáo</MudButton>
+</div>
+
+<div style="width:200px;" class="ms-5 mt-3">
+    <MudSelect Label="Kiểu biểu đồ" Variant="Variant.Outlined" @bind-Value="ChartType" AdornmentIcon="@Icons.Material.Filled.OpenWith" Adornment="Adornment.Start" AdornmentColor="Color.Warning">
+        <MudSelectItem Value="@(ChartType.Bar)">Biểu đồ cột</MudSelectItem>
+        <MudSelectItem Value="@(ChartType.Line)">Biểu đồ đường</MudSelectItem>
+    </MudSelect>
+</div>
+
+
+
+@if (isLoaded)
+{
+    @*     <MudTabs Elevation="2" Rounded="true" Centered="true" Class="my-6" Color="Color.Dark">
+        <MudTabPanel OnClick="SelectAccount" Icon="@Icons.Material.Filled.Api" Text="Tài khoản" BadgeDot="true" BadgeColor="Color.Error" >
+        </MudTabPanel>
+
+        <MudTabPanel OnClick="SelectPost" Icon="@Icons.Material.Filled.Build" Text="Bài viết" BadgeDot="true" BadgeColor="Color.Success">
+        </MudTabPanel>
+
+        <MudTabPanel OnClick="SelectGroup" Icon="@Icons.Material.Filled.BugReport" Text="Nhóm" BadgeDot="true" BadgeColor="Color.Info">
+        </MudTabPanel>
+    </MudTabs> *@
+
+    <div class="mt-4">
+        <MudChart ChartType="ChartType" ChartSeries="@Series" XAxisLabels="@XAxisLabels" Width="100%" Height="350px" ChartOptions="@Options" />
+    </div>
+
+}
+else
+{
+    <Client.Components.ComponentCustom.LoadingLocal></Client.Components.ComponentCustom.LoadingLocal>
+}
+
+    <MudContainer Class="mt-4">
+        <MudText Typo="Typo.h6" Style="font-weight:bold">Thống kê đơn booking</MudText>
+        <MudDivider Style="border-width: 1px; border-color: black;" />
+        <MudGrid Justify="Justify.Center" Style="padding:10px">
+            @if (bookingStats != null)
+            {
+                <MudItem xs="6">
+                    <MudGrid>
+                        <MudItem xs="12">
+                            <MudCard Style="height:130px; background-color:#00293C" Class="WhiteBold">
+                                <MudCardHeader Class="d-flex justify-content-center pb-2">
+                                    <MudItem Class="centers">
+                                        <MudText>Hôm nay</MudText>
+                                        <MudText Class="d-flex justify-content-center">
+                                            @{
+                                                var dailyStats = ((dynamic)bookingStats?["daily"]);
+                                                var revenue = dailyStats?.Revenue ?? 0.0;
+                                            }
+                                            @revenue.ToString("N0")đ
+                                        </MudText>
+                                    </MudItem>
+                                </MudCardHeader>
+                                <MudCardContent Class="p-0 m-0">
+                                    <MudGrid Justify="Justify.SpaceAround">
+                                        <MudItem>
+                                            <MudText>Số đơn</MudText>
+                                            <MudText Class="d-flex justify-content-center">
+                                                @(((dynamic)bookingStats?["daily"])?.TotalOrders ?? 0)
+                                            </MudText>
+                                        </MudItem>
+                                        <MudItem>
+                                            <MudText>Số đơn thành công</MudText>
+                                            <MudText Class="d-flex justify-content-center">
+                                                @(((dynamic)bookingStats?["daily"])?.SuccessfulOrders ?? 0)
+                                            </MudText>
+                                        </MudItem>
+                                        <MudItem>
+                                            <MudText>Số đơn hủy</MudText>
+                                            <MudText Class="d-flex justify-content-center">
+                                                @(((dynamic)bookingStats?["daily"])?.CancelledOrders ?? 0)
+                                            </MudText>
+                                        </MudItem>
+                                    </MudGrid>
+                                </MudCardContent>
+                            </MudCard>
+                        </MudItem>
+
+                        <MudItem xs="12">
+                            <MudCard Style="height:130px; background-color:#75B1A9" Class="WhiteBold">
+                                <MudCardHeader Class="d-flex justify-content-center pb-2">
+                                    <MudItem Class="centers">
+                                        <MudText>Tuần này</MudText>
+                                        <MudText Class="d-flex justify-content-center">
+                                            @{
+                                                var weeklyStats = ((dynamic)bookingStats?["weekly"]);
+                                                var revenue = weeklyStats?.Revenue ?? 0.0;
+                                            }
+                                            @revenue.ToString("N0")đ
+                                        </MudText>
+                                    </MudItem>
+                                </MudCardHeader>
+                                <MudCardContent Class="p-0 m-0">
+                                    <MudGrid Justify="Justify.SpaceAround">
+                                        <MudItem>
+                                            <MudText>Số đơn</MudText>
+                                            <MudText Class="d-flex justify-content-center">
+                                                @(((dynamic)bookingStats?["weekly"])?.TotalOrders ?? 0)
+                                            </MudText>
+                                        </MudItem>
+                                        <MudItem>
+                                            <MudText>Số đơn thành công</MudText>
+                                            <MudText Class="d-flex justify-content-center">
+                                                @(((dynamic)bookingStats?["weekly"])?.SuccessfulOrders ?? 0)
+                                            </MudText>
+                                        </MudItem>
+                                        <MudItem>
+                                            <MudText>Số đơn hủy</MudText>
+                                            <MudText Class="d-flex justify-content-center">
+                                                @(((dynamic)bookingStats?["weekly"])?.CancelledOrders ?? 0)
+                                            </MudText>
+                                        </MudItem>
+                                    </MudGrid>
+                                </MudCardContent>
+                            </MudCard>
+                        </MudItem>
+                    </MudGrid>
+                </MudItem>
+                <MudItem xs="6">
+                    <MudGrid>
+                        <MudItem xs="12">
+                            <MudCard Style="height:130px; background-color:#4F6457" Class="WhiteBold">
+                                <MudCardHeader Class="d-flex justify-content-center pb-2">
+                                    <MudItem Class="centers">
+                                        <MudText>Tháng này</MudText>
+                                        <MudText Class="d-flex justify-content-center">
+                                            @{
+                                                var monthlyStats = ((dynamic)bookingStats?["monthly"]);
+                                                var revenue = monthlyStats?.Revenue ?? 0.0;
+                                            }
+                                            @revenue.ToString("N0")đ
+                                        </MudText>
+                                    </MudItem>
+                                </MudCardHeader>
+                                <MudCardContent Class="p-0 m-0">
+                                    <MudGrid Justify="Justify.SpaceAround">
+                                        <MudItem>
+                                            <MudText>Số đơn</MudText>
+                                            <MudText Class="d-flex justify-content-center">
+                                                @(((dynamic)bookingStats?["monthly"])?.TotalOrders ?? 0)
+                                            </MudText>
+                                        </MudItem>
+                                        <MudItem>
+                                            <MudText>Số đơn thành công</MudText>
+                                            <MudText Class="d-flex justify-content-center">
+                                                @(((dynamic)bookingStats?["monthly"])?.SuccessfulOrders ?? 0)
+                                            </MudText>
+                                        </MudItem>
+                                        <MudItem>
+                                            <MudText>Số đơn hủy</MudText>
+                                            <MudText Class="d-flex justify-content-center">
+                                                @(((dynamic)bookingStats?["monthly"])?.CancelledOrders ?? 0)
+                                            </MudText>
+                                        </MudItem>
+                                    </MudGrid>
+                                </MudCardContent>
+                            </MudCard>
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudCard Style="height:130px; background-color:#D9B44A" Class="WhiteBold">
+                                <MudCardHeader Class="d-flex justify-content-center pb-2">
+                                    <MudItem Class="centers">
+                                        <MudText>Năm này</MudText>
+                                        <MudText Class="d-flex justify-content-center">
+                                            @{
+                                                var yearlyStats = ((dynamic)bookingStats?["yearly"]);
+                                                var revenue = yearlyStats?.Revenue ?? 0.0;
+                                            }
+                                            @revenue.ToString("N0")đ
+                                        </MudText>
+                                    </MudItem>
+                                </MudCardHeader>
+                                <MudCardContent Class="p-0 m-0">
+                                    <MudGrid Justify="Justify.SpaceAround">
+                                        <MudItem>
+                                            <MudText>Số đơn</MudText>
+                                            <MudText Class="d-flex justify-content-center">
+                                                @(((dynamic)bookingStats?["yearly"])?.TotalOrders ?? 0)
+                                            </MudText>
+                                        </MudItem>
+                                        <MudItem>
+                                            <MudText>Số đơn thành công</MudText>
+                                            <MudText Class="d-flex justify-content-center">
+                                                @(((dynamic)bookingStats?["yearly"])?.SuccessfulOrders ?? 0)
+                                            </MudText>
+                                        </MudItem>
+                                        <MudItem>
+                                            <MudText>Số đơn hủy</MudText>
+                                            <MudText Class="d-flex justify-content-center">
+                                                @(((dynamic)bookingStats?["yearly"])?.CancelledOrders ?? 0)
+                                            </MudText>
+                                        </MudItem>
+                                    </MudGrid>
+                                </MudCardContent>
+                            </MudCard>
+                        </MudItem>
+                    </MudGrid>
+                </MudItem>
+            }
+        </MudGrid>
+    </MudContainer>
+<script>
+    window.saveAsFile = function (fileName, byteBase64) {
+        var link = document.createElement('a');
+        link.download = fileName;
+        link.href = "data:application/octet-stream;base64," + byteBase64;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+</script>
 
 @code {
+    public ChartOptions Options = new ChartOptions();
 
+    bool isLoaded;
+
+    ChartType ChartType = ChartType.Bar; 
+
+    int Year = DateTime.Now.Year;
+
+    int CurrentYear = DateTime.Now.Year;
+
+    bool isColumn = true;
+
+    public List<ChartSeries> Series = new List<ChartSeries>();
+
+    public string[] XAxisLabels = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"};
+
+    private Dictionary<string, object> bookingStats;
+
+    private Timer? timer;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Options.YAxisTicks = 10;
+        await GetData();
+        await GetBookingStatistics();
+
+        // Set up timer to update every minute
+        timer = new Timer(async _ =>
+        {
+            await GetBookingStatistics();
+            await InvokeAsync(StateHasChanged);
+        }, null, TimeSpan.Zero, TimeSpan.FromMinutes(1));
+    }
+
+    public void Dispose()
+    {
+        timer?.Dispose();
+    }
+
+    async Task Change(ChangeEventArgs v)
+    {
+        Year = Convert.ToInt16(v.Value);
+        await GetData();
+        StateHasChanged();
+    }
+
+    async Task GetData ()
+    {
+        isLoaded = false;
+        var _httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+
+        var result = await _httpClient.GetStringAsync($"/getstatisUser/{Year}");
+
+        var listData = JsonConvert.DeserializeObject<List<double>>(result);
+
+        result = await _httpClient.GetStringAsync($"/getstatisPost/{Year}");
+
+        var listDataPost = JsonConvert.DeserializeObject<List<double>>(result);
+
+        result = await _httpClient.GetStringAsync($"/getstatisGroup/{Year}");
+
+        var listDataGroup = JsonConvert.DeserializeObject<List<double>>(result);
+
+        Series = new List<ChartSeries>()
+        {
+            new ChartSeries() { Name = "Tài khoản mới", Data = listData.ToArray() },
+            new ChartSeries() { Name = "Bài viết mới", Data = listDataPost.ToArray() },
+            new ChartSeries() { Name = "Nhóm mới", Data = listDataGroup.ToArray() },
+        };
+
+        result = await _httpClient.GetStringAsync($"/getStatisTotal");
+
+        var data = JsonConvert.DeserializeObject<Dictionary<string,string>>(result);
+        isLoaded = true;
+    }
+
+    async Task GetBookingStatistics()
+    {
+        try 
+        {
+            var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+            var response = await httpClient.GetStringAsync("/getBookingStatisticsRealtime");
+            bookingStats = JsonConvert.DeserializeObject<Dictionary<string, object>>(response);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error fetching statistics: {ex.Message}");
+        }
+    }
+
+    protected async Task DownloadFile()
+    {
+        // Kiểm tra xác nhận từ người dùng
+        bool confirmExport = await JSRuntime.InvokeAsync<bool>("confirm", "Do you want to Export?");
+
+        if (confirmExport)
+        {
+            StateHasChanged();
+
+            var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+            var response = await httpClient.GetAsync($"api/files/DownloadExcel/{Year}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                var fileBytes = await response.Content.ReadAsByteArrayAsync();
+                var fileName = $"MyReport{DateTime.Now.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture)}.xlsx";
+                await JSRuntime.InvokeAsync<object>("saveAsFile", fileName, Convert.ToBase64String(fileBytes));
+            }
+            else
+            {
+                // Xử lý lỗi ở đây nếu cần
+                Console.WriteLine($"Error: {response.StatusCode} - {response.ReasonPhrase}");
+            }
+        }
+    }
 }
