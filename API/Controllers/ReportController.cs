@@ -32,7 +32,7 @@ namespace API.Controllers
         public async Task<IActionResult> GetTopics(int page)
         {
             page = page - 1;
-            var listPostRepost = _context.Reports.Include(a => a.Post).Where(a => a.State == Data.Enums.WaitState.Pending && a.Post.IsDeleted == false).GroupBy(a => a.IdPost).ToList().Skip(page * 10).Take(10).ToList();
+            var listPostRepost = _context.Reports.Include(a => a.Post).ThenInclude(a => a.User).Where(a => a.State == Data.Enums.WaitState.Pending && a.Post.IsDeleted == false && a.Post.User.LockoutEnd == null).GroupBy(a => a.IdPost).ToList().Skip(page * 10).Take(10).ToList();
 
             var listReport = new List<ReportDTO>();
             foreach (var item in listPostRepost)
@@ -51,7 +51,7 @@ namespace API.Controllers
         [HttpGet("/getListUserReport/{IdUser}")]
         public async Task<IActionResult> GetReportUser(Guid IdUser)
         {
-            var listPostRepost = _context.Reports.Include(a => a.Post).Where(a => a.State == Data.Enums.WaitState.Accept && a.IdUser == IdUser).GroupBy(a => a.IdPost).ToList();
+            var listPostRepost = _context.Reports.Include(a => a.Post).ThenInclude(a => a.User).Where(a => a.State == Data.Enums.WaitState.Accept && a.IdUser == IdUser && a.Post.User.LockoutEnd == null).GroupBy(a => a.IdPost).ToList();
 
             var listReport = new List<ReportDTO>();
             foreach (var item in listPostRepost)
@@ -70,7 +70,7 @@ namespace API.Controllers
         [HttpGet("/report/getReportPost/{idPost}")]
         public async Task<PostIntroDTO> GetPost(Guid idPost)
         {
-            var post = await _context.Posts.FirstOrDefaultAsync(a => a.Id == idPost && a.IsDeleted == false);
+            var post = await _context.Posts.Include(a => a.User).FirstOrDefaultAsync(a => a.Id == idPost && a.IsDeleted == false && a.User.LockoutEnd == null);
             if (post == null)
             {
                 return null;
@@ -82,7 +82,7 @@ namespace API.Controllers
         [HttpGet("/report/getReportedPost/{idPost}")]
         public async Task<PostIntroDTO> GetPostReported(Guid idPost)
         {
-            var post = await _context.Posts.FirstOrDefaultAsync(a => a.Id == idPost);
+            var post = await _context.Posts.Include(a => a.User).FirstOrDefaultAsync(a => a.Id == idPost && a.User.LockoutEnd == null);
             if (post == null)
             {
                 return null;

@@ -319,6 +319,15 @@ else
         {
             if ((bool)result.Data)
             {
+                var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+                var data = await httpClient.GetStringAsync($"/checkwaitbill/{Id}");
+
+                if (data == "false")
+                {
+                    Snackbar.Add("Không thể hủy do quảng cáo của bạn đã được admin xác nhận", Severity.Info);
+                    WaitBill();
+                    return;
+                }
                 var _httpClient = HttpClientFactory.CreateClient("MyHttpClient");
                 var response = await _httpClient.DeleteAsync($"/deleteRegisAds/{Id}");
                 if (response.IsSuccessStatusCode)

@@ -140,7 +140,9 @@ namespace API.Controllers.PostController
 
 			// Lấy danh sách GroupPosts cho nhóm này để kiểm tra quan hệ
 			var groupPosts = await _context.GroupPosts
-											.Where(gp => gp.IdGroup == group.IdGroup && gp.WaitState == WaitState.Pending)
+											.Include(a => a.Post)
+											.ThenInclude(a => a.User)
+											.Where(gp => gp.IdGroup == group.IdGroup && gp.WaitState == WaitState.Pending && gp.Post.IsDeleted == false && gp.Post.User.LockoutEnd == null)
 											.ToListAsync();
 
 			var listIntroPost = new List<PostIntroDTO>();

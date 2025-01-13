@@ -703,7 +703,7 @@ else
     private async Task SearchPosts(string keyword)
     {
         var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
-        var response = await httpClient.GetAsync($"/api/search/search-all?keyword={Uri.EscapeDataString(keyword)}");
+        var response = await httpClient.GetAsync($"/api/search/search-all?keyword={Uri.EscapeDataString(keyword)}&idUser={this.IdUser}");
 
         if (response.IsSuccessStatusCode)
         {

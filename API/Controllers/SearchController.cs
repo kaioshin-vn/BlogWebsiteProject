@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
 using System.Text;
+using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
 namespace API.Controllers
 {
@@ -26,7 +27,20 @@ namespace API.Controllers
         [HttpGet("getListPostTop/{idUser}")]
         public async Task<List<PostIntroDTO>> GetListPostTop(Guid idUser)
         {
-            var lstPost = await _context.Posts.Where(x => x.IsDeleted == false).ToListAsync();
+            var listIdHide = _context.PostHideByRestricted.Select(a => a.IdPost).ToList();
+            if (idUser != null)
+            {
+                var listHide = _context.PostHides.Where(a => a.IdUser == idUser).Select(a => a.IdPost).ToList();
+                if (listHide.Count != 0)
+                {
+                    listIdHide.AddRange(listHide);
+                }
+            }
+
+            var lstPost = await _context.Posts.Include(a => a.User)
+                .Include(a => a.GroupPost).ThenInclude(a => a.Group).Where(a => a.IsDeleted == false && a.User.LockoutEnd == null && !listIdHide.Contains(a.Id)
+                && (a.GroupPost.Count == 0 || (a.GroupPost.Any(b => b.IdPost == a.Id && b.WaitState == WaitState.Accept && (b.Group.StateGroup == KindGroup.Public)))))
+                .ToListAsync();
 
             var lstPostUser = new List<PostIntroDTO>();
             foreach (var item in lstPost)
@@ -41,7 +55,23 @@ namespace API.Controllers
         [HttpGet("SearchListPostIntro/{idUser}")]
         public async Task<List<PostIntroDTO>> GetListPostIntro(Guid idUser)
         {
-            var listPost = await _context.Posts.Where(a => a.IsDeleted == false).ToListAsync();
+            var listIdHide = _context.PostHideByRestricted.Select(a => a.IdPost).ToList();
+            if (idUser != null)
+            {
+                var listHide = _context.PostHides.Where(a => a.IdUser == idUser).Select(a => a.IdPost).ToList();
+                if (listHide.Count != 0)
+                {
+                    listIdHide.AddRange(listHide);
+                }
+            }
+
+            var listPost = await _context.Posts.Include(a => a.User)
+                .Include(a => a.GroupPost).ThenInclude(a => a.Group).Where(a => a.IsDeleted == false && a.User.LockoutEnd == null && !listIdHide.Contains(a.Id)
+                && (a.GroupPost.Count == 0 || (a.GroupPost.Any(b => b.IdPost == a.Id && b.WaitState == WaitState.Accept && (b.Group.StateGroup == KindGroup.Public)))))
+                .ToListAsync();
+
+
+
 
             var listIntroPost = new List<PostIntroDTO>();
             foreach (var item in listPost)

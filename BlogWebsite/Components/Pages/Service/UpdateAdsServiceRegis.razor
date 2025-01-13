@@ -181,7 +181,7 @@ else
         var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
         var data = await httpClient.GetStringAsync($"/checkwaitbill/{RegistrationAdvertisement.Id}");
 
-        if (data == "False")
+        if (data == "false")
         {
             Snackbar.Add("Không thể chỉnh sửa do quảng cáo của bạn đã được admin xác nhận", Severity.Info);
             return;
