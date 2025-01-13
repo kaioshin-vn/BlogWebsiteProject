@@ -28,7 +28,7 @@ namespace API.Controllers
         public async Task<List<PostIntroDTO>> GetListPostTop(Guid idUser)
         {
             var listIdHide = _context.PostHideByRestricted.Select(a => a.IdPost).ToList();
-            if (idUser != null)
+            if (idUser != Guid.Empty)
             {
                 var listHide = _context.PostHides.Where(a => a.IdUser == idUser).Select(a => a.IdPost).ToList();
                 if (listHide.Count != 0)
@@ -56,7 +56,7 @@ namespace API.Controllers
         public async Task<List<PostIntroDTO>> GetListPostIntro(Guid idUser)
         {
             var listIdHide = _context.PostHideByRestricted.Select(a => a.IdPost).ToList();
-            if (idUser != null)
+            if (idUser != Guid.Empty)
             {
                 var listHide = _context.PostHides.Where(a => a.IdUser == idUser).Select(a => a.IdPost).ToList();
                 if (listHide.Count != 0)

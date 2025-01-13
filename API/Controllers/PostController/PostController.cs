@@ -114,7 +114,16 @@ namespace API.Controllers.PostController
         [HttpGet("/GetListPostUser/{idUser}")]
         public async Task<List<PostIntroDTO>> GetListPostUser(Guid idUser)
         {
-            var listPost = await _context.Posts.Include(a => a.GroupPost).Where(a => a.IdUser == idUser && a.GroupPost.Count == 0 && a.IsDeleted == false).OrderByDescending(a => a.CreateDate).ToListAsync();
+            var listIdHide = _context.PostHideByRestricted.Select(a => a.IdPost).ToList();
+            if (idUser != Guid.Empty)
+            {
+                var listHide = _context.PostHides.Where(a => a.IdUser == idUser).Select(a => a.IdPost).ToList();
+                if (listHide.Count != 0)
+                {
+                    listIdHide.AddRange(listHide);
+                }
+            }
+            var listPost = await _context.Posts.Include(a => a.GroupPost).Where(a => a.IdUser == idUser && a.GroupPost.Count == 0 && a.IsDeleted == false && !listIdHide.Contains(a.Id)).OrderByDescending(a => a.CreateDate).ToListAsync();
 
             var listIntroPost = new List<PostIntroDTO>();
             foreach (var item in listPost)
