@@ -207,11 +207,10 @@ else
 
                 var lockoutResult = await UserManager.SetLockoutEndDateAsync(user, null);
 
-                var from = new MailAddress("trangcthph46782@fpt.edu.vn", "KAIZEN");
+                var from = new MailAddress("kaioshin697@gmail.com", "KAIZEN");
                 var to = new MailAddress(user.Email);
                 const string subject = "Tài khoản đã được mở khóa";
-                const string frompass = "xrlz fpkb hjfe lbdw";
-
+                const string frompass = "nsal krhp xdqq jsfv";
 
                 string body = $"Tài khoản của bạn đã được chúng tôi mở khóa, hãy rút kinh nghiệm cho những lần sau";
                 using (var smtpClient = new SmtpClient
@@ -260,11 +259,10 @@ else
 
                 var lockoutResult = await UserManager.SetLockoutEndDateAsync(user, null);
 
-                var from = new MailAddress("trangcthph46782@fpt.edu.vn", "KAIZEN");
+                var from = new MailAddress("kaioshin697@gmail.com", "KAIZEN");
                 var to = new MailAddress(user.Email);
                 const string subject = "Khiếu nại của bạn đã bị từ chối";
-                const string frompass = "xrlz fpkb hjfe lbdw";
-
+                const string frompass = "nsal krhp xdqq jsfv";
 
                 string body = $"Chúng tôi rất tiếc phải thông báo rằng khiếu nại của bạn đã bị từ chối, do đó tài khoản của bạn đã bị ban vĩnh viễn, đây sẽ là lần <b>cuối cùng </b> chúng tôi phản hồi về tài khoản của bạn";
                 using (var smtpClient = new SmtpClient
