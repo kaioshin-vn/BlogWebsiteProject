@@ -1,140 +1,293 @@
 ﻿@page "/statistics"
+@using Data.Database.Table
+@using Newtonsoft.Json
+
+@inject IHttpClientFactory HttpClientFactory
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserManager<ApplicationUser> UserManager
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
 <style>
     .WhiteBold {
-        font-weight: bold;
-        color: white;
+    font-weight: bold;
+    color: white;
     }
 
     .BlackBold {
-        font-weight: bold;
-        color: black;
-        padding-top: 5px;
+    font-weight: bold;
+    color: black;
+    padding-top: 5px;
     }
     .centers{
-        
+
     }
 </style>
-<MudContainer>
-    <MudPaper Class="p-4" Outlined="true" Square="true" Style="height:650px; background-color:#F8FAFC">
-        <MudText Typo="Typo.h6" Style="font-weight:bold">Thống kê</MudText>
-        <MudDivider Style="border-width: 1px; border-color: black;" />
-        <MudGrid Justify="Justify.Center" Style="padding:10px">
-            <MudItem xs="6">
-                <MudGrid>
-                    <MudItem xs="12" >
-                        <MudCard Style="height:130px; background-color:#00293C" Class="WhiteBold">
-                            <MudCardHeader Class="d-flex justify-content-center pb-2">
-                                <MudItem Class="centers">
-                                    <MudText>Hôm nay</MudText>
-                                    <MudText Class="d-flex justify-content-center">500.000đ</MudText>
-                                </MudItem>
-                            </MudCardHeader>
-                            <MudCardContent Class="p-0 m-0">
-                                <MudGrid Justify="Justify.SpaceAround">
-                                    <MudItem >
-                                        <MudText>Số đơn</MudText>
-                                        <MudText Class="d-flex justify-content-center">4</MudText>
+@if (lstInvoices == null || StatisticsDaily == null)
+{
+    <Client.Components.ComponentCustom.LoadingLocal></Client.Components.ComponentCustom.LoadingLocal>
+}
+else{
+    <MudContainer>
+        <MudPaper Class="p-4" Outlined="true" Square="true" Style=" background-color:#F8FAFC">
+            <MudText Typo="Typo.h6" Style="font-weight:bold">Thống kê</MudText>
+            <MudDivider Style="border-width: 1px; border-color: black;" />
+            <MudGrid Justify="Justify.Center" Style="padding:10px">
+                <MudItem xs="6">
+                    <MudGrid>
+                        <MudItem xs="12">
+                            <MudCard Style="height:130px; background-color:#00293C" Class="WhiteBold">
+                                <MudCardHeader Class="d-flex justify-content-center pb-2">
+                                    <MudItem Class="centers">
+                                        <MudText>Hôm nay</MudText>
+                                        <MudText Class="d-flex justify-content-center">@(StatisticsDaily?.Today.TotalRevenue.ToString("N0"))đ</MudText>
                                     </MudItem>
-                                    <MudItem>
-                                        <MudText>Số đơn thành công</MudText>
-                                        <MudText Class="d-flex justify-content-center">3</MudText>
+                                </MudCardHeader>
+                                <MudCardContent Class="p-0 m-0">
+                                    <MudGrid Justify="Justify.SpaceAround">
+                                        <MudItem>
+                                            <MudText>Số đơn</MudText>
+                                            <MudText Class="d-flex justify-content-center">@(StatisticsDaily?.Today.TotalOrders)</MudText>
+                                        </MudItem>
+                                        <MudItem>
+                                            <MudText>Số đơn thành công</MudText>
+                                            <MudText Class="d-flex justify-content-center">@(StatisticsDaily?.Today.SuccessfulOrders)</MudText>
+                                        </MudItem>
+                                        <MudItem>
+                                            <MudText>Số đơn hủy</MudText>
+                                            <MudText Class="d-flex justify-content-center">@(StatisticsDaily?.Today.CancelledOrders)</MudText>
+                                        </MudItem>
+                                    </MudGrid>
+                                </MudCardContent>
+                            </MudCard>
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudCard Style="height:130px; background-color:#75B1A9" Class="WhiteBold">
+                                <MudCardHeader Class="d-flex justify-content-center pb-2">
+                                    <MudItem Class="centers">
+                                        <MudText>Tuần này</MudText>
+                                        <MudText Class="d-flex justify-content-center">@(StatisticsDaily?.ThisWeek.TotalRevenue.ToString("N0"))đ</MudText>
                                     </MudItem>
-                                    <MudItem>
-                                        <MudText>Số đơn hủy</MudText>
-                                        <MudText Class="d-flex justify-content-center">1</MudText>
+                                </MudCardHeader>
+                                <MudCardContent Class="p-0 m-0">
+                                    <MudGrid Justify="Justify.SpaceAround">
+                                        <MudItem>
+                                            <MudText>Số đơn</MudText>
+                                            <MudText Class="d-flex justify-content-center">@(StatisticsDaily?.ThisWeek.TotalOrders)</MudText>
+                                        </MudItem>
+                                        <MudItem>
+                                            <MudText>Số đơn thành công</MudText>
+                                            <MudText Class="d-flex justify-content-center">@(StatisticsDaily?.ThisWeek.SuccessfulOrders)</MudText>
+                                        </MudItem>
+                                        <MudItem>
+                                            <MudText>Số đơn hủy</MudText>
+                                            <MudText Class="d-flex justify-content-center">@(StatisticsDaily?.ThisWeek.CancelledOrders)</MudText>
+                                        </MudItem>
+                                    </MudGrid>
+                                </MudCardContent>
+                            </MudCard>
+                        </MudItem>
+                    </MudGrid>
+                </MudItem>
+                <MudItem xs="6">
+                    <MudGrid>
+                        <MudItem xs="12">
+                            <MudCard Style="height:130px; background-color:#4F6457" Class="WhiteBold">
+                                <MudCardHeader Class="d-flex justify-content-center pb-2">
+                                    <MudItem Class="centers">
+                                        <MudText>Tháng này</MudText>
+                                        <MudText Class="d-flex justify-content-center">@(StatisticsDaily?.ThisMonth.TotalRevenue.ToString("N0"))đ</MudText>
                                     </MudItem>
-                                </MudGrid>
-                            </MudCardContent>
-                        </MudCard>
-                    </MudItem>
-                    <MudItem xs="12">
-                        <MudCard Style="height:130px; background-color:#75B1A9" Class="WhiteBold">
-                            <MudCardHeader Class="d-flex justify-content-center pb-2">
-                                <MudItem Class="centers">
-                                    <MudText>Tuần này</MudText>
-                                    <MudText Class="d-flex justify-content-center">500.000đ</MudText>
-                                </MudItem>
-                            </MudCardHeader>
-                            <MudCardContent Class="p-0 m-0">
-                                <MudGrid Justify="Justify.SpaceAround">
-                                    <MudItem>
-                                        <MudText>Số đơn</MudText>
-                                        <MudText Class="d-flex justify-content-center">4</MudText>
+                                </MudCardHeader>
+                                <MudCardContent Class="p-0 m-0">
+                                    <MudGrid Justify="Justify.SpaceAround">
+                                        <MudItem>
+                                            <MudText>Số đơn</MudText>
+                                            <MudText Class="d-flex justify-content-center">@(StatisticsDaily?.ThisMonth.TotalOrders)</MudText>
+                                        </MudItem>
+                                        <MudItem>
+                                            <MudText>Số đơn thành công</MudText>
+                                            <MudText Class="d-flex justify-content-center">@(StatisticsDaily?.ThisMonth.SuccessfulOrders)</MudText>
+                                        </MudItem>
+                                        <MudItem>
+                                            <MudText>Số đơn hủy</MudText>
+                                            <MudText Class="d-flex justify-content-center">@(StatisticsDaily?.ThisMonth.CancelledOrders)</MudText>
+                                        </MudItem>
+                                    </MudGrid>
+                                </MudCardContent>
+                            </MudCard>
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudCard Style="height:130px; background-color:#D9B44A" Class="WhiteBold">
+                                <MudCardHeader Class="d-flex justify-content-center pb-2">
+                                    <MudItem Class="centers">
+                                        <MudText>Năm này</MudText>
+                                        <MudText Class="d-flex justify-content-center">@(StatisticsDaily?.ThisYear.TotalRevenue.ToString("N0"))đ</MudText>
                                     </MudItem>
-                                    <MudItem>
-                                        <MudText>Số đơn thành công</MudText>
-                                        <MudText Class="d-flex justify-content-center">3</MudText>
-                                    </MudItem>
-                                    <MudItem>
-                                        <MudText>Số đơn hủy</MudText>
-                                        <MudText Class="d-flex justify-content-center">1</MudText>
-                                    </MudItem>
-                                </MudGrid>
-                            </MudCardContent>
-                        </MudCard>
-                    </MudItem>
-                </MudGrid>
-            </MudItem>
-            <MudItem xs="6">
-                <MudGrid>
-                    <MudItem xs="12">
-                        <MudCard Style="height:130px; background-color:#4F6457" Class="WhiteBold">
-                            <MudCardHeader Class="d-flex justify-content-center pb-2">
-                                <MudItem Class="centers">
-                                    <MudText>Tháng này</MudText>
-                                    <MudText Class="d-flex justify-content-center">500.000đ</MudText>
-                                </MudItem>
-                            </MudCardHeader>
-                            <MudCardContent Class="p-0 m-0">
-                                <MudGrid Justify="Justify.SpaceAround">
-                                    <MudItem>
-                                        <MudText>Số đơn</MudText>
-                                        <MudText Class="d-flex justify-content-center">4</MudText>
-                                    </MudItem>
-                                    <MudItem>
-                                        <MudText>Số đơn thành công</MudText>
-                                        <MudText Class="d-flex justify-content-center">3</MudText>
-                                    </MudItem>
-                                    <MudItem>
-                                        <MudText>Số đơn hủy</MudText>
-                                        <MudText Class="d-flex justify-content-center">1</MudText>
-                                    </MudItem>
-                                </MudGrid>
-                            </MudCardContent>
-                        </MudCard>
-                    </MudItem>
-                    <MudItem xs="12" >
-                        <MudCard Style="height:130px; background-color:#D9B44A" Class="WhiteBold">
-                            <MudCardHeader Class="d-flex justify-content-center pb-2">
-                                <MudItem Class="centers">
-                                    <MudText>Năm này</MudText>
-                                    <MudText Class="d-flex justify-content-center">500.000đ</MudText>
-                                </MudItem>
-                            </MudCardHeader>
-                            <MudCardContent Class="p-0 m-0">
-                                <MudGrid Justify="Justify.SpaceAround">
-                                    <MudItem>
-                                        <MudText>Số đơn</MudText>
-                                        <MudText Class="d-flex justify-content-center">4</MudText>
-                                    </MudItem>
-                                    <MudItem>
-                                        <MudText>Số đơn thành công</MudText>
-                                        <MudText Class="d-flex justify-content-center">3</MudText>
-                                    </MudItem>
-                                    <MudItem>
-                                        <MudText>Số đơn hủy</MudText>
-                                        <MudText Class="d-flex justify-content-center">1</MudText>
-                                    </MudItem>
-                                </MudGrid>
-                            </MudCardContent>
-                        </MudCard>
-                    </MudItem>
-                </MudGrid>
-            </MudItem>  
-        </MudGrid>
-    </MudPaper>
-</MudContainer>
+                                </MudCardHeader>
+                                <MudCardContent Class="p-0 m-0">
+                                    <MudGrid Justify="Justify.SpaceAround">
+                                        <MudItem>
+                                            <MudText>Số đơn</MudText>
+                                            <MudText Class="d-flex justify-content-center">@(StatisticsDaily?.ThisYear.TotalOrders)</MudText>
+                                        </MudItem>
+                                        <MudItem>
+                                            <MudText>Số đơn thành công</MudText>
+                                            <MudText Class="d-flex justify-content-center">@(StatisticsDaily?.ThisYear.SuccessfulOrders)</MudText>
+                                        </MudItem>
+                                        <MudItem>
+                                            <MudText>Số đơn hủy</MudText>
+                                            <MudText Class="d-flex justify-content-center">@(StatisticsDaily?.ThisYear.CancelledOrders)</MudText>
+                                        </MudItem>
+                                    </MudGrid>
+                                </MudCardContent>
+                            </MudCard>
+                        </MudItem>
+                    </MudGrid>
+                </MudItem>
+            </MudGrid>
+            <MudDivider Style="border-width: 1px; border-color: black;" />
+            <MudGrid>
+                <MudItem xs="12" Class="d-flex justify-content-between mt-3">
+                    <MudButton Class="mx-2 p-0" Variant="Variant.Outlined" OnClick="@(() => GetStatisticsByPeriod("day"))">Ngày</MudButton>
+                    <MudButton Class="mx-2" Variant="Variant.Outlined" OnClick="@(() => GetStatisticsByPeriod("week"))">Tuần</MudButton>
+                    <MudButton Class="mx-2" Variant="Variant.Outlined" OnClick="@(() => GetStatisticsByPeriod("month"))">Tháng</MudButton>
+                    <MudButton Class="mx-2" Variant="Variant.Outlined" OnClick="@(() => GetStatisticsByPeriod("year"))">Năm</MudButton>
+                    <MudDateRangePicker Label="Chọn khoảng thời gian thống kê" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudGrid>
+                        <MudItem xs="8">
+                            <MudText>Danh sách đơn quảng cáo</MudText>
+                            <MudTable Items="@lstInvoices" Hover="true" Breakpoint="Breakpoint.Sm" LoadingProgressColor="Color.Info">
+                                <HeaderContent>
+                                    <MudTh>Người đăng ký</MudTh>
+                                    <MudTh>Gói dịch vụ</MudTh>
+                                    <MudTh>Giá dịch vụ</MudTh>
+                                    <MudTh>Thời hạn gói</MudTh>
+                                </HeaderContent>
+                                <RowTemplate>
+                                    <MudTd>@context.User?.FullName</MudTd>
+                                    <MudTd>@context.RegistrationAdvertisement?.Name</MudTd>
+                                    <MudTd>@context.RegistrationAdvertisement?.Price.ToString("N0")</MudTd>
+                                    <MudTd>@context.RegistrationAdvertisement?.DurationDays ngày</MudTd>
+                                    <MudTd>
+                                        <MudButton Variant="Variant.Outlined" Color="Color.Success" OnClick="() => DowBill(context.Id)">Hóa đơn</MudButton>
+                                    </MudTd>
+                                </RowTemplate>
+                            </MudTable>
+                        </MudItem>
+                        <MudItem xs="4">
+                            <MudChart ChartType="ChartType.Donut" Width="200px" Height="200px" InputData="@data" InputLabels="@labels">
+                                <CustomGraphics>
+                                    <text class="donut-inner-text" x="47%" y="35%" dominant-baseline="middle" text-anchor="middle" fill="black" font-family="Helvetica" font-size="2">Tổng doanh thu</text>
+                                    <text class="donut-inner-text" x="47%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="black" font-family="Helvetica" font-size="5">@totalRevenue.ToString("N0") đ</text>
+                                </CustomGraphics>
+                            </MudChart>
+                        </MudItem>
+                    </MudGrid>
+                </MudItem>
+            </MudGrid>
+        </MudPaper>
+    </MudContainer>
+}
 
 @code {
+    private double[] data;
+    private string[] labels;
+    private double totalRevenue = 0;
 
+    private List<Invoices> lstInvoices = new List<Invoices>();
+
+    private StatisticsData StatisticsDaily { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        labels = new string[] { "Tổng số đơn", "Đã thanh toán", "Chưa thanh toán" };
+        // Lấy dữ liệu thống kê all
+        await LoadStatistics();
+        // Lấy dữ liệu mặc định (có thể là thống kê ngày hiện tại)
+        await GetStatisticsByPeriod("day");
+    }
+
+    async Task DowBill(Guid Id)
+    {
+        NavigationManager.NavigateTo("/FilePDF/" + Id.ToString() + ".pdf", true);
+    }
+
+    private async Task GetStatisticsByPeriod(string period)
+    {
+        try
+        {
+            var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+            var response = await httpClient.GetStringAsync($"/getStatisticsByPeriod/{period}");
+            
+            if (response != null)
+            {
+                var result = JsonConvert.DeserializeObject<StatisticsResponse>(response);
+                
+                // Cập nhật danh sách đăng ký cho bảng
+                lstInvoices = result.Registrations;
+
+                // Cập nhật dữ liệu cho biểu đồ
+                data = new double[] 
+                { 
+                    result.ChartData.TotalOrders,
+                    result.ChartData.PaidOrders,
+                    result.ChartData.UnpaidOrders
+                };
+
+                // Cập nhật tổng doanh thu
+                totalRevenue = result.ChartData.TotalRevenue;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Chi tiết lỗi: {ex.ToString()}");
+            Snackbar.Add($"Lỗi khi tải thống kê: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task LoadStatistics()
+    {
+        try
+        {
+            var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+            var response = await httpClient.GetStringAsync("/getRevenueStatistics");
+            StatisticsDaily = JsonConvert.DeserializeObject<StatisticsData>(response);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Lỗi khi tải thống kê: {ex.Message}", Severity.Error);
+        }
+    }
+
+    public class StatisticsResponse
+    {
+        public List<Invoices> Registrations { get; set; }
+        public ChartData ChartData { get; set; }
+    }
+
+    public class ChartData
+    {
+        public double TotalRevenue { get; set; }
+        public int TotalOrders { get; set; }
+        public int PaidOrders { get; set; }
+        public int UnpaidOrders { get; set; }
+    }
+    public class StatisticsData
+    {
+        public PeriodStats Today { get; set; }
+        public PeriodStats ThisWeek { get; set; }
+        public PeriodStats ThisMonth { get; set; }
+        public PeriodStats ThisYear { get; set; }
+    }
+    public class PeriodStats
+    {
+        public double TotalRevenue { get; set; }
+        public int TotalOrders { get; set; }
+        public int SuccessfulOrders { get; set; }
+        public int CancelledOrders { get; set; }
+    }
 }
