@@ -76,8 +76,7 @@ namespace API.Controllers.TagController
             {
                 var now = DateTime.Now;
                 var query = _context.Invoices
-                    .Include(i => i.RegistrationAdvertisement)
-                        .ThenInclude(r => r.User)
+                    .Include(i => i.User)
                     .Include(i => i.RegistrationAdvertisement)
                         .ThenInclude(r => r.ServiceAdvertisementPricing)
                     .AsQueryable();
@@ -106,7 +105,14 @@ namespace API.Controllers.TagController
                 {
                     Registrations = invoices
                         .Where(i => i.PaymentDate != DateTime.MinValue)
-                        .Select(i => i.RegistrationAdvertisement)
+                        .Select(i => new Invoices
+                        {
+                            Id = i.Id,
+                            User = i.User,
+                            RegistrationAdvertisement = i.RegistrationAdvertisement,
+                            Amount = i.Amount,
+                            PaymentDate = i.PaymentDate,
+                        })
                         .ToList(),
 
                     ChartData = new
@@ -173,6 +179,53 @@ namespace API.Controllers.TagController
                         TotalOrders = invoices.Count(i => i.PaymentDate >= startOfYear && i.PaymentDate <= now),
                         SuccessfulOrders = invoices.Count(i => i.PaymentDate >= startOfYear && i.PaymentDate <= now && i.RegistrationAdvertisement.State == Data.Enums.WaitState.Accept),
                         CancelledOrders = invoices.Count(i => i.PaymentDate >= startOfYear && i.PaymentDate <= now && i.RegistrationAdvertisement.State == Data.Enums.WaitState.Decline)
+                    }
+                };
+
+                return Ok(statistics);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+        [HttpGet("/getStatisticsByDateRange")]
+        public async Task<IActionResult> GetStatisticsByDateRange([FromQuery] DateTime startDate, [FromQuery] DateTime endDate)
+        {
+            try
+            {
+                var query = _context.Invoices
+                    .Include(i => i.User)
+                    .Include(i => i.RegistrationAdvertisement)
+                        .ThenInclude(r => r.ServiceAdvertisementPricing)
+                    .Where(i => i.PaymentDate >= startDate && i.PaymentDate <= endDate)
+                    .AsQueryable();
+
+                var invoices = await query.ToListAsync();
+
+                var statistics = new
+                {
+                    Registrations = invoices
+                        .Where(i => i.PaymentDate != DateTime.MinValue)
+                        .Select(i => new Invoices
+                        {
+                            Id = i.Id,
+                            User = i.User,
+                            RegistrationAdvertisement = i.RegistrationAdvertisement,
+                            Amount = i.Amount,
+                            PaymentDate = i.PaymentDate,
+                        })
+                        .ToList(),
+
+                    ChartData = new
+                    {
+                        TotalRevenue = invoices
+                            .Where(i => i.PaymentDate != DateTime.MinValue)
+                            .Sum(i => i.Amount),
+                        TotalOrders = invoices.Count(),
+                        PaidOrders = invoices.Count(i => i.PaymentDate != DateTime.MinValue),
+                        UnpaidOrders = invoices.Count(i => i.PaymentDate == DateTime.MinValue)
                     }
                 };
 
