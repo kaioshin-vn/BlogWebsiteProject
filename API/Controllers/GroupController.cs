@@ -31,7 +31,7 @@ namespace API.Controllers
         [HttpGet("/GetListPostPendingGroup/{IdGroup}/{IdUser}")]
         public async Task<List<PostIntroDTO>> GetListPostPendingGroup(Guid IdGroup, Guid IdUser)
         {
-            var listPost = await _context.Posts.Include(a => a.GroupPost).ThenInclude(a => a.Group).Where(a => a.GroupPost.Any(p => p.IdGroup == IdGroup && p.WaitState == WaitState.Pending) && a.IdUser == IdUser && a.IsDeleted == false).ToListAsync();
+            var listPost = await _context.Posts.Include(a => a.User).Include(a => a.GroupPost).ThenInclude(a => a.Group).Where(a => a.GroupPost.Any(p => p.IdGroup == IdGroup && p.WaitState == WaitState.Pending) && a.IdUser == IdUser && a.IsDeleted == false && a.User.LockoutEnd == null ).ToListAsync();
 
             var listIntroPost = new List<PostIntroDTO>();
 

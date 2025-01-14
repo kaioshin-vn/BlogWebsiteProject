@@ -195,7 +195,7 @@ namespace API.Controllers.PostController
             }
 
 
-            var listPost = await _context.Posts.Where(a => a.IsDeleted == false && !listIdHide.Contains(a.Id) && a.User.LockoutEnd == null).OrderByDescending(a => a.CreateDate).ToListAsync();
+            var listPost = await _context.Posts.Include(a => a.User).Where(a => a.IsDeleted == false && !listIdHide.Contains(a.Id) && a.User.LockoutEnd == null).OrderByDescending(a => a.CreateDate).ToListAsync();
 
 			// Lấy danh sách GroupPosts cho nhóm này để kiểm tra quan hệ
 			var groupPosts = await _context.GroupPosts
@@ -234,7 +234,7 @@ namespace API.Controllers.PostController
 			var groupPosts = await _context.GroupPosts
 											.Where(gp => gp.IdGroup == group.IdGroup && gp.WaitState == WaitState.Accept).Select(a => a.IdPost)
 											.ToListAsync();
-			var listPost = await _context.Posts.Where(a => a.IsDeleted == false && a.IdUser == userId && groupPosts.Contains(a.Id)).ToListAsync();
+			var listPost = await _context.Posts.Include(a => a.User).Where(a => a.IsDeleted == false && a.IdUser == userId && groupPosts.Contains(a.Id) && a.User.LockoutEnd == null).ToListAsync();
 
 			// Lấy danh sách GroupPosts cho nhóm này để kiểm tra quan hệ
 
