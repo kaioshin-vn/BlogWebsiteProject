@@ -147,35 +147,66 @@ else{
                     </MudGrid>
                 </MudItem>
             </MudGrid>
+            <MudText Typo="Typo.h6" Class="mt-3" Style="font-weight:bold">Bộ lọc</MudText>
             <MudDivider Style="border-width: 1px; border-color: black;" />
             <MudGrid>
                 <MudItem xs="12" Class="d-flex justify-content-between mt-3">
-                    <MudButton Class="mx-2 p-0" Variant="Variant.Outlined" OnClick="@(() => GetStatisticsByPeriod("day"))">Ngày</MudButton>
-                    <MudButton Class="mx-2" Variant="Variant.Outlined" OnClick="@(() => GetStatisticsByPeriod("week"))">Tuần</MudButton>
-                    <MudButton Class="mx-2" Variant="Variant.Outlined" OnClick="@(() => GetStatisticsByPeriod("month"))">Tháng</MudButton>
-                    <MudButton Class="mx-2" Variant="Variant.Outlined" OnClick="@(() => GetStatisticsByPeriod("year"))">Năm</MudButton>
-                    <MudDateRangePicker Label="Chọn khoảng thời gian thống kê" />
+                    <MudButton Class="mx-2 p-0" Variant="Variant.Filled" Color="Color.Warning" OnClick="@(() => GetStatisticsByPeriod("day"))">Ngày</MudButton>
+                    <MudButton Class="mx-2" Variant="Variant.Filled" Color="Color.Warning" OnClick="@(() => GetStatisticsByPeriod("week"))">Tuần</MudButton>
+                    <MudButton Class="mx-2" Variant="Variant.Filled" Color="Color.Warning" OnClick="@(() => GetStatisticsByPeriod("month"))">Tháng</MudButton>
+                    <MudButton Class="mx-2" Variant="Variant.Filled" Color="Color.Warning" OnClick="@(() => GetStatisticsByPeriod("year"))">Năm</MudButton>
+                    <MudDateRangePicker Label="Chọn khoảng thời gian thống kê" 
+                    @bind-Value="dateRange"
+                    DateFormat="dd/MM/yyyy"
+                    AdornmentColor="Color.Primary"
+                    DateRangeChanged="OnDateRangeSelect"
+                    />
                 </MudItem>
                 <MudItem xs="12">
                     <MudGrid>
                         <MudItem xs="8">
                             <MudText>Danh sách đơn quảng cáo</MudText>
-                            <MudTable Items="@lstInvoices" Hover="true" Breakpoint="Breakpoint.Sm" LoadingProgressColor="Color.Info">
+                            <MudTable Items="@lstInvoices" 
+                                      Dense="false"
+                                      Hover="true" 
+                                      Breakpoint="Breakpoint.Sm"
+                                      LoadingProgressColor="Color.Info"
+                                      Filter="new Func<Invoices,bool>(FilterFunc)"
+                                      @bind-SelectedItem="selectedItem">
+                                <ToolBarContent>
+                                    <MudText Typo="Typo.h6">Danh sách đơn quảng cáo</MudText>
+                                    <MudSpacer />
+                                    <MudTextField @bind-Value="searchString" 
+                                                 Placeholder="Tìm kiếm" 
+                                                 Adornment="Adornment.Start" 
+                                                 AdornmentIcon="@Icons.Material.Filled.Search" 
+                                                 IconSize="Size.Medium" 
+                                                 Class="mt-0">
+                                    </MudTextField>
+                                </ToolBarContent>
                                 <HeaderContent>
                                     <MudTh>Người đăng ký</MudTh>
                                     <MudTh>Gói dịch vụ</MudTh>
                                     <MudTh>Giá dịch vụ</MudTh>
                                     <MudTh>Thời hạn gói</MudTh>
+                                    <MudTh>Thao tác</MudTh>
                                 </HeaderContent>
                                 <RowTemplate>
-                                    <MudTd>@context.User?.FullName</MudTd>
-                                    <MudTd>@context.RegistrationAdvertisement?.Name</MudTd>
-                                    <MudTd>@context.RegistrationAdvertisement?.Price.ToString("N0")</MudTd>
-                                    <MudTd>@context.RegistrationAdvertisement?.DurationDays ngày</MudTd>
-                                    <MudTd>
-                                        <MudButton Variant="Variant.Outlined" Color="Color.Success" OnClick="() => DowBill(context.Id)">Hóa đơn</MudButton>
+                                    <MudTd DataLabel="Người đăng ký">@context.User?.FullName</MudTd>
+                                    <MudTd DataLabel="Gói dịch vụ">@context.RegistrationAdvertisement?.Name</MudTd>
+                                    <MudTd DataLabel="Giá dịch vụ">@context.RegistrationAdvertisement?.Price.ToString("N0")</MudTd>
+                                    <MudTd DataLabel="Thời hạn gói">@context.RegistrationAdvertisement?.DurationDays ngày</MudTd>
+                                    <MudTd DataLabel="Thao tác">
+                                        <MudButton Variant="Variant.Outlined" 
+                                                  Color="Color.Success" 
+                                                  OnClick="() => DowBill(context.Id)">
+                                            Hóa đơn
+                                        </MudButton>
                                     </MudTd>
                                 </RowTemplate>
+                                <PagerContent>
+                                    <MudTablePager PageSizeOptions="new int[] { 5, 10, 20 }" />
+                                </PagerContent>
                             </MudTable>
                         </MudItem>
                         <MudItem xs="4">
@@ -202,6 +233,33 @@ else{
 
     private StatisticsData StatisticsDaily { get; set; }
 
+    private DateRange dateRange;
+
+    private int currentPage = 1;
+    private Invoices selectedItem = null;
+
+    private string searchString = "";
+    
+    private bool FilterFunc(Invoices invoice)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+
+        // Tìm kiếm theo tên người đăng ký
+        if (invoice.User?.FullName?.Contains(searchString, StringComparison.OrdinalIgnoreCase) == true)
+            return true;
+
+        // Tìm kiếm theo tên gói dịch vụ
+        if (invoice.RegistrationAdvertisement?.Name?.Contains(searchString, StringComparison.OrdinalIgnoreCase) == true)
+            return true;
+
+        // Tìm kiếm theo giá dịch vụ
+        if (invoice.RegistrationAdvertisement?.Price.ToString()?.Contains(searchString, StringComparison.OrdinalIgnoreCase) == true)
+            return true;
+
+        return false;
+    }
+
     protected override async Task OnInitializedAsync()
     {
         labels = new string[] { "Tổng số đơn", "Đã thanh toán", "Chưa thanh toán" };
@@ -222,11 +280,11 @@ else{
         {
             var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
             var response = await httpClient.GetStringAsync($"/getStatisticsByPeriod/{period}");
-            
+
             if (response != null)
             {
                 var result = JsonConvert.DeserializeObject<StatisticsResponse>(response);
-                
+
                 // Cập nhật danh sách đăng ký cho bảng
                 lstInvoices = result.Registrations;
 
@@ -260,6 +318,46 @@ else{
         catch (Exception ex)
         {
             Snackbar.Add($"Lỗi khi tải thống kê: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task OnDateRangeSelect(DateRange range)
+    {
+        if (range.Start.HasValue && range.End.HasValue)
+        {
+            try
+            {
+                var httpClient = HttpClientFactory.CreateClient("MyHttpClient");
+                var startDate = range.Start.Value.ToString("yyyy-MM-dd");
+                var endDate = range.End.Value.ToString("yyyy-MM-dd");
+
+                var response = await httpClient.GetStringAsync(
+                    $"/getStatisticsByDateRange?startDate={startDate}&endDate={endDate}");
+
+                if (response != null)
+                {
+                    var result = JsonConvert.DeserializeObject<StatisticsResponse>(response);
+
+                    // Cập nhật danh sách đăng ký cho bảng
+                    lstInvoices = result.Registrations;
+
+                    // Cập nhật dữ liệu cho biểu đồ
+                    data = new double[]
+                    {
+                        result.ChartData.TotalOrders,
+                        result.ChartData.PaidOrders,
+                        result.ChartData.UnpaidOrders
+                    };
+
+                    // Cập nhật tổng doanh thu
+                    totalRevenue = result.ChartData.TotalRevenue;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Chi tiết lỗi: {ex.ToString()}");
+                Snackbar.Add($"Lỗi khi tải thống kê: {ex.Message}", Severity.Error);
+            }
         }
     }
 
