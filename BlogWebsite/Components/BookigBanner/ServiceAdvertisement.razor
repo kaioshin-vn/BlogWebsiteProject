@@ -71,7 +71,7 @@ else{
                                         <MudTextField @bind-Value="ServiceAdver.Name" For="@(() => ServiceAdver.Name)" Label="Tên gói dịch vụ" />
                                         <MudTextField @bind-Value="ServiceAdver.Price" For="@( ()=> ServiceAdver.Price)" InputType="InputType.Number" Label="Giá"Class="mt-3" />
                                         <MudTextField @bind-Value="ServiceAdver.DurationDays" For="@( ()=> ServiceAdver.DurationDays)" InputType="InputType.Number" Label="Hạn gói" Class="mt-3" />
-                                        <MudTextField @bind-Value="ServiceAdver.Description" T="string" Label="Mô tả" Variant="Variant.Text" Lines="4"/>
+                                        <MudTextField @bind-Value="ServiceAdver.Description" For="@( ()=> ServiceAdver.Description)" T="string" Label="Mô tả" Variant="Variant.Text" Lines="4" />
                                     </MudCardContent>
                                     <MudCardActions>
                                         <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">Thêm mới</MudButton>
@@ -97,7 +97,13 @@ else{
         lstServiceAdver = await httpclient.GetFromJsonAsync<List<ServiceAdvertisementPricing>>("/api/ServiceAdvertisement/getAllService");
     }
 
-    private async Task CreateServiceAdver(){
+    private async Task CreateServiceAdver()
+    {
+        if (string.IsNullOrWhiteSpace(ServiceAdver.Description))
+        {
+            Snackbar.Add("Mô tả không được để trống!", Severity.Error);
+            return;
+        }
         var httpclient = HttpClientFactory.CreateClient("MyHttpClient");
         var result = await httpclient.PostAsJsonAsync("api/ServiceAdvertisement/addService", ServiceAdver);
         if(result.IsSuccessStatusCode){
