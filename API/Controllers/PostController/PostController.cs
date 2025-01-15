@@ -399,11 +399,11 @@ namespace API.Controllers.PostController
 
 			_context.Posts.Update(existingPost);
 
-			var postHide = await _context.PostHideByRestricted.FirstOrDefaultAsync(a => a.IdPost == idPost);
+			var postHide = _context.PostHideByRestricted.Where(a => a.IdPost == idPost);
 
 			if (postHide != null)
 			{
-				_context.PostHideByRestricted.Remove(postHide);
+				_context.PostHideByRestricted.RemoveRange(postHide);
 			}
 
 			await _context.SaveChangesAsync();

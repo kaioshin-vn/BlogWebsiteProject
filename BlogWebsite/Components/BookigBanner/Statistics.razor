@@ -9,6 +9,8 @@
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 
+@attribute [Authorize(Roles = "Admin")]
+
 <style>
     .WhiteBold {
     font-weight: bold;
@@ -29,7 +31,7 @@
     <Client.Components.ComponentCustom.LoadingLocal></Client.Components.ComponentCustom.LoadingLocal>
 }
 else{
-    <MudContainer>
+    <MudContainer Class="mb-5">
         <MudPaper Class="p-4" Outlined="true" Square="true" Style=" background-color:#F8FAFC">
             <MudText Typo="Typo.h6" Style="font-weight:bold">Thống kê</MudText>
             <MudDivider Style="border-width: 1px; border-color: black;" />
@@ -194,7 +196,7 @@ else{
                                 <RowTemplate>
                                     <MudTd DataLabel="Người đăng ký">@context.User?.FullName</MudTd>
                                     <MudTd DataLabel="Gói dịch vụ">@context.RegistrationAdvertisement?.Name</MudTd>
-                                    <MudTd DataLabel="Giá dịch vụ">@context.RegistrationAdvertisement?.Price.ToString("N0")</MudTd>
+                                    <MudTd DataLabel="Giá dịch vụ">@context.Amount.ToString("N0")</MudTd>
                                     <MudTd DataLabel="Thời hạn gói">@context.RegistrationAdvertisement?.DurationDays ngày</MudTd>
                                     <MudTd DataLabel="Thao tác">
                                         <MudButton Variant="Variant.Outlined" 
