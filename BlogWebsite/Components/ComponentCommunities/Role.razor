@@ -13,6 +13,7 @@
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager Navigation
 @inject IHttpClientFactory HttpClientFactory
+@inject ISnackbar Snackbar
 @inject IJSRuntime JSRunTime
 
 <h1>Thông tin đối tượng</h1>
@@ -106,12 +107,13 @@ else
 
 		if (response.IsSuccessStatusCode)
 		{
-			Console.WriteLine("Thành công");
+			Snackbar.Add("Cập nhật thành công.", Severity.Success);
 			Navigation.NavigateTo($"/groups/{Name}/mod");
 		}
 		else
 		{
-			Console.WriteLine("Thất bại");
+			Snackbar.Add("Opps, đã có lỗi gì đó xảy ra.", Severity.Success);
+			Navigation.NavigateTo($"/groups/{Name}/mod", true);
 		}
 	}
 

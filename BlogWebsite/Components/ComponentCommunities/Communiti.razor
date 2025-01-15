@@ -380,6 +380,7 @@ else
         var response = await httpClient.PutAsJsonAsync($"api/group/update-group-info/?groupName={Name}", group);
         if (response.IsSuccessStatusCode)
         {
+            Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
             Console.WriteLine("Update thành công");
             Snackbar.Add("Cập nhật thành công.", Severity.Success);
         }

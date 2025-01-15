@@ -197,10 +197,25 @@ namespace API.Controllers.PostController
 
             var listPost = await _context.Posts.Include(a => a.User).Where(a => a.IsDeleted == false && !listIdHide.Contains(a.Id) && a.User.LockoutEnd == null).OrderByDescending(a => a.CreateDate).ToListAsync();
 
-			// Lấy danh sách GroupPosts cho nhóm này để kiểm tra quan hệ
-			var groupPosts = await _context.GroupPosts
-											.Where(gp => gp.IdGroup == group.IdGroup && gp.WaitState == WaitState.Accept)
-											.ToListAsync();
+			var groupPosts = new List<GroupPost>();
+            // Lấy danh sách GroupPosts cho nhóm này để kiểm tra quan hệ
+            if (group.StateGroup != KindGroup.Private)
+			{
+                groupPosts = await _context.GroupPosts
+                                            .Where(gp => gp.IdGroup == group.IdGroup && gp.WaitState == WaitState.Accept)
+                                            .ToListAsync();
+            }
+			else
+			{
+				var listIdAdmin = _context.MemberGroups.Where(a => a.IdGroup == group.IdGroup && a.Position == Position.Deputy || a.Position == Position.Chief).Select(a => a.IdMember);
+
+                groupPosts = await _context.GroupPosts
+					.Include(a => a.Post)
+					.ThenInclude(a => a.User)
+                                            .Where(gp => gp.IdGroup == group.IdGroup && gp.WaitState == WaitState.Accept && listIdAdmin.Contains(gp.Post.User.Id))
+                                            .ToListAsync();   
+
+            }
 
 			var listIntroPost = new List<PostIntroDTO>();
 

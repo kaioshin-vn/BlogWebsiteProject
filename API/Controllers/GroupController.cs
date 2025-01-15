@@ -642,7 +642,7 @@ namespace API.Controllers
         }
 
         [HttpPut("update-member/{id}")]
-        public async Task<ActionResult> UpdateMember(Guid id, [FromQuery] Guid userId, [FromQuery] string groupName, MemberDTO memberInfo)
+        public async Task<ActionResult> UpdateMember(Guid id, [FromQuery] Guid userId, [FromQuery] string groupName, [FromBody] MemberDTO memberInfo)
         {
             Console.WriteLine($"anhbuon:{groupName}");
             // Lấy thông tin thành viên từ id
