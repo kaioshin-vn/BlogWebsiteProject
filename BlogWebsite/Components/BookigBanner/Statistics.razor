@@ -23,6 +23,17 @@
     .centers{
 
     }
+    .legend-item {
+        display: flex;
+        align-items: center;
+        margin: 5px 0;
+    }
+    .legend-color {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        margin-right: 8px;
+    }
 </style>
 @if (lstInvoices == null || StatisticsDaily == null)
 {
@@ -210,12 +221,35 @@ else{
                             </MudTable>
                         </MudItem>
                         <MudItem xs="4">
-                            <MudChart ChartType="ChartType.Donut" Width="200px" Height="200px" InputData="@data" InputLabels="@labels">
-                                <CustomGraphics>
-                                    <text class="donut-inner-text" x="47%" y="35%" dominant-baseline="middle" text-anchor="middle" fill="black" font-family="Helvetica" font-size="2">Tổng doanh thu</text>
-                                    <text class="donut-inner-text" x="47%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="black" font-family="Helvetica" font-size="5">@totalRevenue.ToString("N0") đ</text>
-                                </CustomGraphics>
-                            </MudChart>
+                            <MudGrid>
+                                <MudItem xs="12">
+                                    <MudChart ChartType="ChartType.Donut" Width="200px" Height="200px" InputData="@data" InputLabels="@labels">
+                                        <CustomGraphics>
+                                            <text class="donut-inner-text" x="47%" y="35%" dominant-baseline="middle" text-anchor="middle" fill="black" font-family="Helvetica" font-size="2">Tổng doanh thu</text>
+                                            <text class="donut-inner-text" x="47%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="black" font-family="Helvetica" font-size="5">@totalRevenue.ToString("N0") đ</text>
+                                        </CustomGraphics>
+                                    </MudChart>
+                                </MudItem>
+                                <MudItem xs="12">
+                                    <MudList T="string">
+                                        <MudListItem>
+                                            <MudText>
+                                                <span style="color: royalblue">⬤</span> Tổng số đơn: @data[0]
+                                            </MudText>
+                                        </MudListItem>
+                                        <MudListItem>
+                                            <MudText>
+                                                <span style="color: aquamarine">⬤</span> Đã thanh toán: @data[1]
+                                            </MudText>
+                                        </MudListItem>
+                                        <MudListItem>
+                                            <MudText>
+                                                <span style="color:gold">⬤</span> Chưa thanh toán: @data[2]
+                                            </MudText>
+                                        </MudListItem>
+                                    </MudList>
+                                </MudItem>
+                            </MudGrid>
                         </MudItem>
                     </MudGrid>
                 </MudItem>
